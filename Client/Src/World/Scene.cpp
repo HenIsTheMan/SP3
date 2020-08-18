@@ -56,7 +56,7 @@ Scene::Scene():
 	view(glm::mat4(1.f)),
 	projection(glm::mat4(1.f)),
 	elapsedTime(0.f),
-	polyMode(0),
+	//polyMode(0),
 	modelStack()
 {
 }
@@ -105,7 +105,7 @@ Scene::~Scene(){
 }
 
 bool Scene::Init(){
-	glGetIntegerv(GL_POLYGON_MODE, &polyMode);
+	//glGetIntegerv(GL_POLYGON_MODE, &polyMode);
 
 	soundEngine = createIrrKlangDevice(ESOD_AUTO_DETECT, ESEO_MULTI_THREADED | ESEO_LOAD_PLUGINS | ESEO_USE_3D_BUFFERS | ESEO_PRINT_DEBUG_INFO_TO_DEBUGGER);
 	if(!soundEngine){
@@ -167,11 +167,11 @@ void Scene::Update(){
 	static float wavesReverbBT = 0.f;
 	static float resetSoundFXBT = 0.f;
 
-	if(Key(GLFW_KEY_F2) && polyModeBT <= elapsedTime){
-		polyMode += polyMode == GL_FILL ? -2 : 1;
-		glPolygonMode(GL_FRONT_AND_BACK, polyMode);
-		polyModeBT = elapsedTime + .5f;
-	}
+	//if(Key(GLFW_KEY_F2) && polyModeBT <= elapsedTime){
+	//	polyMode += polyMode == GL_FILL ? -2 : 1;
+	//	glPolygonMode(GL_FRONT_AND_BACK, polyMode);
+	//	polyModeBT = elapsedTime + .5f;
+	//}
 
 	if(soundFX){
 		if(Key(GLFW_KEY_I) && distortionBT <= elapsedTime){
@@ -326,9 +326,9 @@ void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID){
 
 void Scene::ForwardRender(){
 	forwardSP.Use();
-	const int& pAmt = 0;
-	const int& dAmt = 0;
-	const int& sAmt = 0;
+	const int& pAmt = (int)ptLights.size();
+	const int& dAmt = (int)directionalLights.size();
+	const int& sAmt = (int)spotlights.size();
 
 	forwardSP.Set1f("shininess", 32.f); //More light scattering if lower
 	forwardSP.Set3fv("globalAmbient", Light::globalAmbient);
@@ -366,7 +366,64 @@ void Scene::ForwardRender(){
 		forwardSP.Set1f(("spotlights[" + std::to_string(i) + "].cosOuterCutoff").c_str(), spotlight->cosOuterCutoff);
 	}
 
+	forwardSP.SetMat4fv("PV", &(projection * glm::mat4(glm::mat3(view)))[0][0]);
+
+	///Sky
+	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
+	glCullFace(GL_FRONT);
+	forwardSP.Set1i("sky", 1);
+	PushModel({
+		Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
+		});
+	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+	meshes[(int)MeshType::Sphere]->Render(forwardSP);
+	PopModel();
+	forwardSP.Set1i("sky", 0);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LESS);
+
 	forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
+
+	///Terrain
+	PushModel({
+		Rotate(glm::vec4(0.f, 1.f, 0.f, 45.f)),
+		Scale(glm::vec3(500.f, 100.f, 500.f)),
+	});
+		meshes[(int)MeshType::Terrain]->SetModel(GetTopModel());
+		meshes[(int)MeshType::Terrain]->Render(forwardSP);
+	PopModel();
+
+	///Shapes
+	PushModel({
+		Translate(glm::vec3(0.f, 100.f, 0.f)),
+		Scale(glm::vec3(10.f)),
+	});
+		PushModel({
+			Translate(glm::vec3(6.f, 0.f, 0.f)),
+		});
+			forwardSP.Set1i("noNormals", 1);
+			forwardSP.Set1i("useCustomColour", 1);
+			forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(5.f), 1.f));
+			meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+			meshes[(int)MeshType::Quad]->Render(forwardSP);
+			forwardSP.Set1i("useCustomColour", 0);
+			forwardSP.Set1i("noNormals", 0);
+			PushModel({
+				Translate(glm::vec3(0.f, 0.f, 5.f)),
+			});
+				meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Sphere]->Render(forwardSP);
+			PopModel();
+			PushModel({
+				Translate(glm::vec3(0.f, 0.f, -5.f)),
+			});
+				meshes[(int)MeshType::Cylinder]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Cylinder]->Render(forwardSP);
+			PopModel();
+		PopModel();
+	PopModel();
+
+
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	///Shapes
