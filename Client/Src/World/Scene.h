@@ -17,6 +17,7 @@ public:
 private:
 	Cam cam;
 	Cam dCam;
+	Cam sCam;
 	ISoundEngine* soundEngine;
 	ISound* music;
 	ISoundEffectControl* soundFX;

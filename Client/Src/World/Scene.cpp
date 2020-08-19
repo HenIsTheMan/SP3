@@ -11,6 +11,7 @@ glm::vec3 Light::globalAmbient = glm::vec3(.2f);
 Scene::Scene():
 	cam(glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 150.f),
 	dCam(glm::vec3(0.f, 150.f, 0.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
+	sCam(glm::vec3(0.f, 100.f, 200.f), glm::vec3(0.f, 100.f, 0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 0.f),
 	soundEngine(nullptr),
 	music(nullptr),
 	soundFX(nullptr),
@@ -162,8 +163,8 @@ void Scene::Update(){
 	spotlights[0]->ambient = glm::vec3(.05f);
 	spotlights[0]->diffuse = glm::vec3(.8f);
 	spotlights[0]->spec = glm::vec3(1.f);
-	static_cast<Spotlight*>(spotlights[0])->pos = camPos;
-	static_cast<Spotlight*>(spotlights[0])->dir = camFront;
+	static_cast<Spotlight*>(spotlights[0])->pos = sCam.GetPos();
+	static_cast<Spotlight*>(spotlights[0])->dir = sCam.CalcFront();
 	static_cast<Spotlight*>(spotlights[0])->cosInnerCutoff = cosf(glm::radians(12.5f));
 	static_cast<Spotlight*>(spotlights[0])->cosOuterCutoff = cosf(glm::radians(17.5f));
 
@@ -335,10 +336,18 @@ void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID){
 void Scene::DepthRender(const short& projectionType){
 	depthSP.Use();
 	if(projectionType){
-		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(angularFOV + 45.f), 1.f, 20.f, 500.f) * cam.LookAt())[0][0]);
+		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), 1.f, 80.f, 5000.f) * sCam.LookAt())[0][0]);
 	} else{
 		depthSP.SetMat4fv("PV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
 	}
+
+	PushModel({
+		Translate(glm::vec3(0.f, 100.f, -50.f)),
+		Scale(glm::vec3(50.f)),
+	});
+		meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+		meshes[(int)MeshType::Quad]->Render(depthSP, false);
+	PopModel();
 
 	PushModel({
 		Scale(glm::vec3(500.f, 100.f, 500.f)),
@@ -371,7 +380,7 @@ void Scene::DepthRender(const short& projectionType){
 void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID){
 	forwardSP.Use();
 	forwardSP.SetMat4fv("directionalLightPV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
-	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(135.f - angularFOV), 1.f, 20.f, 500.f) * cam.LookAt())[0][0]);
+	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), 1.f, 80.f, 5000.f) * sCam.LookAt())[0][0]);
 
 	const int& pAmt = (int)ptLights.size();
 	const int& dAmt = (int)directionalLights.size();
@@ -430,6 +439,15 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	glDepthFunc(GL_LESS);
 
 	forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
+
+	//Test wall
+	PushModel({
+		Translate(glm::vec3(0.f, 100.f, -50.f)),
+		Scale(glm::vec3(50.f)),
+	});
+		meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+		meshes[(int)MeshType::Quad]->Render(forwardSP);
+	PopModel();
 
 	///Terrain
 	PushModel({

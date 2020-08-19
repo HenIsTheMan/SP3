@@ -197,7 +197,7 @@ void App::Render(){
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(1.f, 0.82f, 0.86f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	scene.DefaultRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthD]);
+	scene.DefaultRender(texRefIDs[(int)Tex::DepthS], texRefIDs[(int)Tex::DepthS]);
 	#else
 	glViewport(0, 0, winWidth, winHeight);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
