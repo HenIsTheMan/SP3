@@ -12,9 +12,11 @@ public:
 	void LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID);
 	void BlurRender(const uint& brightTexRefID, const bool& horizontal);
 	void DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID);
-	void ForwardRender();
+	void DepthRender(const short& projectionType);
+	void ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID);
 private:
 	Cam cam;
+	Cam dCam;
 	ISoundEngine* soundEngine;
 	ISound* music;
 	ISoundEffectControl* soundFX;
@@ -39,6 +41,7 @@ private:
 	Model* models[(int)ModelType::Amt];
 
 	ShaderProg blurSP;
+	ShaderProg depthSP;
 	ShaderProg forwardSP;
 	ShaderProg geoPassSP;
 	ShaderProg lightingPassSP;

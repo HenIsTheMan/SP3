@@ -79,5 +79,11 @@
     <None Include="Shaders\Forward.vs">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\Depth.fs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Depth.vs">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

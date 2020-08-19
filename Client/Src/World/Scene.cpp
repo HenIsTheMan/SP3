@@ -10,6 +10,7 @@ glm::vec3 Light::globalAmbient = glm::vec3(.2f);
 
 Scene::Scene():
 	cam(glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 150.f),
+	dCam(glm::vec3(0.f, 150.f, 0.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
 	soundEngine(nullptr),
 	music(nullptr),
 	soundFX(nullptr),
@@ -44,6 +45,7 @@ Scene::Scene():
 		}),
 	},
 	blurSP{"Shaders/Quad.vs", "Shaders/Blur.fs"},
+	depthSP{"Shaders/Depth.vs", "Shaders/Depth.fs"},
 	forwardSP{"Shaders/Forward.vs", "Shaders/Forward.fs"},
 	geoPassSP{"Shaders/GeoPass.vs", "Shaders/GeoPass.fs"},
 	lightingPassSP{"Shaders/Quad.vs", "Shaders/LightingPass.fs"},
@@ -132,6 +134,7 @@ bool Scene::Init(){
 
 	meshes[(int)MeshType::Terrain]->AddTexMap({"Imgs/GrassGround.jpg", Mesh::TexType::Diffuse, 0});
 
+	directionalLights.emplace_back(CreateLight(LightType::Directional));
 	spotlights.emplace_back(CreateLight(LightType::Spot));
 
 	return true;
@@ -150,6 +153,11 @@ void Scene::Update(){
 	const glm::vec3& camPos = cam.GetPos();
 	const glm::vec3& camFront = cam.CalcFront();
 	soundEngine->setListenerPosition(vec3df(camPos.x, camPos.y, camPos.z), vec3df(camFront.x, camFront.y, camFront.z));
+
+	directionalLights[0]->ambient = glm::vec3(.05f);
+	directionalLights[0]->diffuse = glm::vec3(.8f);
+	directionalLights[0]->spec = glm::vec3(1.f);
+	static_cast<DirectionalLight*>(directionalLights[0])->dir = dCam.CalcFront();
 
 	spotlights[0]->ambient = glm::vec3(.05f);
 	spotlights[0]->diffuse = glm::vec3(.8f);
@@ -324,8 +332,47 @@ void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID){
 	screenSP.ResetTexUnits();
 }
 
-void Scene::ForwardRender(){
+void Scene::DepthRender(const short& projectionType){
+	depthSP.Use();
+	if(projectionType){
+		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(angularFOV + 45.f), 1.f, 20.f, 500.f) * cam.LookAt())[0][0]);
+	} else{
+		depthSP.SetMat4fv("PV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
+	}
+
+	PushModel({
+		Scale(glm::vec3(500.f, 100.f, 500.f)),
+	});
+		meshes[(int)MeshType::Terrain]->SetModel(GetTopModel());
+		meshes[(int)MeshType::Terrain]->Render(depthSP, false);
+	PopModel();
+
+	PushModel({
+		Translate(glm::vec3(0.f, 100.f, 0.f)),
+		Scale(glm::vec3(10.f)),
+	});
+			meshes[(int)MeshType::Cylinder]->SetModel(GetTopModel());
+			meshes[(int)MeshType::Cylinder]->Render(depthSP, false);
+		PushModel({
+			Translate(glm::vec3(-3.f, 0.f, 0.f)),
+		});
+			meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+			meshes[(int)MeshType::Sphere]->Render(depthSP, false);
+		PopModel();
+		PushModel({
+			Translate(glm::vec3(3.f, 0.f, 0.f)),
+		});
+			meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
+			meshes[(int)MeshType::Cube]->Render(depthSP, false);
+		PopModel();
+	PopModel();
+}
+
+void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID){
 	forwardSP.Use();
+	forwardSP.SetMat4fv("directionalLightPV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
+	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(135.f - angularFOV), 1.f, 20.f, 500.f) * cam.LookAt())[0][0]);
+
 	const int& pAmt = (int)ptLights.size();
 	const int& dAmt = (int)directionalLights.size();
 	const int& sAmt = (int)spotlights.size();
@@ -374,9 +421,9 @@ void Scene::ForwardRender(){
 	forwardSP.Set1i("sky", 1);
 	PushModel({
 		Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
-		});
-	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
-	meshes[(int)MeshType::Sphere]->Render(forwardSP);
+	});
+		meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+		meshes[(int)MeshType::Sphere]->Render(forwardSP);
 	PopModel();
 	forwardSP.Set1i("sky", 0);
 	glCullFace(GL_BACK);
@@ -386,9 +433,10 @@ void Scene::ForwardRender(){
 
 	///Terrain
 	PushModel({
-		Rotate(glm::vec4(0.f, 1.f, 0.f, 45.f)),
 		Scale(glm::vec3(500.f, 100.f, 500.f)),
 	});
+		forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+		forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
 		meshes[(int)MeshType::Terrain]->SetModel(GetTopModel());
 		meshes[(int)MeshType::Terrain]->Render(forwardSP);
 	PopModel();
@@ -401,6 +449,8 @@ void Scene::ForwardRender(){
 		PushModel({
 			Translate(glm::vec3(6.f, 0.f, 0.f)),
 		});
+			forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+			forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
 			forwardSP.Set1i("noNormals", 1);
 			forwardSP.Set1i("useCustomColour", 1);
 			forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(5.f), 1.f));
@@ -411,18 +461,21 @@ void Scene::ForwardRender(){
 			PushModel({
 				Translate(glm::vec3(0.f, 0.f, 5.f)),
 			});
+				forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+				forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
 				meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
 				meshes[(int)MeshType::Sphere]->Render(forwardSP);
 			PopModel();
 			PushModel({
 				Translate(glm::vec3(0.f, 0.f, -5.f)),
 			});
+				forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+				forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
 				meshes[(int)MeshType::Cylinder]->SetModel(GetTopModel());
 				meshes[(int)MeshType::Cylinder]->Render(forwardSP);
 			PopModel();
 		PopModel();
 	PopModel();
-
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -431,34 +484,31 @@ void Scene::ForwardRender(){
 		Translate(glm::vec3(0.f, 100.f, 0.f)),
 		Scale(glm::vec3(10.f)),
 	});
-		forwardSP.Set1i("useCustomColour", 1);
-		forwardSP.Set4fv("customColour", glm::vec4(glm::rgbColor(glm::vec3(1.f, PseudorandMinMax(0.f, 255.f), 1.f)) * .5f, .5f));
+		forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+		forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
 		meshes[(int)MeshType::Cylinder]->SetModel(GetTopModel());
 		meshes[(int)MeshType::Cylinder]->Render(forwardSP);
-		forwardSP.Set1i("useCustomColour", 0);
 		PushModel({
 			Translate(glm::vec3(-3.f, 0.f, 0.f)),
 		});
-			forwardSP.Set1i("useCustomColour", 1);
-			forwardSP.Set4fv("customColour", glm::vec4(glm::rgbColor(glm::vec3(1.f, 1.f, PseudorandMinMax(0.f, 255.f))) * 7.f, .3f));
+			forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+			forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
 			forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
 			forwardSP.Set1i("customDiffuseTexIndex", -1);
 			meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
 			meshes[(int)MeshType::Sphere]->Render(forwardSP);
 			forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
-			forwardSP.Set1i("useCustomColour", 0);
 		PopModel();
 		PushModel({
 			Translate(glm::vec3(3.f, 0.f, 0.f)),
 		});
-			forwardSP.Set1i("useCustomColour", 1);
-			forwardSP.Set4fv("customColour", glm::vec4(glm::rgbColor(glm::vec3(PseudorandMinMax(0.f, 255.f), 1.f, 1.f)) * .5f, .7f));
+			forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+			forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
 			forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
 			forwardSP.Set1i("customDiffuseTexIndex", -1);
 			meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
 			meshes[(int)MeshType::Cube]->Render(forwardSP);
 			forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
-			forwardSP.Set1i("useCustomColour", 0);
 		PopModel();
 	PopModel();
 
@@ -467,6 +517,8 @@ void Scene::ForwardRender(){
 		Translate(glm::vec3(0.f, 50.f, 0.f)),
 		Scale(glm::vec3(20.f, 40.f, 20.f)),
 	});
+		forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+		forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
 		forwardSP.Set1i("noNormals", 1);
 		forwardSP.Set1i("useCustomColour", 1);
 		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f), 1.f));
@@ -494,7 +546,6 @@ void Scene::ForwardRender(){
 	});
 
 	glBlendFunc(GL_ONE, GL_ZERO);
-
 	if(music && music->getIsPaused()){
 		music->setIsPaused(false);
 	}

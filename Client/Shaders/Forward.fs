@@ -69,10 +69,39 @@ uniform sampler2D emissionMap;
 uniform sampler2D reflectionMap;
 
 vec3 WorldSpacePos = fsIn.pos;
-vec4 Colour;
+vec4 Colour = fsIn.colour;
 vec3 Normal = fsIn.normal;
 vec3 Spec = useSpecMap ? texture(specMap, fsIn.texCoords).rgb : vec3(0.f); //Use full white tex for full spec
 vec3 Reflection = useReflectionMap ? texture(reflectionMap, fsIn.texCoords).rgb : vec3(0.f); //Use full white tex for full reflection
+
+in vec4 posFromDirectionalLight;
+in vec4 posFromSpotlight;
+uniform sampler2D dDepthTexSampler;
+uniform sampler2D sDepthTexSampler;
+
+float NotInShadow(vec3 lightDir, sampler2D shadowMap, vec4 FragPosFromLight){ //Shadows (adds realism to a lit scene, makes spatial relationship between objs easier to observe, gives greater sense of depth to scene and objs in it) are formed with absence of light due to occlusion
+    vec3 projectedFragCoords = FragPosFromLight.xyz / FragPosFromLight.w; //Transform pt in light's visible coord space/clip space (-w, w) to NDC (-1 to 1) thru perspective division (divide gl_Position's xyz coords by its w-component, done automatically after vertex shader step if output clip-space vertex pos thru gl_Position, allows both types of projection to be used)
+    projectedFragCoords = projectedFragCoords * .5f + .5f; //Transform NDC to range of [0, 1] so can use to index/... from depth/... map //Because the depth from the depth map is in the range [0, 1]??
+    if(projectedFragCoords.z > 1.f){ //Reduce oversampling of depth/... map (...) by accting for currDepth > 1.f when projectedFragCoords.z > 1.f if light-space projected frag is outside far plane of light's... (in dark region at the far end [in the dir of shadows] of light's...)
+        return 1.f;
+    } //All frags...
+    //float closestDepth = texture(shadowMap, projectedFragCoords.xy).r; //Use pt in light's... to index depth/... map to get closest visible depth from light's POV //Use r as colours of shadowMap range from red to black
+    float currDepth = projectedFragCoords.z; //Curr depth of frag from light's POV
+    float shadowBias = max(.05f * (1.f - dot(Normal, -lightDir)), .005f); //Shadow bias (offset surface depth [currDepth] or depth/... map depth [closestDepth] such that frags are not considered below the surface) to solve shadow acne (shadow mapping artefact) //Max of .05f and min of .005f //Diff for each scene so increment until shadow acne is removed //Based on angle between light dir and surface normal
+
+    ////PCF (%-closer filtering, reduce jagged and blocky edges of shadows due to multiple frags sampling depth from same texel of the depth/... map with the depth/... map having a fixed resolution, sample depth/... map multiple times with diff texCoords every time then combine and avg all "NotInShadow" results to produce softer shadows)
+    ///Sample surrounding texels of depth/... map then... (use more depth samples and/or vary texelSize to increase quality of soft shadows)
+    ///Also can reduce... by increasing depth/... map resolution or fitting the light's visible frustum as closely to the scene as possible
+    float notInShadowSum = 0.f;
+    vec2 texelSize = 1.f / textureSize(shadowMap, 0); //Reciprocal of size of tex at mipmap lvl 0
+    for(float x = -1.f; x <= 1.f; ++x){
+        for(float y = -1.f; y <= 1.f; ++y){
+            float closestDepth = texture(shadowMap, projectedFragCoords.xy + vec2(x, y) * texelSize).r;
+            notInShadowSum += float(currDepth - shadowBias <= closestDepth);
+        }
+    }
+    return notInShadowSum / 9.f; //9 depth samples taken
+}
 
 vec3 CalcAmbient(vec3 lightAmbient){
     return lightAmbient * Colour.rgb;
@@ -99,7 +128,7 @@ vec3 CalcPtLight(PtLight light){
 
 vec3 CalcDirectionalLight(DirectionalLight light){
     vec3 lightDir = normalize(light.dir);
-    return CalcAmbient(light.ambient) + CalcDiffuse(lightDir, light.diffuse) + CalcSpec(lightDir, light.spec);
+    return CalcAmbient(light.ambient) + NotInShadow(lightDir, dDepthTexSampler, posFromDirectionalLight) * (CalcDiffuse(lightDir, light.diffuse) + CalcSpec(lightDir, light.spec));
 }
 
 vec3 CalcSpotlight(Spotlight light){
@@ -107,7 +136,7 @@ vec3 CalcSpotlight(Spotlight light){
     float cosTheta = dot(lightDir, normalize(light.dir));
     float epsilon = light.cosInnerCutoff - light.cosOuterCutoff;
     float lightIntensity = clamp((cosTheta - light.cosOuterCutoff) / epsilon, 0.f, 1.f);
-    return CalcAmbient(light.ambient) + lightIntensity * (CalcDiffuse(lightDir, light.diffuse) + CalcSpec(lightDir, light.spec));
+    return CalcAmbient(light.ambient) + NotInShadow(lightDir, sDepthTexSampler, posFromSpotlight) * lightIntensity * (CalcDiffuse(lightDir, light.diffuse) + CalcSpec(lightDir, light.spec));
 }
 
 void main(){

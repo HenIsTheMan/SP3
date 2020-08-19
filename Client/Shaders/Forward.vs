@@ -15,6 +15,10 @@ out myInterface{
 	flat int diffuseTexIndex;
 } vsOut;
 
+out vec4 posFromDirectionalLight;
+out vec4 posFromSpotlight;
+uniform mat4 directionalLightPV;
+uniform mat4 spotlightPV;
 uniform mat4 PV;
 uniform mat4 model;
 
@@ -32,6 +36,8 @@ void main(){
 	vsOut.normal = noNormals ? vec3(0.f) : normalize(mat3(transpose(inverse(instancing ? model * modelMat : model))) * (useBumpMap ? texture(bumpMap, texCoords).rgb : normal));
 	vsOut.diffuseTexIndex = diffuseTexIndex;
 	gl_Position = PV * vec4(vsOut.pos, 1.f);
+	posFromDirectionalLight = directionalLightPV * vec4(vsOut.pos, 1.f);
+	posFromSpotlight = spotlightPV * vec4(vsOut.pos, 1.f);
 
 	if(sky){
 		vsOut.normal = vec3(0.f);
