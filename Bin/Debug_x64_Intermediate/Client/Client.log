@@ -1,8 +1,7 @@
 ﻿  App.cpp
-  Client.cpp
-  Cam.cpp
   Scene.cpp
   Generating Code...
+  LINK : C:\Users\gohbe\Documents\GitHub\SP3\Bin\Debug_x64\Client\Product.exe not found or not built by the last incremental link; performing full link
   Client.vcxproj -> C:\Users\gohbe\Documents\GitHub\SP3\Bin\Debug_x64\Client\Product.exe
   C:\Users\gohbe\Documents\GitHub\SP3\Engine\DLLs\assimp-vc142-mtd.dll
   C:\Users\gohbe\Documents\GitHub\SP3\Engine\DLLs\freetype.dll

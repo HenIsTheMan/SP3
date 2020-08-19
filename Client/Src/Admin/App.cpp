@@ -198,7 +198,9 @@ void App::Render(){
 	//glViewport(0, 0, winWidth, winHeight);
 	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	//glBlitFramebuffer(0, 0, 2048, 2048, 0, 0, winWidth, winHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClearColor(1.f, 0.82f, 0.86f, 1.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	scene.ForwardRender();
 }
 
