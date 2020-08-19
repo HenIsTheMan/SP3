@@ -13,6 +13,7 @@ Scene::Scene() :
 	soundEngine(nullptr),
 	music(nullptr),
 	soundFX(nullptr),
+	entityManager(nullptr),
 	meshes{
 		new Mesh(Mesh::MeshType::Quad, GL_TRIANGLES, {
 			{"Imgs/BoxAlbedo.png", Mesh::TexType::Diffuse, 0},
@@ -102,6 +103,10 @@ Scene::~Scene() {
 	if (soundEngine) {
 		soundEngine->drop();
 	}
+	if (entityManager) {
+		entityManager->Destroy();
+		entityManager = NULL;
+	}
 }
 
 bool Scene::Init() {
@@ -134,6 +139,20 @@ bool Scene::Init() {
 	meshes[(int)MeshType::Terrain]->AddTexMap({ "Imgs/GrassGround.jpg", Mesh::TexType::Diffuse, 0 });
 
 	spotlights.emplace_back(CreateLight(LightType::Spot));
+
+	entityManager = EntityManager::GetObjPtr();
+	entityManager->Init();
+	// Create Particles
+	for (int i = 0; i < 100; ++i)
+	{
+		Entity* particle = new Entity(Entity::EntityType::PARTICLE,  // Type
+			false, // Active
+			false, // Rendered
+			glm::vec3(PseudorandMinMax(-100.f, 100.f), PseudorandMinMax(100.f, 200.f), 0.f),  // Translate
+			glm::vec3(5.f), // Scale
+			glm::vec4(0.f)); // Rotate
+		entityManager->AddEntity(particle);
+	}
 
 	return true;
 }
@@ -192,6 +211,9 @@ void Scene::Update() {
 			resetSoundFXBT = elapsedTime + .5f;
 		}
 	}
+
+	// Can be modified to be used for other entities too
+	entityManager->Update(1); // Number of particles to be rendered every frame
 }
 
 void Scene::GeoRenderPass() {
@@ -426,6 +448,41 @@ void Scene::ForwardRender() {
 
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	///Entities
+	for (size_t i = 0; i < entityManager->getVector().size(); ++i)
+	{
+		Entity* entity = entityManager->getVector()[i];
+		if (entity->active)
+		{
+			switch (entity->type)
+			{
+			//case Entity::EntityType::ENEMY:
+			//	PushModel({
+			//		Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
+			//		//Rotate(glm::vec4(entity->rotate.x, entity->rotate.y, entity->rotate.z, entity->rotate.w)), // Not sure about the x,y,z etc
+			//		Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+			//		});
+			//	// Change the mesh or model accordingly
+			//	meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
+			//	meshes[(int)MeshType::Cube]->Render(forwardSP); // Remeber to change forwardSP etc accordingly
+			//	PopModel();
+			//	break;
+
+			case Entity::EntityType::PARTICLE:
+				PushModel({
+					Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
+					//Rotate(glm::vec4(entity->rotate.x, entity->rotate.y, entity->rotate.z, entity->rotate.w)), // Not sure about the x,y,z etc
+					Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+					});
+				// Change the mesh or model accordingly
+				meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Quad]->Render(forwardSP); // Remeber to change forwardSP etc accordingly
+				PopModel();
+				break;
+			}
+		}
+	}
 
 	///Shapes
 	PushModel({
