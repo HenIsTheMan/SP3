@@ -137,6 +137,7 @@ bool Scene::Init(){
 
 	directionalLights.emplace_back(CreateLight(LightType::Directional));
 	spotlights.emplace_back(CreateLight(LightType::Spot));
+	//spotlights.emplace_back(CreateLight(LightType::Spot));
 
 	return true;
 }
@@ -167,6 +168,14 @@ void Scene::Update(){
 	static_cast<Spotlight*>(spotlights[0])->dir = sCam.CalcFront();
 	static_cast<Spotlight*>(spotlights[0])->cosInnerCutoff = cosf(glm::radians(12.5f));
 	static_cast<Spotlight*>(spotlights[0])->cosOuterCutoff = cosf(glm::radians(17.5f));
+
+	//spotlights[1]->ambient = glm::vec3(.05f);
+	//spotlights[1]->diffuse = glm::vec3(.8f);
+	//spotlights[1]->spec = glm::vec3(1.f);
+	//static_cast<Spotlight*>(spotlights[1])->pos = camPos;
+	//static_cast<Spotlight*>(spotlights[1])->dir = camFront;
+	//static_cast<Spotlight*>(spotlights[1])->cosInnerCutoff = cosf(glm::radians(12.5f));
+	//static_cast<Spotlight*>(spotlights[1])->cosOuterCutoff = cosf(glm::radians(17.5f));
 
 	static_cast<SpriteAni*>(meshes[(int)MeshType::SpriteAni])->Update();
 
@@ -336,7 +345,7 @@ void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID){
 void Scene::DepthRender(const short& projectionType){
 	depthSP.Use();
 	if(projectionType){
-		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), 1.f, 80.f, 5000.f) * sCam.LookAt())[0][0]);
+		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), 1.f, 100.f, 10000.f) * sCam.LookAt())[0][0]);
 	} else{
 		depthSP.SetMat4fv("PV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
 	}
@@ -380,7 +389,7 @@ void Scene::DepthRender(const short& projectionType){
 void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID){
 	forwardSP.Use();
 	forwardSP.SetMat4fv("directionalLightPV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
-	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), 1.f, 80.f, 5000.f) * sCam.LookAt())[0][0]);
+	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), 1.f, 100.f, 10000.f) * sCam.LookAt())[0][0]);
 
 	const int& pAmt = (int)ptLights.size();
 	const int& dAmt = (int)directionalLights.size();
@@ -445,6 +454,8 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		Translate(glm::vec3(0.f, 100.f, -50.f)),
 		Scale(glm::vec3(50.f)),
 	});
+		forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+		forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
 		meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
 		meshes[(int)MeshType::Quad]->Render(forwardSP);
 	PopModel();
