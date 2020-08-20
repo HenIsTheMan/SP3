@@ -1,6 +1,7 @@
 #pragma once
 #include <Engine.h>
 #include "Cam.h"
+#include "../GDev/EntityManager.h"
 
 class Scene final{
 public:
@@ -13,6 +14,8 @@ public:
 	void BlurRender(const uint& brightTexRefID, const bool& horizontal);
 	void DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID);
 	void ForwardRender();
+	bool CheckCollision(const glm::vec3& pos, const glm::vec3& scale);
+
 private:
 	Cam cam;
 	ISoundEngine* soundEngine;
@@ -38,6 +41,8 @@ private:
 	};
 	Model* models[(int)ModelType::Amt];
 
+	EntityManager* entityManager;
+
 	ShaderProg blurSP;
 	ShaderProg forwardSP;
 	ShaderProg geoPassSP;
@@ -55,7 +60,7 @@ private:
 	//std::vector<Mesh::BatchRenderParams> params;
 
 	float elapsedTime;
-	int polyMode;
+	//int polyMode;
 	mutable std::stack<glm::mat4> modelStack;
 	glm::mat4 Translate(const glm::vec3& translate);
 	glm::mat4 Rotate(const glm::vec4& rotate);
