@@ -61,6 +61,9 @@
     <ClInclude Include="Src\Global\GlobalStructs.h">
       <Filter>Src\Global</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Geo\Water.h">
+      <Filter>Src\Geo</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\Vendor\glad.c">
@@ -86,6 +89,9 @@
     </ClCompile>
     <ClCompile Include="Src\Graphics\TextChief.cpp">
       <Filter>Src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Geo\Water.cpp">
+      <Filter>Src\Geo</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

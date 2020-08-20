@@ -49,6 +49,7 @@ uniform PtLight ptLights[maxAmtP];
 uniform DirectionalLight directionalLights[maxAmtD];
 uniform Spotlight spotlights[maxAmtS];
 
+uniform bool water;
 uniform vec3 camPos;
 uniform samplerCube cubemapSampler;
 
@@ -102,19 +103,17 @@ float randFract(vec3 seed, int i){
     return fract(sin(dot(vec4(seed, i), vec4(12.9898f, 78.233f, 45.164f, 94.673f))) * 43758.5453f);
 } 
 
-float NotInShadow(vec3 lightDir, sampler2D shadowMap, vec4 FragPosFromLight){ //Shadows (adds realism to a lit scene, makes spatial relationship between objs easier to observe, gives greater sense of depth to scene and objs in it) are formed with absence of light due to occlusion
-    vec3 projectedFragCoords = FragPosFromLight.xyz / FragPosFromLight.w; //Transform pt in light's visible coord space/clip space (-w, w) to NDC (-1 to 1) thru perspective division (divide gl_Position's xyz coords by its w-component, done automatically after vertex shader step if output clip-space vertex pos thru gl_Position, allows both types of projection to be used)
-    projectedFragCoords = projectedFragCoords * .5f + .5f; //Transform NDC to range of [0, 1] so can use to index/... from depth/... map //Because the depth from the depth map is in the range [0, 1]??
-    if(projectedFragCoords.z > 1.f){ //Acct for oversampling of depth/... map (...) by accting for currDepth > 1.f when projectedFragCoords.z > 1.f if light-space projected frag is outside far plane of light's... (in dark region at the far end [in the dir of shadows] of light's...)
+float NotInShadow(vec3 lightDir, sampler2D shadowMap, vec4 FragPosFromLight){
+    vec3 projectedFragCoords = FragPosFromLight.xyz / FragPosFromLight.w;
+    projectedFragCoords = projectedFragCoords * .5f + .5f;
+    if(projectedFragCoords.z > 1.f){
         return 1.f;
-    } //All frags...
-    //float closestDepth = texture(shadowMap, projectedFragCoords.xy).r; //Use pt in light's... to index depth/... map to get closest visible depth from light's POV //Use r as colours of shadowMap range from red to black
-    float currDepth = projectedFragCoords.z; //Curr depth of frag from light's POV
-    float shadowBias = max(.05f * (1.f - dot(Normal, -lightDir)), .005f); //Shadow bias (offset surface depth [currDepth] or depth/... map depth [closestDepth] such that frags are not considered below the surface) to solve shadow acne (shadow mapping artefact) //Max of .05f and min of .005f //Diff for each scene so increment until shadow acne is removed //Based on angle between light dir and surface normal
+    }
 
-    ////PCF (%-closer filtering, reduce jagged and blocky edges of shadows due to multiple frags sampling depth from same texel of the depth/... map with the depth/... map having a fixed resolution, sample depth/... map multiple times with diff texCoords every time then combine and avg all "NotInShadow" results to produce softer shadows)
-    ///Sample surrounding texels of depth/... map then... (use more depth samples and/or vary texelSize to increase quality of soft shadows)
-    ///Also can reduce... by increasing depth/... map resolution or fitting the light's visible frustum as closely to the scene as possible
+    float currDepth = projectedFragCoords.z;
+    float shadowBias = max(.05f * (1.f - dot(Normal, -lightDir)), .005f);
+
+    ///PCF
     float notInShadowSum = 0.f;
     vec2 texelSize = 1.f / textureSize(shadowMap, 0); //Reciprocal of size of tex at mipmap lvl 0
     for(float x = -1.f; x <= 1.f; ++x){

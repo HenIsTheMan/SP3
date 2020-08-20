@@ -32,6 +32,7 @@ Scene::Scene():
 		}),
 		new SpriteAni(4, 8),
 		new Terrain("Imgs/hMap.raw", 8.f, 8.f),
+		new Water(24.f, 2.f, 2.f, .5f),
 	},
 	models{
 		new Model("ObjsAndMtls/Skydome.obj", {
@@ -134,6 +135,7 @@ bool Scene::Init(){
 	static_cast<SpriteAni*>(meshes[(int)MeshType::SpriteAni])->Play("FireSpriteAni", -1, .5f);
 
 	meshes[(int)MeshType::Terrain]->AddTexMap({"Imgs/GrassGround.jpg", Mesh::TexType::Diffuse, 0});
+	meshes[(int)MeshType::Water]->AddTexMap({"Imgs/Water.jpg", Mesh::TexType::Diffuse, 0});
 
 	directionalLights.emplace_back(CreateLight(LightType::Directional));
 	spotlights.emplace_back(CreateLight(LightType::Spot));
@@ -545,18 +547,35 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 
 	///SpriteAni
 	PushModel({
-		Translate(glm::vec3(0.f, 50.f, 0.f)),
+		Translate(glm::vec3(0.f, 300.f, 0.f)),
 		Scale(glm::vec3(20.f, 40.f, 20.f)),
 	});
 		forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
 		forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
 		forwardSP.Set1i("noNormals", 1);
 		forwardSP.Set1i("useCustomColour", 1);
-		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f), 1.f));
+		forwardSP.Set4fv("customColour", glm::vec4(1.f));
 		meshes[(int)MeshType::SpriteAni]->SetModel(GetTopModel());
 		meshes[(int)MeshType::SpriteAni]->Render(forwardSP);
 		forwardSP.Set1i("useCustomColour", 0);
 		forwardSP.Set1i("noNormals", 0);
+	PopModel();
+
+	PushModel({
+		Translate(glm::vec3(0.f, 40.f, 0.f)),
+		Rotate(glm::vec4(1.f, 0.f, 0.f, -90.f)),
+		Scale(glm::vec3(250.f)),
+	});
+		forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+		forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
+		forwardSP.Set1i("water", 1);
+		forwardSP.Set1f("elapsedTime", elapsedTime);
+		forwardSP.Set1i("useCustomColour", 1);
+		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f), .5f));
+		meshes[(int)MeshType::Water]->SetModel(GetTopModel());
+		meshes[(int)MeshType::Water]->Render(forwardSP);
+		forwardSP.Set1i("useCustomColour", 0);
+		forwardSP.Set1i("water", 0);
 	PopModel();
 
 	textChief.RenderText(textSP, {

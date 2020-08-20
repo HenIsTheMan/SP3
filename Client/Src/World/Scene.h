@@ -30,6 +30,7 @@ private:
 		Cylinder,
 		SpriteAni,
 		Terrain,
+		Water,
 		Amt
 	};
 	Mesh* meshes[(int)MeshType::Amt];

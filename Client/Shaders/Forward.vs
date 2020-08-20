@@ -25,6 +25,9 @@ uniform mat4 model;
 uniform bool useBumpMap;
 uniform sampler2D bumpMap;
 
+uniform bool water;
+uniform float elapsedTime;
+
 uniform bool instancing;
 uniform bool noNormals;
 uniform bool sky;
@@ -42,5 +45,10 @@ void main(){
 	if(sky){
 		vsOut.normal = vec3(0.f);
 		gl_Position = gl_Position.xyww; //Resulting NDC after perspective division will have a z value (gl_FragCoord.z) equal to 1.f
+	}
+	if(water){
+		vsOut.pos.y += sin(vsOut.pos.x + elapsedTime) * cos(vsOut.pos.z + elapsedTime) * 5.f;
+		gl_Position = PV * vec4(vsOut.pos, 1.f);
+		vsOut.texCoords.x += elapsedTime / 100.f;
 	}
 }
