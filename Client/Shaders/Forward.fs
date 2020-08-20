@@ -82,7 +82,7 @@ uniform sampler2D sDepthTexSampler;
 float NotInShadow(vec3 lightDir, sampler2D shadowMap, vec4 FragPosFromLight){ //Shadows (adds realism to a lit scene, makes spatial relationship between objs easier to observe, gives greater sense of depth to scene and objs in it) are formed with absence of light due to occlusion
     vec3 projectedFragCoords = FragPosFromLight.xyz / FragPosFromLight.w; //Transform pt in light's visible coord space/clip space (-w, w) to NDC (-1 to 1) thru perspective division (divide gl_Position's xyz coords by its w-component, done automatically after vertex shader step if output clip-space vertex pos thru gl_Position, allows both types of projection to be used)
     projectedFragCoords = projectedFragCoords * .5f + .5f; //Transform NDC to range of [0, 1] so can use to index/... from depth/... map //Because the depth from the depth map is in the range [0, 1]??
-    if(projectedFragCoords.z > 1.f){ //Reduce oversampling of depth/... map (...) by accting for currDepth > 1.f when projectedFragCoords.z > 1.f if light-space projected frag is outside far plane of light's... (in dark region at the far end [in the dir of shadows] of light's...)
+    if(projectedFragCoords.z > 1.f){ //Acct for oversampling of depth/... map (...) by accting for currDepth > 1.f when projectedFragCoords.z > 1.f if light-space projected frag is outside far plane of light's... (in dark region at the far end [in the dir of shadows] of light's...)
         return 1.f;
     } //All frags...
     //float closestDepth = texture(shadowMap, projectedFragCoords.xy).r; //Use pt in light's... to index depth/... map to get closest visible depth from light's POV //Use r as colours of shadowMap range from red to black

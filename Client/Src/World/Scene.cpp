@@ -345,7 +345,7 @@ void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID){
 void Scene::DepthRender(const short& projectionType){
 	depthSP.Use();
 	if(projectionType){
-		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), 1.f, 100.f, 10000.f) * sCam.LookAt())[0][0]);
+		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), 1.f, 120.f, 5000.f) * sCam.LookAt())[0][0]);
 	} else{
 		depthSP.SetMat4fv("PV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
 	}
@@ -358,6 +358,7 @@ void Scene::DepthRender(const short& projectionType){
 		meshes[(int)MeshType::Quad]->Render(depthSP, false);
 	PopModel();
 
+	glCullFace(GL_FRONT);
 	PushModel({
 		Scale(glm::vec3(500.f, 100.f, 500.f)),
 	});
@@ -384,12 +385,13 @@ void Scene::DepthRender(const short& projectionType){
 			meshes[(int)MeshType::Cube]->Render(depthSP, false);
 		PopModel();
 	PopModel();
+	glCullFace(GL_BACK);
 }
 
 void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID){
 	forwardSP.Use();
 	forwardSP.SetMat4fv("directionalLightPV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
-	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), 1.f, 100.f, 10000.f) * sCam.LookAt())[0][0]);
+	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), 1.f, 120.f, 5000.f) * sCam.LookAt())[0][0]);
 
 	const int& pAmt = (int)ptLights.size();
 	const int& dAmt = (int)directionalLights.size();
