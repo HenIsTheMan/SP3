@@ -134,7 +134,7 @@ float NotInShadow(vec3 lightDir, sampler2D shadowMap, vec4 FragPosFromLight){
     for(int i = 0; i < 16; ++i){ //Produces noise??
         int index = int(16.f * randFract(gl_FragCoord.xyz, i)) % 16; 
         if(texture2D(shadowMap, projectedFragCoords.xy + poissonDisk[index] / 9999.f).x < currDepth - shadowBias){
-            result -= .07f * (gl_FragCoord.x * gl_FragCoord.x + gl_FragCoord.z * gl_FragCoord.z); //??
+            result -= .07f * (gl_FragCoord.x * gl_FragCoord.x + gl_FragCoord.z * gl_FragCoord.z);
         }
     }
     return max(result, .37f);
@@ -203,10 +203,10 @@ void main(){
         }
 
         if(Reflection != vec3(0.f)){
-            const float ratio = 1.f / 1.52f; //n of air / n of glass (ratio between refractive indices of both materials)
+            //const float ratio = 1.f / 1.52f; //n of air / n of glass (ratio between refractive indices of both materials)
             vec3 incidentRay = normalize(WorldSpacePos - camPos);
             vec3 reflectedRay = reflect(incidentRay, Normal);
-            vec3 refractedRay = refract(incidentRay, Normal, ratio);
+            //vec3 refractedRay = refract(incidentRay, Normal, ratio);
             if(water){
                 fragColour.rgb += texture(planarReflectionTex, fsIn.texCoords).rgb * Reflection;
             } else{

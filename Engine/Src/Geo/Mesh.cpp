@@ -450,7 +450,7 @@ void Mesh::Render(ShaderProg& SP, const bool& autoConfig){
 		SP.Set1i("useDiffuseMap", 0);
 		SP.Set1i("useSpecMap", 0);
 		SP.Set1i("useEmissionMap", 0);
-		//SP.Set1i("useReflectionMap", 0);
+		SP.Set1i("useReflectionMap", 0);
 		SP.Set1i("useBumpMap", 0);
 
 		short diffuseCount = 0;

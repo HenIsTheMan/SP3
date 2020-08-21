@@ -13,6 +13,9 @@
     <Filter Include="Src\Admin">
       <UniqueIdentifier>{f538d115-7fd3-4fa1-96ec-7883b734805d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Game">
+      <UniqueIdentifier>{7a747a58-fef3-42bc-a089-86ddc407c813}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\World\Cam.cpp">
@@ -27,8 +30,15 @@
     <ClCompile Include="Src\Admin\App.cpp">
       <Filter>Src\Admin</Filter>
     </ClCompile>
-    <ClCompile Include="Src\GDev\Entity.cpp" />
-    <ClCompile Include="Src\GDev\EntityManager.cpp" />
+    <ClCompile Include="Src\Game\GO.cpp">
+      <Filter>Src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Game\GOManager.cpp">
+      <Filter>Src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Game\Quad.cpp">
+      <Filter>Src\Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\World\Cam.h">
@@ -40,8 +50,15 @@
     <ClInclude Include="Src\Admin\App.h">
       <Filter>Src\Admin</Filter>
     </ClInclude>
-    <ClInclude Include="Src\GDev\Entity.h" />
-    <ClInclude Include="Src\GDev\EntityManager.h" />
+    <ClInclude Include="Src\Game\GO.h">
+      <Filter>Src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\GOManager.h">
+      <Filter>Src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\Quad.h">
+      <Filter>Src\Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Screen.fs">

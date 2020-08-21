@@ -1,7 +1,6 @@
 #pragma once
 #include <Engine.h>
 #include "Cam.h"
-#include "../GDev/EntityManager.h"
 
 class Scene final{
 public:
@@ -15,12 +14,14 @@ public:
 	void DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID);
 	void DepthRender(const short& projectionType);
 	void PlanarReflectionRender();
-	void ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID);
+	void CubemapReflectionRender(const short& cubemapFace);
+	void ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID, const uint& cubemapReflectionTexID);
 private:
 	Cam cam;
 	Cam dCam;
 	Cam sCam;
 	Cam waterCam;
+	Cam enCam;
 	ISoundEngine* soundEngine;
 	ISound* music;
 	ISoundEffectControl* soundFX;
@@ -44,8 +45,6 @@ private:
 		Amt
 	};
 	Model* models[(int)ModelType::Amt];
-
-	EntityManager* entityManager;
 
 	ShaderProg blurSP;
 	ShaderProg depthSP;
