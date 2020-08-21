@@ -29,6 +29,10 @@
     </ClCompile>
     <ClCompile Include="Src\GDev\Entity.cpp" />
     <ClCompile Include="Src\GDev\EntityManager.cpp" />
+    <ClCompile Include="Src\GDev\Weapon.cpp" />
+    <ClCompile Include="Src\GDev\Pistol.cpp" />
+    <ClCompile Include="Src\GDev\AssaultRifle.cpp" />
+    <ClCompile Include="Src\GDev\SniperRifle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\World\Cam.h">
@@ -42,6 +46,10 @@
     </ClInclude>
     <ClInclude Include="Src\GDev\Entity.h" />
     <ClInclude Include="Src\GDev\EntityManager.h" />
+    <ClInclude Include="Src\GDev\Weapon.h" />
+    <ClInclude Include="Src\GDev\Pistol.h" />
+    <ClInclude Include="Src\GDev\AssaultRifle.h" />
+    <ClInclude Include="Src\GDev\SniperRifle.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Screen.fs">

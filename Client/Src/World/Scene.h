@@ -2,6 +2,7 @@
 #include <Engine.h>
 #include "Cam.h"
 #include "../GDev/EntityManager.h"
+#include "../GDev/Weapon.h"
 
 class Scene final{
 public:
@@ -40,6 +41,7 @@ private:
 	Model* models[(int)ModelType::Amt];
 
 	EntityManager* entityManager;
+	Weapon* weapon;
 
 	ShaderProg blurSP;
 	ShaderProg forwardSP;
@@ -58,6 +60,10 @@ private:
 	//std::vector<Mesh::BatchRenderParams> params;
 
 	float elapsedTime;
+	float playerCurrHealth;
+	float playerMaxHealth;
+	float playerCurrLives;
+	float playerMaxLives;
 	//int polyMode;
 	mutable std::stack<glm::mat4> modelStack;
 	glm::mat4 Translate(const glm::vec3& translate);

@@ -28,10 +28,9 @@ void EntityManager::FetchParticle(int numPerFrame)
 	for (size_t i = 0; i < entityList.size(); ++i)
 	{
 		Entity* particle = entityList[i];
-		if (particle->type == Entity::EntityType::PARTICLE && !particle->active && !particle->rendered) // Check for entities that are of PARTICLE type and not rendered yet
+		if (particle->type == Entity::EntityType::PARTICLE && !particle->active) // Check for entities that are of PARTICLE type and not rendered yet
 		{
 			particle->active = true;
-			particle->rendered = true;
 			count++;
 		}
 		if (count == numPerFrame) // Number of particles per frame to be rendered is met
@@ -39,17 +38,7 @@ void EntityManager::FetchParticle(int numPerFrame)
 	}
 }
 
-void EntityManager::UpdateParticles()
-{
-	// Do the movement/lifetime for the particles here
-}
-
-void EntityManager::UpdateEnemies()
-{
-	// Do the movement for the enemies here
-}
-
-void EntityManager::Update(int numPerFrame)
+void EntityManager::Update(int numPerFrame, glm::vec3 storeCamFront)
 {
 	FetchParticle(numPerFrame); // Every frame, a certain number of particles will be rendered
 	// Put any function here to match the enemy spawning 
@@ -60,17 +49,20 @@ void EntityManager::Update(int numPerFrame)
 		switch (entity->type)
 		{
 		case Entity::EntityType::PARTICLE:
-			UpdateParticles();
+			// Do the movement/lifetime for the particles here
 			break;
 
 		case Entity::EntityType::ENEMY:
-			UpdateEnemies();
+			// Do the movement for the enemies here
 			break;
 
+		case Entity::EntityType::BULLET:
+			entity->active = true;
+			entity->pos = entity->pos + entity->storeCamFront * 0.5f;
+			break;
 			// Add others if needed
 		}
 	}
-
 }
 
 //void EntityManager::Render(void)
