@@ -27,6 +27,8 @@
     <ClCompile Include="Src\Admin\App.cpp">
       <Filter>Src\Admin</Filter>
     </ClCompile>
+    <ClCompile Include="Src\GDev\Entity.cpp" />
+    <ClCompile Include="Src\GDev\EntityManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\World\Cam.h">
@@ -38,6 +40,8 @@
     <ClInclude Include="Src\Admin\App.h">
       <Filter>Src\Admin</Filter>
     </ClInclude>
+    <ClInclude Include="Src\GDev\Entity.h" />
+    <ClInclude Include="Src\GDev\EntityManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Screen.fs">

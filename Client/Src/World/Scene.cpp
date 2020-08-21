@@ -12,7 +12,8 @@ Scene::Scene():
 	cam(glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 150.f),
 	dCam(glm::vec3(0.f, 150.f, 0.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
 	sCam(glm::vec3(0.f, 100.f, 200.f), glm::vec3(0.f, 100.f, 0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 0.f),
-	waterCam(glm::vec3(-20.f, -20.f, -20.f), glm::vec3(-20.f, 0.f, -20.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f), 
+	waterCam(glm::vec3(-15.f, -20.f, -20.f), glm::vec3(-15.f, 0.f, -20.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
+	enCam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 0.f, 0.f),
 	soundEngine(nullptr),
 	music(nullptr),
 	soundFX(nullptr),
@@ -24,6 +25,7 @@ Scene::Scene():
 		}),
 		new Mesh(Mesh::MeshType::Cube, GL_TRIANGLES, {
 			{"Imgs/BoxAlbedo.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/Grey.png", Mesh::TexType::Reflection, 0},
 		}),
 		new Mesh(Mesh::MeshType::Sphere, GL_TRIANGLE_STRIP, {
 			{"Imgs/Skydome.hdr", Mesh::TexType::Diffuse, 0},
@@ -403,7 +405,6 @@ void Scene::PlanarReflectionRender(){
 
 	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), 1.f, .1f, 9999.f) * glm::mat4(glm::mat3(waterCam.LookAt())))[0][0]);
 
-	///Sky
 	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
 	glCullFace(GL_FRONT);
 	forwardSP.Set1i("sky", 1);
@@ -454,7 +455,78 @@ void Scene::PlanarReflectionRender(){
 	PopModel();
 }
 
-void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID){
+void Scene::CubemapReflectionRender(const short& cubemapFace){
+	forwardSP.Use();
+	forwardSP.Set1f("shininess", 32.f); //More light scattering if lower
+	forwardSP.Set3fv("globalAmbient", Light::globalAmbient);
+	forwardSP.Set3fv("camPos", cam.GetPos());
+	forwardSP.Set1i("pAmt", 0);
+	forwardSP.Set1i("dAmt", 0);
+	forwardSP.Set1i("sAmt", 0);
+
+	enCam.SetPos(glm::vec3(60.f, 100.f, 50.f));
+	switch(cubemapFace){
+		case 1:
+			enCam.SetTarget(enCam.GetPos() + glm::vec3(1.f, 0.f, 0.f));
+			enCam.SetUp(glm::vec3(0.f, -1.f, 0.f));
+			break;
+		case 2:
+			enCam.SetTarget(enCam.GetPos() + glm::vec3(-1.f, 0.f, 0.f));
+			enCam.SetUp(glm::vec3(0.f, -1.f, 0.f));
+			break;
+		case 3:
+			enCam.SetTarget(enCam.GetPos() + glm::vec3(0.f, 1.f, 0.f));
+			enCam.SetUp(glm::vec3(0.f, 0.f, 1.f));
+			break;
+		case 4:
+			enCam.SetTarget(enCam.GetPos() + glm::vec3(0.f, -1.f, 0.f));
+			enCam.SetUp(glm::vec3(0.f, 0.f, 1.f)); 
+			break;
+		case 5:
+			enCam.SetTarget(enCam.GetPos() + glm::vec3(0.f, 0.f, 1.f));
+			enCam.SetUp(glm::vec3(0.f, -1.f, 0.f));
+			break;
+		case 6:
+			enCam.SetTarget(enCam.GetPos() + glm::vec3(0.f, 0.f, -1.f));
+			enCam.SetUp(glm::vec3(0.f, -1.f, 0.f));
+			break;
+	}
+
+	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), 1.f, .1f, 9999.f) * glm::mat4(glm::mat3(enCam.LookAt())))[0][0]);
+
+	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
+	glCullFace(GL_FRONT);
+	forwardSP.Set1i("sky", 1);
+	PushModel({
+		//Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
+	});
+		meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+		meshes[(int)MeshType::Sphere]->Render(forwardSP);
+	PopModel();
+	forwardSP.Set1i("sky", 0);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LESS);
+
+	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), 1.f, .1f, 9999.f) * enCam.LookAt())[0][0]);
+
+	PushModel({
+		Translate(glm::vec3(0.f, 100.f, 0.f)),
+		Scale(glm::vec3(10.f)),
+	});
+		PushModel({
+			Translate(glm::vec3(6.f, 0.f, 0.f)),
+		});
+			PushModel({
+				Translate(glm::vec3(5.f, 0.f, 5.f)),
+			});
+				meshes[(int)MeshType::Cylinder]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Cylinder]->Render(forwardSP);
+			PopModel();
+		PopModel();
+	PopModel();
+}
+
+void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID, const uint& cubemapReflectionTexID){
 	forwardSP.Use();
 	forwardSP.SetMat4fv("directionalLightPV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
 	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), 1.f, 120.f, 5000.f) * sCam.LookAt())[0][0]);
@@ -559,14 +631,22 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			forwardSP.Set1i("noNormals", 0);
 			PushModel({
 				Translate(glm::vec3(0.f, 0.f, 5.f)),
+				Scale(glm::vec3(3.f)),
 			});
 				forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
 				forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
-				meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
-				meshes[(int)MeshType::Sphere]->Render(forwardSP);
+				forwardSP.UseTex(cubemapReflectionTexID, "cubemapSampler", GL_TEXTURE_CUBE_MAP);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+				forwardSP.Set1i("customDiffuseTexIndex", -1);
+				forwardSP.Set1i("useCustomColour", 1);
+				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f), 1.f));
+				meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Cube]->Render(forwardSP);
+				forwardSP.Set1i("useCustomColour", 0);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
 			PopModel();
 			PushModel({
-				Translate(glm::vec3(0.f, 0.f, -5.f)),
+				Translate(glm::vec3(5.f, 0.f, 5.f)),
 			});
 				forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
 				forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
@@ -626,7 +706,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 
 	///Water
 	PushModel({
-		Translate(glm::vec3(-20.f, 40.f, -20.f)),
+		Translate(glm::vec3(-15.f, 40.f, -20.f)),
 		Rotate(glm::vec4(1.f, 0.f, 0.f, -90.f)),
 		Scale(glm::vec3(180.f)),
 	});

@@ -1,6 +1,7 @@
 #pragma once
 #include <Engine.h>
 #include "Cam.h"
+#include "../GDev/EntityManager.h"
 
 class Scene final{
 public:
@@ -43,6 +44,8 @@ private:
 		Amt
 	};
 	Model* models[(int)ModelType::Amt];
+
+	EntityManager* entityManager;
 
 	ShaderProg blurSP;
 	ShaderProg depthSP;
