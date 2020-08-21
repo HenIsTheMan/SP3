@@ -12,7 +12,7 @@ extern int winHeight;
 const GLFWvidmode* App::mode = nullptr;
 GLFWwindow* App::win = nullptr;
 
-//#define RENDER_DEPTH_MAP
+//#define RENDER_OTHER
 
 App::App():
 	fullscreen(false),
@@ -121,6 +121,14 @@ bool App::Init(){
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texRefIDs[(int)Tex::DepthS], 0);
 		glDrawBuffer(GL_NONE);
 		glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::PlanarReflection]);
+		glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)Tex::PlanarReflection]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texRefIDs[(int)Tex::PlanarReflection], 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	(void)InitOptions();
@@ -196,17 +204,22 @@ void App::Render(){
 	glClear(GL_DEPTH_BUFFER_BIT);
 	scene.DepthRender(1);
 
-	#ifdef RENDER_DEPTH_MAP
+	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::PlanarReflection]);
+	glClearColor(.5f, 0.82f, 0.86f, 1.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	scene.PlanarReflectionRender();
+
+	#ifdef RENDER_OTHER
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(1.f, 0.82f, 0.86f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	scene.DefaultRender(texRefIDs[(int)Tex::DepthS], texRefIDs[(int)Tex::DepthS]);
+	scene.DefaultRender(texRefIDs[(int)Tex::PlanarReflection], texRefIDs[(int)Tex::PlanarReflection]);
 	#else
 	glViewport(0, 0, winWidth, winHeight);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(1.f, 0.82f, 0.86f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	scene.ForwardRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthS]);
+	scene.ForwardRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthS], texRefIDs[(int)Tex::PlanarReflection]);
 	#endif
 }
 

@@ -12,6 +12,7 @@ Scene::Scene():
 	cam(glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 150.f),
 	dCam(glm::vec3(0.f, 150.f, 0.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
 	sCam(glm::vec3(0.f, 100.f, 200.f), glm::vec3(0.f, 100.f, 0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 0.f),
+	waterCam(glm::vec3(-20.f, -20.f, -20.f), glm::vec3(-20.f, 0.f, -20.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f), 
 	soundEngine(nullptr),
 	music(nullptr),
 	soundFX(nullptr),
@@ -136,6 +137,7 @@ bool Scene::Init(){
 
 	meshes[(int)MeshType::Terrain]->AddTexMap({"Imgs/GrassGround.jpg", Mesh::TexType::Diffuse, 0});
 	meshes[(int)MeshType::Water]->AddTexMap({"Imgs/Water.jpg", Mesh::TexType::Diffuse, 0});
+	meshes[(int)MeshType::Water]->AddTexMap({"Imgs/Grey.png", Mesh::TexType::Reflection, 0});
 
 	directionalLights.emplace_back(CreateLight(LightType::Directional));
 	spotlights.emplace_back(CreateLight(LightType::Spot));
@@ -390,7 +392,69 @@ void Scene::DepthRender(const short& projectionType){
 	glCullFace(GL_BACK);
 }
 
-void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID){
+void Scene::PlanarReflectionRender(){
+	forwardSP.Use();
+	forwardSP.Set1f("shininess", 32.f); //More light scattering if lower
+	forwardSP.Set3fv("globalAmbient", Light::globalAmbient);
+	forwardSP.Set3fv("camPos", cam.GetPos());
+	forwardSP.Set1i("pAmt", 0);
+	forwardSP.Set1i("dAmt", 0);
+	forwardSP.Set1i("sAmt", 0);
+
+	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), 1.f, .1f, 9999.f) * glm::mat4(glm::mat3(waterCam.LookAt())))[0][0]);
+
+	///Sky
+	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
+	glCullFace(GL_FRONT);
+	forwardSP.Set1i("sky", 1);
+	PushModel({
+		Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
+	});
+		meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+		meshes[(int)MeshType::Sphere]->Render(forwardSP);
+	PopModel();
+	forwardSP.Set1i("sky", 0);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LESS);
+
+	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), 1.f, .1f, 9999.f) * waterCam.LookAt())[0][0]);
+
+	PushModel({
+		Translate(glm::vec3(0.f, 100.f, -50.f)),
+		Scale(glm::vec3(50.f)),
+	});
+		meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+		meshes[(int)MeshType::Quad]->Render(forwardSP);
+	PopModel();
+
+	PushModel({
+		Translate(glm::vec3(0.f, 100.f, 0.f)),
+		Scale(glm::vec3(10.f)),
+	});
+		meshes[(int)MeshType::Cylinder]->SetModel(GetTopModel());
+		meshes[(int)MeshType::Cylinder]->Render(forwardSP);
+		PushModel({
+			Translate(glm::vec3(-3.f, 0.f, 0.f)),
+		});
+			forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+			forwardSP.Set1i("customDiffuseTexIndex", -1);
+			meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+			meshes[(int)MeshType::Sphere]->Render(forwardSP);
+			forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+		PopModel();
+		PushModel({
+			Translate(glm::vec3(3.f, 0.f, 0.f)),
+		});
+			forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+			forwardSP.Set1i("customDiffuseTexIndex", -1);
+			meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
+			meshes[(int)MeshType::Cube]->Render(forwardSP);
+			forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+		PopModel();
+	PopModel();
+}
+
+void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID){
 	forwardSP.Use();
 	forwardSP.SetMat4fv("directionalLightPV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
 	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), 1.f, 120.f, 5000.f) * sCam.LookAt())[0][0]);
@@ -474,6 +538,8 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		meshes[(int)MeshType::Terrain]->Render(forwardSP);
 	PopModel();
 
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	///Shapes
 	PushModel({
 		Translate(glm::vec3(0.f, 100.f, 0.f)),
@@ -510,9 +576,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		PopModel();
 	PopModel();
 
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	///Shapes
 	PushModel({
 		Translate(glm::vec3(0.f, 100.f, 0.f)),
 		Scale(glm::vec3(10.f)),
@@ -561,17 +624,19 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		forwardSP.Set1i("noNormals", 0);
 	PopModel();
 
+	///Water
 	PushModel({
-		Translate(glm::vec3(0.f, 40.f, 0.f)),
+		Translate(glm::vec3(-20.f, 40.f, -20.f)),
 		Rotate(glm::vec4(1.f, 0.f, 0.f, -90.f)),
-		Scale(glm::vec3(250.f)),
+		Scale(glm::vec3(180.f)),
 	});
 		forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
 		forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
+		forwardSP.UseTex(planarReflectionTexID, "planarReflectionTex");
 		forwardSP.Set1i("water", 1);
 		forwardSP.Set1f("elapsedTime", elapsedTime);
 		forwardSP.Set1i("useCustomColour", 1);
-		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f), .5f));
+		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(.7f), .5f));
 		meshes[(int)MeshType::Water]->SetModel(GetTopModel());
 		meshes[(int)MeshType::Water]->Render(forwardSP);
 		forwardSP.Set1i("useCustomColour", 0);

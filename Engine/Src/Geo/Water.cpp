@@ -35,7 +35,7 @@ void Water::Create(){
 				vertices->push_back({
 					glm::vec3(float(x) / quadSize - .5f, float(y) / quadSize - .5f, 0.f),
 					glm::vec4(.7f, .4f, .1f, 1.f),
-					glm::vec2(float(x) / quadSize * hTile, 1.f - float(y) / quadSize * vTile),
+					glm::vec2(float(x) / quadSize, 1.f - float(y) / quadSize),
 					glm::vec3(0.f, 0.f, 1.f),
 					glm::vec3(0.f), //??
 					0,

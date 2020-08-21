@@ -16,6 +16,7 @@ public:
 		PingPong1,
 		DepthD,
 		DepthS,
+		PlanarReflection,
 		Amt
 	};
 	enum struct Tex{
@@ -30,6 +31,7 @@ public:
 		PingPong1,
 		DepthD,
 		DepthS,
+		PlanarReflection,
 		Amt
 	};
 

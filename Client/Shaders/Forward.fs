@@ -50,8 +50,9 @@ uniform DirectionalLight directionalLights[maxAmtD];
 uniform Spotlight spotlights[maxAmtS];
 
 uniform bool water;
-uniform vec3 camPos;
+uniform sampler2D planarReflectionTex;
 uniform samplerCube cubemapSampler;
+uniform vec3 camPos;
 
 ///Can be set by client
 uniform bool useCustomDiffuseTexIndex;
@@ -206,7 +207,11 @@ void main(){
             vec3 incidentRay = normalize(WorldSpacePos - camPos);
             vec3 reflectedRay = reflect(incidentRay, Normal);
             vec3 refractedRay = refract(incidentRay, Normal, ratio);
-            fragColour.rgb += texture(cubemapSampler, reflectedRay).rgb * Reflection;
+            if(water){
+                fragColour.rgb += texture(planarReflectionTex, fsIn.texCoords).rgb * Reflection;
+            } else{
+                fragColour.rgb += texture(cubemapSampler, reflectedRay).rgb * Reflection;
+            }
         }
     }
 }

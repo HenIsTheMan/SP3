@@ -49,6 +49,6 @@ void main(){
 	if(water){
 		vsOut.pos.y += sin(vsOut.pos.x + elapsedTime) * cos(vsOut.pos.z + elapsedTime) * 5.f;
 		gl_Position = PV * vec4(vsOut.pos, 1.f);
-		vsOut.texCoords.x += elapsedTime / 100.f;
+		//vsOut.texCoords.x += elapsedTime / 100.f;
 	}
 }

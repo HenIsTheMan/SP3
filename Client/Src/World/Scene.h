@@ -13,11 +13,13 @@ public:
 	void BlurRender(const uint& brightTexRefID, const bool& horizontal);
 	void DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID);
 	void DepthRender(const short& projectionType);
-	void ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID);
+	void PlanarReflectionRender();
+	void ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID);
 private:
 	Cam cam;
 	Cam dCam;
 	Cam sCam;
+	Cam waterCam;
 	ISoundEngine* soundEngine;
 	ISound* music;
 	ISoundEffectControl* soundFX;
