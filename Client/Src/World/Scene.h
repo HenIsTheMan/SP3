@@ -2,6 +2,7 @@
 #include <Engine.h>
 #include "Cam.h"
 #include "../GDev/EntityManager.h"
+#include "../GDev/Weapon.h"
 
 class Scene final{
 public:
@@ -12,12 +13,14 @@ public:
 	void GeoRenderPass();
 	void LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID);
 	void BlurRender(const uint& brightTexRefID, const bool& horizontal);
-	void DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID);
+	void DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, const glm::vec3& translate, const glm::vec3& scale);
 	void ForwardRender();
+	void MinimapRender();
 	bool CheckCollision(const glm::vec3& pos, const glm::vec3& scale);
 
 private:
 	Cam cam;
+	Cam minimapcam;
 	ISoundEngine* soundEngine;
 	ISound* music;
 	ISoundEffectControl* soundFX;
@@ -42,6 +45,7 @@ private:
 	Model* models[(int)ModelType::Amt];
 
 	EntityManager* entityManager;
+	Weapon* weapon;
 
 	ShaderProg blurSP;
 	ShaderProg forwardSP;
@@ -57,9 +61,15 @@ private:
 
 	glm::mat4 view;
 	glm::mat4 projection;
+	glm::mat4 minimapview;
+	glm::mat4 minimapproj;
 	//std::vector<Mesh::BatchRenderParams> params;
 
 	float elapsedTime;
+	float playerCurrHealth;
+	float playerMaxHealth;
+	float playerCurrLives;
+	float playerMaxLives;
 	//int polyMode;
 	mutable std::stack<glm::mat4> modelStack;
 	glm::mat4 Translate(const glm::vec3& translate);

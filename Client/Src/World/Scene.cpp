@@ -1,5 +1,8 @@
 #include "Scene.h"
 #include "Vendor/stb_image.h"
+#include "../GDev/Pistol.h"
+#include "../GDev/AssaultRifle.h"
+#include "../GDev/SniperRifle.h"
 
 extern float angularFOV;
 extern float dt;
@@ -10,10 +13,12 @@ glm::vec3 Light::globalAmbient = glm::vec3(.2f);
 
 Scene::Scene() :
 	cam(glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 150.f),
+	minimapcam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 0.f, 0.f),
 	soundEngine(nullptr),
 	music(nullptr),
 	soundFX(nullptr),
 	entityManager(nullptr),
+	weapon(nullptr),
 	meshes{
 		new Mesh(Mesh::MeshType::Quad, GL_TRIANGLES, {
 			{"Imgs/BoxAlbedo.png", Mesh::TexType::Diffuse, 0},
@@ -58,7 +63,11 @@ view(glm::mat4(1.f)),
 projection(glm::mat4(1.f)),
 elapsedTime(0.f),
 //polyMode(0),
-modelStack()
+modelStack(),
+playerCurrHealth(100.f),
+playerMaxHealth(100.f),
+playerCurrLives(5.f),
+playerMaxLives(5.f)
 {
 }
 
@@ -105,7 +114,10 @@ Scene::~Scene() {
 	}
 	if (entityManager) {
 		entityManager->Destroy();
-		entityManager = NULL;
+		entityManager = nullptr;
+	}
+	if (weapon) {
+		weapon = NULL;
 	}
 }
 
@@ -142,17 +154,77 @@ bool Scene::Init() {
 
 	entityManager = EntityManager::GetObjPtr();
 	entityManager->Init();
+	// Create Player
+	Entity* player = new Entity(Entity::EntityType::PLAYER,
+		true, // Always active
+		cam.GetPos(), // Need to check first
+		glm::vec3(5.f),
+		glm::vec4(0.f),
+		glm::vec3(0.f));
+	entityManager->AddEntity(player);
+
 	// Create Particles
 	for (int i = 0; i < 100; ++i)
 	{
-		Entity* particle = new Entity(Entity::EntityType::PARTICLE,  // Type
-			false, // Active
-			false, // Rendered
-			glm::vec3(PseudorandMinMax(-100.f, 100.f), PseudorandMinMax(100.f, 200.f), 0.f),  // Translate
-			glm::vec3(5.f), // Scale
-			glm::vec4(0.f)); // Rotate
+		Entity* particle = new Entity(Entity::EntityType::PARTICLE,  
+			false, // False first to be able to control the rendering from the start
+			glm::vec3(PseudorandMinMax(-100.f, 100.f), PseudorandMinMax(100.f, 200.f), 0.f),  
+			glm::vec3(5.f), 
+			glm::vec4(0.f),
+			glm::vec3(0.f));
 		entityManager->AddEntity(particle);
 	}
+
+	// Create HealthBar
+	Entity* healthbar = new Entity(Entity::EntityType::HEALTHBAR,
+		true, // Always active
+		glm::vec3(-float(winWidth) / 2.5f, float(winHeight) / 2.5f, -10.f),
+		glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f),
+		glm::vec4(0.f),
+		glm::vec3(0.f));
+	entityManager->AddEntity(healthbar);
+
+	// Create the player lives on top of the HealthBar
+	Entity* playerlives = new Entity(Entity::EntityType::PLAYERLIVES,
+		true, // Always active at first
+		glm::vec3(-float(winWidth) / 2.2f, float(winHeight) / 2.2f, -9.f),
+		glm::vec3(25.f, 25.f, 1.f),
+		glm::vec4(0.f),
+		glm::vec3(0.f));
+	entityManager->AddEntity(playerlives);
+
+	// Create Ammo Bar
+	Entity* ammoBar = new Entity(Entity::EntityType::AMMOBAR,
+		true,
+		glm::vec3(float(winWidth) / 3.f, -float(winHeight) / 2.2f, -10.f),
+		glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f),
+		glm::vec4(0.f),
+		glm::vec3(0.f));
+	entityManager->AddEntity(ammoBar);
+
+	// Create Inventory Slots
+	Entity* inventory = new Entity(Entity::EntityType::INVENTORY,
+			true,
+		glm::vec3(-float(winWidth) / 6.f, -float(winHeight) / 2.2f, -11.f),
+		glm::vec3(35.f, 35.f, 1.f),
+		glm::vec4(0.f),
+		glm::vec3(0.f));
+	entityManager->AddEntity(inventory);
+
+	// Create weapons to be put in the inventory
+	weapon = new Weapon();
+
+	Pistol* pistol = new Pistol();
+	pistol->Init();
+	weapon->SetInventory(0, pistol);
+
+	AssaultRifle* assaultRifle = new AssaultRifle();
+	assaultRifle->Init();
+	weapon->SetInventory(1, assaultRifle);
+
+	SniperRifle* sniperRifle = new SniperRifle();
+	sniperRifle->Init();
+	weapon->SetInventory(2, sniperRifle);
 
 	return true;
 }
@@ -166,6 +238,9 @@ void Scene::Update() {
 	cam.Update(GLFW_KEY_Q, GLFW_KEY_E, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_W, GLFW_KEY_S);
 	view = cam.LookAt();
 	projection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
+	minimapview = cam.LookAt();
+	minimapproj = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
+
 
 	const glm::vec3& camPos = cam.GetPos();
 	const glm::vec3& camFront = cam.CalcFront();
@@ -211,26 +286,52 @@ void Scene::Update() {
 			resetSoundFXBT = elapsedTime + .5f;
 		}
 	}
-
-	// Can be modified to be used for other entities too
-	entityManager->Update(1); // Number of particles to be rendered every frame
-
-	for (size_t i = 0; i < entityManager->getVector().size(); ++i)
+	// TESTING ONLY FOR HEALTHBAR
+	if (Key(GLFW_KEY_SPACE))
 	{
-		Entity* entity = entityManager->getVector()[i];
-		if (entity->active)
+		playerCurrHealth -= 1.f;
+	}
+
+	// Player gets max health again, but loses 1 life
+	if (playerCurrHealth <= 0.f && playerCurrLives > 0.f)
+	{
+		playerCurrHealth = 100.f;
+		--playerCurrLives;
+	}
+
+	// Change weapon using the inventory slots
+	if (Key(GLFW_KEY_1))
+		weapon->SetCurrentSlot(0);
+	if (Key(GLFW_KEY_2))
+		weapon->SetCurrentSlot(1);
+	if (Key(GLFW_KEY_3))
+		weapon->SetCurrentSlot(2);
+
+	// Update current weapon status to see whether can shoot
+	weapon->GetCurrentWeapon()->Update(elapsedTime);
+	// TESTING ONLY FOR SHOOTING
+	if (Key(GLFW_KEY_5))
+	{
+		if (weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0)
 		{
-			switch (entity->type)
-			{
-			case Entity::EntityType::ENEMY:
-				if (CheckCollision(entity->pos, entity->scale))
-				{
-					//do stuff here if raycasting detects enemy
-				}
-				break;
-			}
+			Entity* bullet = new Entity(Entity::EntityType::BULLET,
+				false, 
+				glm::vec3(cam.GetPos() + 10.f * cam.CalcFront()),
+				glm::vec3(1.f),
+				glm::vec4(0.f),
+				cam.CalcFront());
+			entityManager->AddEntity(bullet);
+			weapon->GetCurrentWeapon()->SetCanShoot(false); // For the shooting cooldown time
+			weapon->GetCurrentWeapon()->SetCurrentAmmoRound(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() - 1); // Decrease the ammo
 		}
 	}
+
+	if (Key(GLFW_KEY_R)) // Reload the current weapon
+		weapon->GetCurrentWeapon()->Reload();
+
+	// Can be modified to be used for other entities too
+	entityManager->Update(1, cam.CalcFront()); // Number of particles to be rendered every frame
+	
 }
 
 void Scene::GeoRenderPass() {
@@ -354,13 +455,18 @@ void Scene::BlurRender(const uint& brightTexRefID, const bool& horizontal) {
 	blurSP.ResetTexUnits();
 }
 
-void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID) {
+void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, const glm::vec3& translate, const glm::vec3& scale) {
 	screenSP.Use();
 	screenSP.Set1f("exposure", 1.2f);
 	screenSP.UseTex(screenTexRefID, "screenTexSampler");
 	screenSP.UseTex(blurTexRefID, "blurTexSampler");
+	PushModel({
+			Translate(translate),
+			Scale(scale),
+		});
 	meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
 	meshes[(int)MeshType::Quad]->Render(screenSP, false);
+	PopModel();
 	screenSP.ResetTexUnits();
 }
 
@@ -405,9 +511,7 @@ void Scene::ForwardRender() {
 		forwardSP.Set1f(("spotlights[" + std::to_string(i) + "].cosInnerCutoff").c_str(), spotlight->cosInnerCutoff);
 		forwardSP.Set1f(("spotlights[" + std::to_string(i) + "].cosOuterCutoff").c_str(), spotlight->cosOuterCutoff);
 	}
-
 	forwardSP.SetMat4fv("PV", &(projection * glm::mat4(glm::mat3(view)))[0][0]);
-
 	///Sky
 	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
 	glCullFace(GL_FRONT);
@@ -463,29 +567,33 @@ void Scene::ForwardRender() {
 	PopModel();
 	PopModel();
 
-
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	///Entities
-	for (size_t i = 0; i < entityManager->getVector().size(); ++i)
+	for (int i = 0; i < entityManager->getVector().size(); ++i)
 	{
 		Entity* entity = entityManager->getVector()[i];
 		if (entity->active)
 		{
 			switch (entity->type)
 			{
-			case Entity::EntityType::ENEMY:
-				PushModel({
-					Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
-					//Rotate(glm::vec4(entity->rotate.x, entity->rotate.y, entity->rotate.z, entity->rotate.w)), // Not sure about the x,y,z etc
-					Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
-					});
-				// Change the mesh or model accordingly
-				meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
-				meshes[(int)MeshType::Cube]->Render(forwardSP); // Remeber to change forwardSP etc accordingly
-				PopModel();
+			//case Entity::EntityType::ENEMY:
+			//	PushModel({
+			//		Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
+			//		//Rotate(glm::vec4(entity->rotate.x, entity->rotate.y, entity->rotate.z, entity->rotate.w)), // Not sure about the x,y,z etc
+			//		Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+			//		});
+			//	// Change the mesh or model accordingly
+			//	meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
+			//	meshes[(int)MeshType::Cube]->Render(forwardSP); // Remeber to change forwardSP etc accordingly
+			//	PopModel();
+			//	break;
+			case Entity::EntityType::STATIC_ENEMY:
+				if (CheckCollision(entity->pos, entity->scale))
+				{
+					//do stuff here if raycasting detects enemy
+				}
 				break;
-
 			case Entity::EntityType::PARTICLE:
 				PushModel({
 					Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
@@ -494,7 +602,185 @@ void Scene::ForwardRender() {
 					});
 				// Change the mesh or model accordingly
 				meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
-				meshes[(int)MeshType::Quad]->Render(forwardSP); // Remeber to change forwardSP etc accordingly
+				meshes[(int)MeshType::Quad]->Render(forwardSP); // Remember to change forwardSP etc accordingly
+				PopModel();
+				break;
+
+			case Entity::EntityType::HEALTHBAR:
+				///Render on the screen, change the projection
+				projection = glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f);
+				forwardSP.SetMat4fv("PV", &(projection)[0][0]);
+				
+				// Shows the background of the HealthBar
+				PushModel({
+					Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
+					Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+						});
+				forwardSP.Set1i("noNormals", 1);
+				forwardSP.Set1i("useCustomColour", 1);
+				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+				forwardSP.Set1i("customDiffuseTexIndex", -1);
+				meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Quad]->Render(forwardSP);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+				forwardSP.Set1i("useCustomColour", 0);
+				forwardSP.Set1i("noNormals", 0);
+				// Shows the status of the HealthBar (Current health of the player)
+				PushModel({
+					Translate(glm::vec3(-(playerMaxHealth - playerCurrHealth) / playerMaxHealth, 0.f, 1.f)), // Translate to the left based on the amount of health to go back to max health
+					Scale(glm::vec3(playerCurrHealth / playerMaxHealth, 1.f, 1.f)), // Scale the x component based on the current health
+					});
+				forwardSP.Set1i("noNormals", 1);
+				forwardSP.Set1i("useCustomColour", 1);
+				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+				forwardSP.Set1i("customDiffuseTexIndex", -1);
+				meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Quad]->Render(forwardSP);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+				forwardSP.Set1i("useCustomColour", 0);
+				forwardSP.Set1i("noNormals", 0);
+				PopModel();
+				PopModel();
+				// Change back the projection
+				projection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
+				forwardSP.SetMat4fv("PV", &(projection* view)[0][0]);
+				break;
+
+			case Entity::EntityType::PLAYERLIVES:
+				///Render on the screen, change the projection
+				projection = glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f);
+				forwardSP.SetMat4fv("PV", &(projection)[0][0]);
+
+				// Shows the number of lives the player has
+				for (int i = 0; i < playerCurrLives; ++i)
+				{
+					PushModel({
+						Translate(glm::vec3(entity->pos.x + 75.f * (float)i, entity->pos.y, entity->pos.z)),
+						Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+						});
+					forwardSP.Set1i("noNormals", 1);
+					forwardSP.Set1i("useCustomColour", 1);
+					forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+					forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+					forwardSP.Set1i("customDiffuseTexIndex", -1);
+					meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+					meshes[(int)MeshType::Quad]->Render(forwardSP);
+					forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+					forwardSP.Set1i("useCustomColour", 0);
+					forwardSP.Set1i("noNormals", 0);
+					PopModel();
+				}
+				// Shows the number of lives the player lost
+				for (int i = playerCurrLives; i < playerMaxLives; ++i)
+				{
+					PushModel({
+						Translate(glm::vec3(entity->pos.x + 75.f * (float)i, entity->pos.y, entity->pos.z)),
+						Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+						});
+					forwardSP.Set1i("noNormals", 1);
+					forwardSP.Set1i("useCustomColour", 1);
+					forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.3f), 1.f));
+					forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+					forwardSP.Set1i("customDiffuseTexIndex", -1);
+					meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+					meshes[(int)MeshType::Quad]->Render(forwardSP);
+					forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+					forwardSP.Set1i("useCustomColour", 0);
+					forwardSP.Set1i("noNormals", 0);
+					PopModel();
+				}
+				// Change back the projection
+				projection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
+				forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
+				break;
+
+			case Entity::EntityType::AMMOBAR:
+				///Render on the screen, change the projection
+				projection = glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f);
+				forwardSP.SetMat4fv("PV", &(projection)[0][0]);
+
+				// Shows the background of the AmmoBar
+				PushModel({
+					Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
+					Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+					});
+				forwardSP.Set1i("noNormals", 1);
+				forwardSP.Set1i("useCustomColour", 1);
+				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+				forwardSP.Set1i("customDiffuseTexIndex", -1);
+				meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Quad]->Render(forwardSP);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+				forwardSP.Set1i("useCustomColour", 0);
+				forwardSP.Set1i("noNormals", 0);
+				// Shows the status of the AmmoBar (Current ammo of the round)
+				PushModel({
+					Translate(glm::vec3(-float(weapon->GetCurrentWeapon()->GetMaxAmmoRound() - weapon->GetCurrentWeapon()->GetCurrentAmmoRound())
+					/ float(weapon->GetCurrentWeapon()->GetMaxAmmoRound()), 0.f, 1.f)), // Translate to the left based on the amount of ammo to go back to max ammo of the round
+					Scale(glm::vec3(float(weapon->GetCurrentWeapon()->GetCurrentAmmoRound())
+					/ float(weapon->GetCurrentWeapon()->GetMaxAmmoRound()), 1.f, 1.f)), // Scale the x component based on the current ammo of the round
+					});
+				forwardSP.Set1i("noNormals", 1);
+				forwardSP.Set1i("useCustomColour", 1);
+				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+				forwardSP.Set1i("customDiffuseTexIndex", -1);
+				meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Quad]->Render(forwardSP);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+				forwardSP.Set1i("useCustomColour", 0);
+				forwardSP.Set1i("noNormals", 0);
+				PopModel();
+				PopModel();
+				// Change back the projection
+				projection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
+				forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
+				break;
+
+			case Entity::EntityType::INVENTORY:
+				///Render on the screen, change the projection
+				projection = glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f);
+				forwardSP.SetMat4fv("PV", &(projection)[0][0]);
+
+				for (int i = 0; i < 5; ++i)
+				{
+					PushModel({
+						Translate(glm::vec3(entity->pos.x + i * 75.f, entity->pos.y, entity->pos.z)),
+						Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+						});
+					forwardSP.Set1i("noNormals", 1);
+					forwardSP.Set1i("useCustomColour", 1);
+					// The selected inventory slot will be a different colour
+					if(weapon->GetCurrentSlot() == i)
+						forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
+					else
+						forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+					forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+					forwardSP.Set1i("customDiffuseTexIndex", -1);
+					meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+					meshes[(int)MeshType::Quad]->Render(forwardSP);
+					forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+					forwardSP.Set1i("useCustomColour", 0);
+					forwardSP.Set1i("noNormals", 0);
+					PopModel();
+				}
+				// Change back the projection
+				projection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
+				forwardSP.SetMat4fv("PV", &(projection* view)[0][0]);
+				break;
+
+			case Entity::EntityType::BULLET:
+				PushModel({
+					Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
+					//Rotate(glm::vec4(entity->rotate.x, entity->rotate.y, entity->rotate.z, entity->rotate.w)), // Not sure about the x,y,z etc
+					Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+					});
+				// Change the mesh or model accordingly
+				meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Sphere]->Render(forwardSP); // Remember to change forwardSP etc accordingly
 				PopModel();
 				break;
 			}
@@ -551,14 +837,40 @@ void Scene::ForwardRender() {
 	forwardSP.Set1i("noNormals", 0);
 	PopModel();
 
+	std::string temp;
+	switch (weapon->GetCurrentSlot())
+	{
+	case 0:
+		temp = "Pistol";
+		break;
+
+	case 1:
+		temp = "Assault Rifle";
+		break;
+
+	case 2:
+		temp = "Sniper Rifle";
+		break;
+	}
+	// Weapon type
 	textChief.RenderText(textSP, {
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
-		25.f,
+		temp,
+		1300.f,
 		75.f,
 		1.f,
 		glm::vec4(1.f),
 		0
 		});
+	// Weapon ammo
+	textChief.RenderText(textSP, {
+		std::to_string(weapon->GetCurrentWeapon()->GetCurrentAmmoRound()) + "/" + std::to_string(weapon->GetCurrentWeapon()->GetCurrentTotalAmmo()),
+		1450.f,
+		25.f,
+		1.f,
+		glm::vec4(1.f),
+		0
+		});
+	// FPS
 	textChief.RenderText(textSP, {
 		"FPS: " + std::to_string(1.f / dt),
 		25.f,
@@ -575,15 +887,47 @@ void Scene::ForwardRender() {
 	}
 }
 
+void Scene::MinimapRender()
+{
+	forwardSP.Use();
+	const int& pAmt = 0;
+	const int& dAmt = 0;
+	const int& sAmt = 0;
+	//forwardSP.Set1i("nightVision", 0);
+	forwardSP.Set1f("shininess", 32.f); //More light scattering if lower
+	forwardSP.Set3fv("globalAmbient", Light::globalAmbient);
+	forwardSP.Set3fv("camPos", cam.GetPos());
+	forwardSP.Set1i("pAmt", pAmt);
+	forwardSP.Set1i("dAmt", dAmt);
+	forwardSP.Set1i("sAmt", sAmt);
+
+	minimapcam.SetPos(glm::vec3(cam.GetPos().x, 1000.f, cam.GetPos().z));
+	minimapcam.SetTarget(glm::vec3(cam.GetPos().x, 0.f, cam.GetPos().z));
+	minimapcam.SetUp(glm::vec3(0.f, 0.f, -1.f));
+	minimapview = minimapcam.LookAt();
+	minimapproj = glm::ortho(-float(winWidth) / 5.f, float(winWidth) / 5.f, -float(winHeight) / 5.f, float(winHeight) / 5.f, .1f, 99999.f);
+
+	forwardSP.SetMat4fv("PV", &(minimapproj* minimapview)[0][0]);
+
+	//insert entity rendering here
+	PushModel({
+		Rotate(glm::vec4(0.f, 1.f, 0.f, 45.f)),
+		Scale(glm::vec3(800.f, 100.f, 800.f)),
+		});
+	meshes[(int)MeshType::Terrain]->SetModel(GetTopModel());
+	meshes[(int)MeshType::Terrain]->Render(forwardSP);
+	PopModel();
+
+	PushModel({
+			Translate(glm::vec3(cam.GetPos().x, 0.f, cam.GetPos().z)),
+			Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(cam.CalcFront().x, cam.CalcFront().z)))),
+			Scale(glm::vec3(20.f)),
+		});
+	PopModel();
+}
+
 bool Scene::CheckCollision(const glm::vec3& pos, const glm::vec3& scale)
 {
-	/*Ray casting to check for Ray-Sphere intersection*/
-	glm::vec3 dist_vec = cam.GetPos() - pos;
-	const float b = glm::dot(cam.CalcFront(), dist_vec);
-	const float c = glm::dot(dist_vec, dist_vec) - scale.x * scale.x;
-	if (b * b - c >= 0.f) {
-		return true;
-	}
 	return false;
 }
 

@@ -16,15 +16,13 @@ public:
 	//virtual void Render(void);
 
 	void FetchParticle(int numPerFrame);
-	void Update(int numPerFrame);
+	void Update(int numPerFrame, glm::vec3 storeCamFront);
+
 	const std::vector<Entity*>& getVector();
 
 protected:
 	EntityManager(void);
 	virtual ~EntityManager(void);
-
-	void UpdateParticles();
-	void UpdateEnemies();
 
 	std::vector<Entity*> entityList;
 };

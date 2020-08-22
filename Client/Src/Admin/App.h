@@ -14,6 +14,7 @@ public:
 		LightingPass,
 		PingPong0,
 		PingPong1,
+		Minimap,
 		Amt
 	};
 	enum struct Tex{
@@ -26,6 +27,7 @@ public:
 		Bright,
 		PingPong0,
 		PingPong1,
+		Minimap,
 		Amt
 	};
 
