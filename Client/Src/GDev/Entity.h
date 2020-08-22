@@ -9,6 +9,7 @@ public:
 	{
 		PLAYER,
 		STATIC_ENEMY,
+		MOVING_ENEMY,
 		//STRUCTURE,
 		//COLLECTIBLE,
 		PARTICLE,

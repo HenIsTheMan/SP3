@@ -44,6 +44,13 @@ private:
 	};
 	Model* models[(int)ModelType::Amt];
 
+	enum struct WaveNo {
+		One,
+		Total
+	};
+
+	int waves[(int)WaveNo::Total];
+
 	EntityManager* entityManager;
 	Weapon* weapon;
 
@@ -70,6 +77,8 @@ private:
 	float playerMaxHealth;
 	float playerCurrLives;
 	float playerMaxLives;
+	int enemycount;
+
 	//int polyMode;
 	mutable std::stack<glm::mat4> modelStack;
 	glm::mat4 Translate(const glm::vec3& translate);

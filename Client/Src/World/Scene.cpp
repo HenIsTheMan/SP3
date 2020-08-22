@@ -67,7 +67,8 @@ modelStack(),
 playerCurrHealth(100.f),
 playerMaxHealth(100.f),
 playerCurrLives(5.f),
-playerMaxLives(5.f)
+playerMaxLives(5.f),
+enemycount(0)
 {
 }
 
@@ -332,6 +333,34 @@ void Scene::Update() {
 	// Can be modified to be used for other entities too
 	entityManager->Update(1, cam.CalcFront()); // Number of particles to be rendered every frame
 	
+
+	for (int i = 0; i < (int)WaveNo::Total; ++i)
+	{
+		if (enemycount == 0)
+		{
+			switch (waves[i])
+			{
+			case (int)WaveNo::One:
+				for (int i = 0; i < 10; ++i)
+				{
+					Entity* stillenemy = new Entity(Entity::EntityType::STATIC_ENEMY,
+						true,
+						glm::vec3(rand() % 50 - 25, 10.f, rand() % 50 - 25),
+						glm::vec3(1.f),
+						glm::vec4(0.f),
+						cam.CalcFront());
+					entityManager->AddEntity(stillenemy);
+					++enemycount;
+				}
+				break;
+
+			case (int)WaveNo::Total:
+				i = 0;
+				break;
+			}
+		}
+		
+	}
 }
 
 void Scene::GeoRenderPass() {
@@ -593,7 +622,31 @@ void Scene::ForwardRender() {
 				{
 					//do stuff here if raycasting detects enemy
 				}
+
+				PushModel({
+					Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
+					Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+				});
+				meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Sphere]->Render(forwardSP);
+				PopModel();
 				break;
+
+			case Entity::EntityType::MOVING_ENEMY:
+				if (CheckCollision(entity->pos, entity->scale))
+				{
+					//do stuff here if raycasting detects enemy
+				}
+
+				PushModel({
+					Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
+					Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+					});
+				meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Sphere]->Render(forwardSP);
+				PopModel();
+				break;
+
 			case Entity::EntityType::PARTICLE:
 				PushModel({
 					Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
