@@ -1,8 +1,8 @@
 #pragma once
 #include <Engine.h>
 #include "Cam.h"
-#include "../GDev/EntityManager.h"
-#include "../GDev/Weapon.h"
+#include "../Game/EntityManager.h"
+#include "../Game/Weapon.h"
 
 class Scene final{
 public:

@@ -1,8 +1,8 @@
 #include "Scene.h"
 #include "Vendor/stb_image.h"
-#include "../GDev/Pistol.h"
-#include "../GDev/AssaultRifle.h"
-#include "../GDev/SniperRifle.h"
+#include "../Game/Pistol.h"
+#include "../Game/AssaultRifle.h"
+#include "../Game/SniperRifle.h"
 
 extern float angularFOV;
 extern float dt;
@@ -891,7 +891,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 					PopModel();
 				}
 				// Shows the number of lives the player lost
-				for (int i = playerCurrLives; i < playerMaxLives; ++i)
+				for (float i = playerCurrLives; i < playerMaxLives; ++i)
 				{
 					PushModel({
 						Translate(glm::vec3(entity->pos.x + 75.f * (float)i, entity->pos.y, entity->pos.z)),

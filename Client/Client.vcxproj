@@ -194,29 +194,29 @@
   <ItemGroup>
     <ClCompile Include="Src\Admin\App.cpp" />
     <ClCompile Include="Src\Client.cpp" />
+    <ClCompile Include="Src\Game\AssaultRifle.cpp" />
+    <ClCompile Include="Src\Game\Entity.cpp" />
+    <ClCompile Include="Src\Game\EntityManager.cpp" />
     <ClCompile Include="Src\Game\GO.cpp" />
     <ClCompile Include="Src\Game\GOManager.cpp" />
+    <ClCompile Include="Src\Game\Pistol.cpp" />
     <ClCompile Include="Src\Game\Quad.cpp" />
-    <ClCompile Include="Src\GDev\AssaultRifle.cpp" />
-    <ClCompile Include="Src\GDev\Entity.cpp" />
-    <ClCompile Include="Src\GDev\EntityManager.cpp" />
-    <ClCompile Include="Src\GDev\Pistol.cpp" />
-    <ClCompile Include="Src\GDev\SniperRifle.cpp" />
-    <ClCompile Include="Src\GDev\Weapon.cpp" />
+    <ClCompile Include="Src\Game\SniperRifle.cpp" />
+    <ClCompile Include="Src\Game\Weapon.cpp" />
     <ClCompile Include="Src\World\Cam.cpp" />
     <ClCompile Include="Src\World\Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Admin\App.h" />
+    <ClInclude Include="Src\Game\AssaultRifle.h" />
+    <ClInclude Include="Src\Game\Entity.h" />
+    <ClInclude Include="Src\Game\EntityManager.h" />
     <ClInclude Include="Src\Game\GO.h" />
     <ClInclude Include="Src\Game\GOManager.h" />
+    <ClInclude Include="Src\Game\Pistol.h" />
     <ClInclude Include="Src\Game\Quad.h" />
-    <ClInclude Include="Src\GDev\AssaultRifle.h" />
-    <ClInclude Include="Src\GDev\Entity.h" />
-    <ClInclude Include="Src\GDev\EntityManager.h" />
-    <ClInclude Include="Src\GDev\Pistol.h" />
-    <ClInclude Include="Src\GDev\SniperRifle.h" />
-    <ClInclude Include="Src\GDev\Weapon.h" />
+    <ClInclude Include="Src\Game\SniperRifle.h" />
+    <ClInclude Include="Src\Game\Weapon.h" />
     <ClInclude Include="Src\World\Cam.h" />
     <ClInclude Include="Src\World\Scene.h" />
   </ItemGroup>

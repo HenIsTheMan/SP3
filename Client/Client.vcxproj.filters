@@ -16,9 +16,6 @@
     <Filter Include="Src\Game">
       <UniqueIdentifier>{7a747a58-fef3-42bc-a089-86ddc407c813}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Src\GDev">
-      <UniqueIdentifier>{8156f457-b83a-4492-9360-4287a8bc574b}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\World\Cam.cpp">
@@ -33,32 +30,32 @@
     <ClCompile Include="Src\Admin\App.cpp">
       <Filter>Src\Admin</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Game\AssaultRifle.cpp">
+      <Filter>Src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Game\Entity.cpp">
+      <Filter>Src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Game\EntityManager.cpp">
+      <Filter>Src\Game</Filter>
+    </ClCompile>
     <ClCompile Include="Src\Game\GO.cpp">
       <Filter>Src\Game</Filter>
     </ClCompile>
     <ClCompile Include="Src\Game\GOManager.cpp">
       <Filter>Src\Game</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Game\Pistol.cpp">
+      <Filter>Src\Game</Filter>
+    </ClCompile>
     <ClCompile Include="Src\Game\Quad.cpp">
       <Filter>Src\Game</Filter>
     </ClCompile>
-    <ClCompile Include="Src\GDev\AssaultRifle.cpp">
-      <Filter>Src\GDev</Filter>
+    <ClCompile Include="Src\Game\SniperRifle.cpp">
+      <Filter>Src\Game</Filter>
     </ClCompile>
-    <ClCompile Include="Src\GDev\Entity.cpp">
-      <Filter>Src\GDev</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\GDev\EntityManager.cpp">
-      <Filter>Src\GDev</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\GDev\Pistol.cpp">
-      <Filter>Src\GDev</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\GDev\SniperRifle.cpp">
-      <Filter>Src\GDev</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\GDev\Weapon.cpp">
-      <Filter>Src\GDev</Filter>
+    <ClCompile Include="Src\Game\Weapon.cpp">
+      <Filter>Src\Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -71,32 +68,32 @@
     <ClInclude Include="Src\Admin\App.h">
       <Filter>Src\Admin</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Game\AssaultRifle.h">
+      <Filter>Src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\Entity.h">
+      <Filter>Src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\EntityManager.h">
+      <Filter>Src\Game</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Game\GO.h">
       <Filter>Src\Game</Filter>
     </ClInclude>
     <ClInclude Include="Src\Game\GOManager.h">
       <Filter>Src\Game</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Game\Pistol.h">
+      <Filter>Src\Game</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Game\Quad.h">
       <Filter>Src\Game</Filter>
     </ClInclude>
-    <ClInclude Include="Src\GDev\AssaultRifle.h">
-      <Filter>Src\GDev</Filter>
+    <ClInclude Include="Src\Game\SniperRifle.h">
+      <Filter>Src\Game</Filter>
     </ClInclude>
-    <ClInclude Include="Src\GDev\Entity.h">
-      <Filter>Src\GDev</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\GDev\EntityManager.h">
-      <Filter>Src\GDev</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\GDev\Pistol.h">
-      <Filter>Src\GDev</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\GDev\SniperRifle.h">
-      <Filter>Src\GDev</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\GDev\Weapon.h">
-      <Filter>Src\GDev</Filter>
+    <ClInclude Include="Src\Game\Weapon.h">
+      <Filter>Src\Game</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
