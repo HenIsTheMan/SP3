@@ -285,7 +285,10 @@ void Scene::Update(){
 			bullet->type = Entity::EntityType::BULLET;
 			bullet->active = true;
 			bullet->pos = glm::vec3(cam.GetPos() + 10.f * cam.CalcFront());
-			bullet->facingDir = glm::vec4(0.f, 1.f, 0.f, 0.f);
+			bullet->vel = cam.CalcFront() * 12.f;
+			bullet->mass = 1.f;
+			//const glm::vec3& camFront = cam.CalcFront();
+			//bullet->rotate = glm::vec4(cam.CalcUp(), glm::degrees(atan2(camFront.z, camFront.x)));
 			bullet->scale = glm::vec3(1.f);
 			bullet->mesh = meshes[(int)MeshType::Sphere];
 			weapon->GetCurrentWeapon()->SetCanShoot(false); // For the shooting cooldown time

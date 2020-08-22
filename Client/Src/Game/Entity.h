@@ -24,6 +24,7 @@ private:
 	float maxLife;
 	glm::vec4 colour;
 	int diffuseTexIndex;
+	glm::vec4 rotate;
 	glm::vec3 scale;
 	Light* light;
 	Mesh* mesh;
@@ -33,10 +34,4 @@ private:
 	glm::vec3 vel;
 	float mass;
 	glm::vec3 force;
-
-	///Angular
-	glm::vec3 facingDir;
-	float angularVel;
-	float angularMass;
-	glm::vec3 torque;
 };

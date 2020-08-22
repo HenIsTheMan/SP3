@@ -1,9 +1,5 @@
 #pragma once
 #include <Core.h>
-#include <Engine.h>
-#include "Cam.h"
-#include "../Game/EntityManager.h"
-#include "../Game/Weapon.h"
 
 class ModelStack final{
 public:

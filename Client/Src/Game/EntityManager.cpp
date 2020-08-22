@@ -1,6 +1,8 @@
 #include "EntityManager.h"
 #include <iostream>
 
+extern float dt;
+
 EntityManager::EntityManager():
 	entityList(),
 	root(new CubeSection())
@@ -56,33 +58,34 @@ void EntityManager::UpdateEntities(const UpdateParams& params){
 	const size_t& size = entityList.size();
 	for(size_t i = 0; i < size; ++i){
 		Entity* const& entity = entityList[i];
-		switch(entity->type){
-			case Entity::EntityType::ENEMY:
-				break;
-			case Entity::EntityType::BULLET:
-				entity->active = true;
-				entity->pos = entity->pos + entity->facingDir * .5f;
-				break;
+		if(entity && entity->active){
+			switch(entity->type){
+				case Entity::EntityType::ENEMY:
+					break;
+				case Entity::EntityType::BULLET:
+					break;
+			}
+			entity->vel += (entity->force / entity->mass) * dt;
+			entity->pos += entity->vel * dt;
 		}
 	}
 }
 
-void EntityManager::RenderEntities(const ShaderProg& SP){
+void EntityManager::RenderEntities(ShaderProg& SP){
 	const size_t& size = entityList.size();
 	for(size_t i = 0; i < size; ++i){
 		Entity* entity = entityList[i];
 		if(entity && entity->active){
 			switch(entity->type){
 				case Entity::EntityType::BULLET:
-				//	PushModel({
-				//		Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
-				//		//Rotate(glm::vec4(entity->rotate.x, entity->rotate.y, entity->rotate.z, entity->rotate.w)), // Not sure about the x,y,z etc
-				//		Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
-				//		});
-				//	// Change the mesh or model accordingly
-				//	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
-				//	meshes[(int)MeshType::Sphere]->Render(forwardSP); // Remember to change forwardSP etc accordingly
-				//	PopModel();
+					modelStack.PushModel({
+						modelStack.Translate(entity->pos),
+						modelStack.Rotate(entity->rotate),
+						modelStack.Scale(entity->scale),
+					});
+						entity->mesh->SetModel(modelStack.GetTopModel());
+						entity->mesh->Render(SP);
+					modelStack.PopModel();
 					break;
 				default:
 					break;
