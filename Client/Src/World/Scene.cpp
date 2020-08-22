@@ -14,9 +14,9 @@ glm::vec3 Light::globalAmbient = glm::vec3(.2f);
 Scene::Scene():
 	cam(glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 150.f),
 	dCam(glm::vec3(0.f, 150.f, 0.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
-	sCam(glm::vec3(0.f, 100.f, 200.f), glm::vec3(0.f, 100.f, 0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 0.f),
-	waterCam(glm::vec3(-15.f, -20.f, -20.f), glm::vec3(-15.f, 0.f, -20.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
-	enCam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 0.f, 0.f),
+	sCam(glm::vec3(0.f, 100.f, 200.f), glm::vec3(0.f, 100.f, 0.f), glm::vec3(0.f, 1.f, 0.f), 1.f, 0.f),
+	waterCam(glm::vec3(-15.f, -20.f, -20.f), glm::vec3(-15.f, 0.f, -20.f), glm::vec3(0.f, 0.f, 1.f), 1.f, 0.f),
+	enCam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 1.f, 0.f),
 	soundEngine(nullptr),
 	music(nullptr),
 	soundFX(nullptr),
@@ -436,7 +436,7 @@ void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID){
 void Scene::DepthRender(const short& projectionType){
 	depthSP.Use();
 	if(projectionType){
-		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), 1.f, 120.f, 5000.f) * sCam.LookAt())[0][0]);
+		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), sCam.GetAspectRatio(), 120.f, 5000.f) * sCam.LookAt())[0][0]);
 	} else{
 		depthSP.SetMat4fv("PV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
 	}
@@ -488,7 +488,7 @@ void Scene::PlanarReflectionRender(){
 	forwardSP.Set1i("dAmt", 0);
 	forwardSP.Set1i("sAmt", 0);
 
-	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), 1.f, .1f, 9999.f) * glm::mat4(glm::mat3(waterCam.LookAt())))[0][0]);
+	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), waterCam.GetAspectRatio(), .1f, 9999.f) * glm::mat4(glm::mat3(waterCam.LookAt())))[0][0]);
 
 	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
 	glCullFace(GL_FRONT);
@@ -577,13 +577,13 @@ void Scene::CubemapReflectionRender(const short& cubemapFace){
 			break;
 	}
 
-	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), 1.f, .1f, 9999.f) * glm::mat4(glm::mat3(enCam.LookAt())))[0][0]);
+	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), enCam.GetAspectRatio(), .1f, 9999.f) * glm::mat4(glm::mat3(enCam.LookAt())))[0][0]);
 
 	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
 	glCullFace(GL_FRONT);
 	forwardSP.Set1i("sky", 1);
 	PushModel({
-		//Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
+		Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
 	});
 		meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
 		meshes[(int)MeshType::Sphere]->Render(forwardSP);
