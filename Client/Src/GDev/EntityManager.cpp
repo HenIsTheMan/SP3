@@ -8,7 +8,10 @@ EntityManager::EntityManager(void)
 EntityManager::~EntityManager(void)
 {
 	for (size_t i = 0; i < entityList.size(); ++i)
-		delete entityList[i];
+		if(entityList[i]){
+			delete entityList[i];
+			entityList[i] = nullptr;
+		}
 }
 
 bool EntityManager::Init(void)

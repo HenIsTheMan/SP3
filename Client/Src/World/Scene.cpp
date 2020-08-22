@@ -69,7 +69,7 @@ Scene::Scene():
 	projection(glm::mat4(1.f)),
 	elapsedTime(0.f),
 	//polyMode(0),
-	modelStack()
+	modelStack(),
 	playerCurrHealth(100.f),
 	playerMaxHealth(100.f),
 	playerCurrLives(5.f),

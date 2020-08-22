@@ -16,11 +16,19 @@ Weapon::Weapon() :
 {
 }
 
-Weapon::~Weapon()
-{
-	primaryWeapon = nullptr;
-	secondaryWeapon = nullptr;
-	extraWeapon = nullptr;
+Weapon::~Weapon(){
+	if(primaryWeapon){
+		delete primaryWeapon;
+		primaryWeapon = nullptr;
+	}
+	if(secondaryWeapon){
+		delete secondaryWeapon;
+		secondaryWeapon = nullptr;
+	}
+	if(extraWeapon){
+		delete extraWeapon;
+		extraWeapon = nullptr;
+	}
 }
 
 void Weapon::Update(const double dt)
