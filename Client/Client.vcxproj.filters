@@ -39,19 +39,16 @@
     <ClCompile Include="Src\Game\EntityManager.cpp">
       <Filter>Src\Game</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Game\GOManager.cpp">
-      <Filter>Src\Game</Filter>
-    </ClCompile>
     <ClCompile Include="Src\Game\Pistol.cpp">
-      <Filter>Src\Game</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\Game\Quad.cpp">
       <Filter>Src\Game</Filter>
     </ClCompile>
     <ClCompile Include="Src\Game\SniperRifle.cpp">
       <Filter>Src\Game</Filter>
     </ClCompile>
     <ClCompile Include="Src\Game\Weapon.cpp">
+      <Filter>Src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Game\CubeSection.cpp">
       <Filter>Src\Game</Filter>
     </ClCompile>
   </ItemGroup>
@@ -74,19 +71,16 @@
     <ClInclude Include="Src\Game\EntityManager.h">
       <Filter>Src\Game</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Game\GOManager.h">
-      <Filter>Src\Game</Filter>
-    </ClInclude>
     <ClInclude Include="Src\Game\Pistol.h">
-      <Filter>Src\Game</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\Game\Quad.h">
       <Filter>Src\Game</Filter>
     </ClInclude>
     <ClInclude Include="Src\Game\SniperRifle.h">
       <Filter>Src\Game</Filter>
     </ClInclude>
     <ClInclude Include="Src\Game\Weapon.h">
+      <Filter>Src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\CubeSection.h">
       <Filter>Src\Game</Filter>
     </ClInclude>
   </ItemGroup>

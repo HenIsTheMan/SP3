@@ -197,9 +197,8 @@
     <ClCompile Include="Src\Game\AssaultRifle.cpp" />
     <ClCompile Include="Src\Game\Entity.cpp" />
     <ClCompile Include="Src\Game\EntityManager.cpp" />
-    <ClCompile Include="Src\Game\GOManager.cpp" />
     <ClCompile Include="Src\Game\Pistol.cpp" />
-    <ClCompile Include="Src\Game\Quad.cpp" />
+    <ClCompile Include="Src\Game\CubeSection.cpp" />
     <ClCompile Include="Src\Game\SniperRifle.cpp" />
     <ClCompile Include="Src\Game\Weapon.cpp" />
     <ClCompile Include="Src\World\Cam.cpp" />
@@ -210,9 +209,8 @@
     <ClInclude Include="Src\Game\AssaultRifle.h" />
     <ClInclude Include="Src\Game\Entity.h" />
     <ClInclude Include="Src\Game\EntityManager.h" />
-    <ClInclude Include="Src\Game\GOManager.h" />
     <ClInclude Include="Src\Game\Pistol.h" />
-    <ClInclude Include="Src\Game\Quad.h" />
+    <ClInclude Include="Src\Game\CubeSection.h" />
     <ClInclude Include="Src\Game\SniperRifle.h" />
     <ClInclude Include="Src\Game\Weapon.h" />
     <ClInclude Include="Src\World\Cam.h" />

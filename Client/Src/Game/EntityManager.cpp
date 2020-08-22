@@ -2,8 +2,12 @@
 #include <iostream>
 
 EntityManager::EntityManager():
-	entityList()
+	entityList(),
+	root(new CubeSection())
 {
+	root->SetParent(nullptr);
+	root->SetOrigin(glm::vec3(0.f));
+	root->SetSize(glm::vec3(1000.f)); //??
 }
 
 EntityManager::~EntityManager(){
@@ -14,14 +18,14 @@ EntityManager::~EntityManager(){
 			entityList[i] = nullptr;
 		}
 	}
+	if(root){
+		root->Destroy();
+		root = nullptr;
+	}
 }
 
-///Shld only be called once in Scene::Init()
-void EntityManager::CreateEntities(const int& amt){
-	entityList = std::vector<Entity*>(amt); //Prealloc mem
-	for(int i = 0; i < amt; ++i){
-		entityList[i] = new Entity();
-	}
+const std::vector<Entity*>& EntityManager::GetEntityList() const{
+	return entityList;
 }
 
 Entity* const& EntityManager::FetchEntity(){
@@ -33,6 +37,14 @@ Entity* const& EntityManager::FetchEntity(){
 	entityList.emplace_back(new Entity());
 	(void)puts("1 entity was added to entityList!\n");
 	return entityList.back();
+}
+
+///Shld only be called once in Scene::Init()
+void EntityManager::CreateEntities(const int& amt){
+	entityList = std::vector<Entity*>(amt); //Prealloc mem
+	for(int i = 0; i < amt; ++i){
+		entityList[i] = new Entity();
+	}
 }
 
 void EntityManager::UpdateEntities(const UpdateParams& params){
@@ -88,8 +100,4 @@ void EntityManager::RenderEntities(const ShaderProg& SP){
 			}
 		}
 	}
-}
-
-const std::vector<Entity*>& EntityManager::GetEntityList() const{
-	return entityList;
 }

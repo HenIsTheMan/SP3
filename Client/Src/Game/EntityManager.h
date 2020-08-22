@@ -1,9 +1,7 @@
 #pragma once
-
-#include "Core.h"
-#include "Engine.h"
+#include <Core.h>
 #include "../World/Cam.h"
-#include "Entity.h"
+#include "CubeSection.h"
 
 class EntityManager final: public Singleton<EntityManager>{
 	friend class Singleton<EntityManager>;
@@ -11,15 +9,16 @@ public:
 	struct UpdateParams final{ //Add on here if needed
 	};
 
-	~EntityManager();
-
-	void CreateEntities(const int& amt);
-	Entity* const& FetchEntity();
-	void UpdateEntities(const UpdateParams& params);
-	void RenderEntities(const ShaderProg& SP);
+	~EntityManager(); //Default dtor
 
 	const std::vector<Entity*>& GetEntityList() const;
+	Entity* const& FetchEntity();
+
+	void CreateEntities(const int& amt);
+	void UpdateEntities(const UpdateParams& params);
+	void RenderEntities(const ShaderProg& SP);
 protected:
-	EntityManager();
+	EntityManager(); //Default ctor
+	CubeSection* root; //Ptr to root quad
 	std::vector<Entity*> entityList;
 };

@@ -5,6 +5,9 @@
 class Entity{
 	friend class EntityManager;
 	friend class Scene;
+public:
+	Entity();
+	virtual ~Entity() = default;
 private:
 	enum class EntityType{
 		PLAYER,
@@ -12,9 +15,6 @@ private:
 		BULLET,
 		NUM_TYPES
 	};
-
-	Entity();
-	virtual ~Entity() = default;
 
 	///Misc
 	EntityType type;
