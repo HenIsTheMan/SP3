@@ -5,9 +5,9 @@ EntityManager::EntityManager():
 	entityList(),
 	root(new CubeSection())
 {
-	root->SetParent(nullptr);
 	root->SetOrigin(glm::vec3(0.f));
-	root->SetSize(glm::vec3(1000.f)); //??
+	root->SetSize(glm::vec3(500.f, 150.f, 500.f));
+	root->InitCubeSectionPool(50);
 }
 
 EntityManager::~EntityManager(){
@@ -18,8 +18,9 @@ EntityManager::~EntityManager(){
 			entityList[i] = nullptr;
 		}
 	}
+	root->DestroyCubeSectionPool();
 	if(root){
-		root->Destroy();
+		delete root;
 		root = nullptr;
 	}
 }
@@ -39,24 +40,24 @@ Entity* const& EntityManager::FetchEntity(){
 	return entityList.back();
 }
 
-///Shld only be called once in Scene::Init()
-void EntityManager::CreateEntities(const int& amt){
+void EntityManager::CreateEntities(const int& amt){ //Shld only be called once in Scene::Init()
 	entityList = std::vector<Entity*>(amt); //Prealloc mem
 	for(int i = 0; i < amt; ++i){
 		entityList[i] = new Entity();
+		root->AddEntity(entityList[i]);
 	}
 }
 
 void EntityManager::UpdateEntities(const UpdateParams& params){
+	root->Deactivate();
+	root->Partition();
+	//Collision
+
 	const size_t& size = entityList.size();
 	for(size_t i = 0; i < size; ++i){
 		Entity* const& entity = entityList[i];
 		switch(entity->type){
-			//case Entity::EntityType::RAIN_PARTICLE:
-			//	// Do the movement/lifetime for the particles here
-			//	break;
 			case Entity::EntityType::ENEMY:
-				// Do the movement for the enemies here
 				break;
 			case Entity::EntityType::BULLET:
 				entity->active = true;
@@ -72,19 +73,7 @@ void EntityManager::RenderEntities(const ShaderProg& SP){
 		Entity* entity = entityList[i];
 		if(entity && entity->active){
 			switch(entity->type){
-				case Entity::EntityType::ENEMY:
-					//PushModel({
-					//	Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
-					//	//Rotate(glm::vec4(entity->rotate.x, entity->rotate.y, entity->rotate.z, entity->rotate.w)), // Not sure about the x,y,z etc
-					//	Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
-					//	});
-					//// Change the mesh or model accordingly
-					//meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
-					//meshes[(int)MeshType::Cube]->Render(forwardSP); // Remeber to change forwardSP etc accordingly
-					//PopModel();
-					break;
-
-				//case Entity::EntityType::BULLET:
+				case Entity::EntityType::BULLET:
 				//	PushModel({
 				//		Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
 				//		//Rotate(glm::vec4(entity->rotate.x, entity->rotate.y, entity->rotate.z, entity->rotate.w)), // Not sure about the x,y,z etc
@@ -94,7 +83,7 @@ void EntityManager::RenderEntities(const ShaderProg& SP){
 				//	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
 				//	meshes[(int)MeshType::Sphere]->Render(forwardSP); // Remember to change forwardSP etc accordingly
 				//	PopModel();
-				//	break;
+					break;
 				default:
 					break;
 			}

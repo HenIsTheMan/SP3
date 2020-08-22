@@ -1,5 +1,7 @@
 #include "CubeSection.h"
 
+std::vector<CubeSection*> CubeSection::cubeSectionPool;
+
 CubeSection::CubeSection():
 	parent(nullptr),
 	origin(glm::vec3(0.f)),
@@ -8,18 +10,19 @@ CubeSection::CubeSection():
 	UR(nullptr),
 	DL(nullptr),
 	DR(nullptr),
-	entityList(new std::vector<Entity*>()),
-	count(0)
+	entityList(new std::vector<Entity*>())
 {
 }
 
 CubeSection::~CubeSection(){
 	if(entityList){
 		for(Entity*& entity: *entityList){
-			delete entity;
-			entity = nullptr;
+			if(entity){ //Deleted in EntityManager
+				entity = nullptr;
+			}
 		}
 		delete entityList;
+		entityList = nullptr;
 	}
 }
 
@@ -27,78 +30,93 @@ void CubeSection::AddEntity(Entity* const& entity){
 	entityList->emplace_back(entity);
 }
 
-void CubeSection::Destroy(){
+void CubeSection::Deactivate(){
+	entityList->clear();
 	if(UL){ //If UL exists...
-		UL->Destroy();
-		UL = nullptr; //Make dangling ptr a null ptr
+		UL->entityList->clear();
+		UL->Deactivate();
 	}
 	if(UR){ //If UR exists...
-		UR->Destroy();
-		UR = nullptr; //Make dangling ptr a null ptr
+		UR->entityList->clear();
+		UR->Deactivate();
 	}
 	if(DL){ //If DL exists...
-		DL->Destroy();
-		DL = nullptr; //Make dangling ptr a null ptr
+		DL->entityList->clear();
+		DL->Deactivate();
 	}
 	if(DR){ //If DR exists...
-		DR->Destroy();
-		DR = nullptr; //Make dangling ptr a null ptr
+		DR->entityList->clear();
+		DR->Deactivate();
 	}
-	delete this;
 }
 
 void CubeSection::Partition(){
-	//if(count > 3){
-	//	///Set up UL
-	//	UL = new CubeSection();
-	//	UL->SetParent(this);
-	//	UL->SetOrigin(this->origin);
-	//	UL->SetWidth(width & 1 ? (width - 1) / 2 : width / 2);
-	//	UL->SetHeight(height & 1 ? (height - 1) / 2 : height / 2);
+	if(entityList->size() > 4){
+		///Set up UL
+		UL = FetchCubeSection();
+		UL->SetParent(this);
+		UL->SetOrigin(glm::vec3(origin.x - size.x / 4.f, origin.y + size.y / 4.f, origin.z));
+		UL->SetSize(size / 2.f);
 
-	//	///Set up UR
-	//	UR = new CubeSection();
-	//	UR->SetParent(this);
-	//	UR->SetWidth(width & 1 ? (width - 1) / 2 + 1 : width / 2);
-	//	UR->SetHeight(UL->GetHeight());
-	//	UR->SetOrigin({UL->GetOrigin().x + UL->GetWidth(), UL->GetOrigin().y});
+		///Set up UR
+		UR = FetchCubeSection();
+		UR->SetParent(this);
+		UR->SetOrigin(glm::vec3(origin.x + size.x / 4.f, origin.y + size.y / 4.f, origin.z));
+		UR->SetSize(size / 2.f);
 
-	//	///Set up DL
-	//	DL = new CubeSection();
-	//	DL->SetParent(this);
-	//	DL->SetWidth(UL->GetWidth());
-	//	DL->SetHeight(height & 1 ? (height - 1) / 2 + 1 : height / 2);
-	//	DL->SetOrigin({UL->GetOrigin().x, UL->GetOrigin().y + UL->GetHeight()});
+		///Set up DL
+		DL = FetchCubeSection();
+		DL->SetParent(this);
+		DL->SetOrigin(glm::vec3(origin.x - size.x / 4.f, origin.y - size.y / 4.f, origin.z));
+		DL->SetSize(size / 2.f);
 
-	//	///Set up DR
-	//	DR = new CubeSection();
-	//	DR->SetParent(this);
-	//	DR->SetOrigin({UR->GetOrigin().x, DL->GetOrigin().y});
-	//	DR->SetWidth(UR->GetWidth());
-	//	DR->SetHeight(DL->GetHeight());
+		///Set up DR
+		DR = FetchCubeSection();
+		DR->SetParent(this);
+		DR->SetOrigin(glm::vec3(origin.x + size.x / 4.f, origin.y - size.y / 4.f, origin.z));
+		DR->SetSize(size / 2.f);
 
-	//	for(const GO* const& go: *GOList){
-	//		if(go->GetPosX() >= UR->GetOrigin().x){
-	//			if(go->GetPosY() >= DR->GetOrigin().y){
-	//				DR->AddGO(go->GetID(), go->GetPosX(), go->GetPosY());
-	//			} else{
-	//				UR->AddGO(go->GetID(), go->GetPosX(), go->GetPosY());
-	//			}
-	//		} else{
-	//			if(go->GetPosY() >= DL->GetOrigin().y){
-	//				DL->AddGO(go->GetID(), go->GetPosX(), go->GetPosY());
-	//			} else{
-	//				UL->AddGO(go->GetID(), go->GetPosX(), go->GetPosY());
-	//			}
-	//		}
-	//	}
+		if(entityList){
+			for(Entity*& entity: *entityList){
+				if(entity->pos == origin){
+					switch(PseudorandMinMax(0, 3)){
+						case 0:
+							UR->AddEntity(entity);
+							break;
+						case 1:
+							UL->AddEntity(entity);
+							break;
+						case 2:
+							DR->AddEntity(entity);
+							break;
+						case 3:
+							DL->AddEntity(entity);
+							break;
+					}
+					continue;
+				}
+				if(entity->pos.y > origin.y){
+					if(entity->pos.x > origin.x){
+						UR->AddEntity(entity);
+					} else{
+						UL->AddEntity(entity);
+					}
+				} else{
+					if(entity->pos.x > origin.x){
+						DR->AddEntity(entity);
+					} else{
+						DL->AddEntity(entity);
+					}
+				}
+			}
+		}
 
-	//	///Use recursion to continue forming the Quadtree
-	//	UL->Partition();
-	//	UR->Partition();
-	//	DL->Partition();
-	//	DR->Partition();
-	//}
+		///Use recursion to continue forming the Quadtree
+		UL->Partition();
+		UR->Partition();
+		DL->Partition();
+		DR->Partition();
+	}
 }
 
 const CubeSection* const CubeSection::SearchForEntity(Entity* const& entity) const{ //Search children 1st
@@ -154,4 +172,32 @@ void CubeSection::SetOrigin(const glm::vec3& origin){
 
 void CubeSection::SetSize(const glm::vec3& size){
 	this->size = size;
+}
+
+void CubeSection::InitCubeSectionPool(const int& amt){
+	cubeSectionPool = std::vector<CubeSection*>(amt);
+	for(int i = 0; i < amt; ++i){
+		cubeSectionPool[i] = new CubeSection();
+	}
+}
+
+void CubeSection::DestroyCubeSectionPool(){
+	const size_t& size = cubeSectionPool.size();
+	for(size_t i = 0; i < size; ++i){
+		if(cubeSectionPool[i]){
+			delete cubeSectionPool[i];
+			cubeSectionPool[i] = nullptr;
+		}
+	}
+}
+
+CubeSection* const& CubeSection::FetchCubeSection(){
+	for(CubeSection* const& cubeSection: cubeSectionPool){
+		if(!cubeSection->entityList->size()){
+			return cubeSection;
+		}
+	}
+	cubeSectionPool.emplace_back(new CubeSection());
+	(void)puts("1 cube section was added to cubeSectionPool!\n");
+	return cubeSectionPool.back();
 }

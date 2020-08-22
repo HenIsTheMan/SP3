@@ -4,20 +4,11 @@
 
 class CubeSection final{
 public:
-	enum struct CubeSectionType{
-		UL = 0,
-		UR,
-		DL,
-		DR,
-		Root,
-		Amt
-	};
-
 	CubeSection();
 	~CubeSection();
 
 	void AddEntity(Entity* const& entity);
-	void Destroy();
+	void Deactivate();
 	void Partition();
 	const CubeSection* const SearchForEntity(Entity* const& entity) const;
 	//void Collision
@@ -30,7 +21,13 @@ public:
 	void SetParent(CubeSection* const& parent);
 	void SetOrigin(const glm::vec3& origin);
 	void SetSize(const glm::vec3& size);
+
+	static void InitCubeSectionPool(const int& amt);
+	static void DestroyCubeSectionPool();
 private:
+	static std::vector<CubeSection*> cubeSectionPool;
+	static CubeSection* const& FetchCubeSection();
+
 	CubeSection* parent;
 	glm::vec3 origin;
 	glm::vec3 size;
@@ -40,5 +37,4 @@ private:
 	CubeSection* DL;
 	CubeSection* DR;
 	std::vector<Entity*>* entityList;
-	int count;
 };
