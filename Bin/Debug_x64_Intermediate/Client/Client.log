@@ -1,9 +1,0 @@
-﻿  Scene.cpp
-C:\Users\gohbe\Documents\GitHub\SP3\Client\Src\World\Scene.cpp(663,16): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-  Client.vcxproj -> C:\Users\gohbe\Documents\GitHub\SP3\Bin\Debug_x64\Client\Product.exe
-  C:\Users\gohbe\Documents\GitHub\SP3\Engine\DLLs\assimp-vc142-mtd.dll
-  C:\Users\gohbe\Documents\GitHub\SP3\Engine\DLLs\freetype.dll
-  C:\Users\gohbe\Documents\GitHub\SP3\Engine\DLLs\ikpFlac.dll
-  C:\Users\gohbe\Documents\GitHub\SP3\Engine\DLLs\ikpMP3.dll
-  C:\Users\gohbe\Documents\GitHub\SP3\Engine\DLLs\irrKlang.dll
-          5 file(s) copied.
