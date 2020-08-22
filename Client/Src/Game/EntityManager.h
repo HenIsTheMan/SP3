@@ -5,24 +5,20 @@
 #include "../World/Cam.h"
 #include "Entity.h"
 
-class EntityManager :public Singleton<EntityManager>
-{
+class EntityManager final: public Singleton<EntityManager>{
 	friend class Singleton<EntityManager>;
-
 public:
-	bool Init(void);
-	virtual void AddEntity(Entity* entity);
-	//virtual void Update();
-	//virtual void Render(void);
+	struct UpdateParams final{ //Add on here if needed
+	};
 
-	void FetchParticle(int numPerFrame);
-	void Update(int numPerFrame, glm::vec3 storeCamFront);
+	~EntityManager();
 
-	const std::vector<Entity*>& getVector();
+	void CreateEntities(const int& amt);
+	Entity* const& FetchEntity();
+	void Update(const UpdateParams& params);
 
+	const std::vector<Entity*>& GetEntityList() const;
 protected:
-	EntityManager(void);
-	virtual ~EntityManager(void);
-
+	EntityManager();
 	std::vector<Entity*> entityList;
 };

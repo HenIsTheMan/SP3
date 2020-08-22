@@ -162,63 +162,42 @@ bool Scene::Init(){
 	spotlights.emplace_back(CreateLight(LightType::Spot));
 	//spotlights.emplace_back(CreateLight(LightType::Spot));
 
-	entityManager = EntityManager::GetObjPtr();
-	entityManager->Init();
-	// Create Player
-	Entity* player = new Entity(Entity::EntityType::PLAYER,
-		true, // Always active
-		cam.GetPos(), // Need to check first
-		glm::vec3(5.f),
-		glm::vec4(0.f),
-		glm::vec3(0.f));
-	entityManager->AddEntity(player);
 
-	// Create Particles
-	for(int i = 0; i < 100; ++i){
-		Entity* particle = new Entity(Entity::EntityType::PARTICLE,  
-			false, // False first to be able to control the rendering from the start
-			glm::vec3(PseudorandMinMax(-100.f, 100.f), PseudorandMinMax(100.f, 200.f), 0.f),  
-			glm::vec3(5.f), 
-			glm::vec4(0.f),
-			glm::vec3(0.f));
-		entityManager->AddEntity(particle);
-	}
+
+	entityManager = EntityManager::GetObjPtr();
+	entityManager->CreateEntities(100);
 
 	// Create HealthBar
-	Entity* healthbar = new Entity(Entity::EntityType::HEALTHBAR,
-		true, // Always active
-		glm::vec3(-float(winWidth) / 2.5f, float(winHeight) / 2.5f, -10.f),
-		glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f),
-		glm::vec4(0.f),
-		glm::vec3(0.f));
-	entityManager->AddEntity(healthbar);
+	Entity* const& healthBar = entityManager->FetchEntity();
+	healthBar->type = Entity::EntityType::HEALTH_BAR;
+	healthBar->active = true;
+	healthBar->pos = glm::vec3(-float(winWidth) / 2.5f, float(winHeight) / 2.5f, -10.f);
+	healthBar->facingDir = glm::vec4(0.f, 1.f, 0.f, 0.f);
+	healthBar->scale = glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f);
 
 	// Create the player lives on top of the HealthBar
-	Entity* playerlives = new Entity(Entity::EntityType::PLAYERLIVES,
-		true, // Always active at first
-		glm::vec3(-float(winWidth) / 2.2f, float(winHeight) / 2.2f, -9.f),
-		glm::vec3(25.f, 25.f, 1.f),
-		glm::vec4(0.f),
-		glm::vec3(0.f));
-	entityManager->AddEntity(playerlives);
+	Entity* const& playerLives = entityManager->FetchEntity();
+	playerLives->type = Entity::EntityType::HEALTH_BAR;
+	playerLives->active = true;
+	playerLives->pos = glm::vec3(-float(winWidth) / 2.2f, float(winHeight) / 2.2f, -9.f);
+	playerLives->facingDir = glm::vec4(0.f, 1.f, 0.f, 0.f);
+	playerLives->scale = glm::vec3(25.f, 25.f, 1.f);
 
 	// Create Ammo Bar
-	Entity* ammoBar = new Entity(Entity::EntityType::AMMOBAR,
-		true,
-		glm::vec3(float(winWidth) / 3.f, -float(winHeight) / 2.2f, -10.f),
-		glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f),
-		glm::vec4(0.f),
-		glm::vec3(0.f));
-	entityManager->AddEntity(ammoBar);
+	Entity* const& ammoBar = entityManager->FetchEntity();
+	ammoBar->type = Entity::EntityType::AMMO_BAR;
+	ammoBar->active = true;
+	ammoBar->pos = glm::vec3(float(winWidth) / 3.f, -float(winHeight) / 2.2f, -10.f);
+	ammoBar->facingDir = glm::vec4(0.f, 1.f, 0.f, 0.f);
+	ammoBar->scale = glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f);
 
 	// Create Inventory Slots
-	Entity* inventory = new Entity(Entity::EntityType::INVENTORY,
-		true,
-		glm::vec3(-float(winWidth) / 6.f, -float(winHeight) / 2.2f, -11.f),
-		glm::vec3(35.f, 35.f, 1.f),
-		glm::vec4(0.f),
-		glm::vec3(0.f));
-	entityManager->AddEntity(inventory);
+	Entity* const& inv = entityManager->FetchEntity();
+	inv->type = Entity::EntityType::INV;
+	inv->active = true;
+	inv->pos = glm::vec3(-float(winWidth) / 6.f, -float(winHeight) / 2.2f, -11.f);
+	inv->facingDir = glm::vec4(0.f, 1.f, 0.f, 0.f);
+	inv->scale = glm::vec3(35.f, 35.f, 1.f);
 
 	// Create weapons to be put in the inventory
 	weapon = new Weapon();
@@ -329,28 +308,29 @@ void Scene::Update(){
 
 	// Update current weapon status to see whether can shoot
 	weapon->GetCurrentWeapon()->Update(elapsedTime);
+
 	// TESTING ONLY FOR SHOOTING
 	if (Key(GLFW_KEY_5))
 	{
 		if (weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0)
 		{
-			Entity* bullet = new Entity(Entity::EntityType::BULLET,
-				false, 
-				glm::vec3(cam.GetPos() + 10.f * cam.CalcFront()),
-				glm::vec3(1.f),
-				glm::vec4(0.f),
-				cam.CalcFront());
-			entityManager->AddEntity(bullet);
+			Entity* const& bullet = entityManager->FetchEntity();
+			bullet->type = Entity::EntityType::BULLET;
+			bullet->active = true;
+			bullet->pos = glm::vec3(cam.GetPos() + 10.f * cam.CalcFront());
+			bullet->facingDir = glm::vec4(0.f, 1.f, 0.f, 0.f);
+			bullet->scale = glm::vec3(1.f);
 			weapon->GetCurrentWeapon()->SetCanShoot(false); // For the shooting cooldown time
 			weapon->GetCurrentWeapon()->SetCurrentAmmoRound(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() - 1); // Decrease the ammo
 		}
 	}
 
-	if (Key(GLFW_KEY_R)) // Reload the current weapon
+	if(Key(GLFW_KEY_R)){ // Reload the curr weapon
 		weapon->GetCurrentWeapon()->Reload();
+	}
 
-	// Can be modified to be used for other entities too
-	entityManager->Update(1, cam.CalcFront()); // Number of particles to be rendered every frame
+	EntityManager::UpdateParams params;
+	entityManager->Update(params);
 }
 
 void Scene::GeoRenderPass(){
@@ -793,9 +773,10 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	///Entities
-	for (int i = 0; i < entityManager->getVector().size(); ++i)
+	const size_t& size = entityManager->GetEntityList().size();
+	for (int i = 0; i < size; ++i)
 	{
-		Entity* entity = entityManager->getVector()[i];
+		Entity* entity = entityManager->GetEntityList()[i];
 		if (entity->active)
 		{
 			switch (entity->type)
@@ -824,7 +805,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				PopModel();
 				break;
 
-			case Entity::EntityType::HEALTHBAR:
+			case Entity::EntityType::HEALTH_BAR:
 				///Render on the screen, change the projection
 				projection = glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f);
 				forwardSP.SetMat4fv("PV", &(projection)[0][0]);
@@ -866,7 +847,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				forwardSP.SetMat4fv("PV", &(projection* view)[0][0]);
 				break;
 
-			case Entity::EntityType::PLAYERLIVES:
+			case Entity::EntityType::PLAYER_LIVES:
 				///Render on the screen, change the projection
 				projection = glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f);
 				forwardSP.SetMat4fv("PV", &(projection)[0][0]);
@@ -914,7 +895,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
 				break;
 
-			case Entity::EntityType::AMMOBAR:
+			case Entity::EntityType::AMMO_BAR:
 				///Render on the screen, change the projection
 				projection = glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f);
 				forwardSP.SetMat4fv("PV", &(projection)[0][0]);
@@ -958,7 +939,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
 				break;
 
-			case Entity::EntityType::INVENTORY:
+			case Entity::EntityType::INV:
 				///Render on the screen, change the projection
 				projection = glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f);
 				forwardSP.SetMat4fv("PV", &(projection)[0][0]);

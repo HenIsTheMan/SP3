@@ -1,80 +1,60 @@
 #include "EntityManager.h"
 #include <iostream>
-EntityManager::EntityManager(void)
+
+EntityManager::EntityManager():
+	entityList()
 {
-	
 }
 
-EntityManager::~EntityManager(void)
-{
-	for (size_t i = 0; i < entityList.size(); ++i)
+EntityManager::~EntityManager(){
+	const size_t& size = entityList.size();
+	for(size_t i = 0; i < size; ++i){
 		if(entityList[i]){
 			delete entityList[i];
 			entityList[i] = nullptr;
 		}
-}
-
-bool EntityManager::Init(void)
-{
-	entityList.clear();
-	return true;
-}
-
-void EntityManager::AddEntity(Entity* entity)
-{
-	entityList.emplace_back(entity);
-}
-
-void EntityManager::FetchParticle(int numPerFrame)
-{
-	int count = 0;
-	for (size_t i = 0; i < entityList.size(); ++i)
-	{
-		Entity* particle = entityList[i];
-		if (particle->type == Entity::EntityType::PARTICLE && !particle->active) // Check for entities that are of PARTICLE type and not rendered yet
-		{
-			particle->active = true;
-			count++;
-		}
-		if (count == numPerFrame) // Number of particles per frame to be rendered is met
-			break;
 	}
 }
 
-void EntityManager::Update(int numPerFrame, glm::vec3 storeCamFront)
-{
-	FetchParticle(numPerFrame); // Every frame, a certain number of particles will be rendered
-	// Put any function here to match the enemy spawning 
+///Shld only be called once in Scene::Init()
+void EntityManager::CreateEntities(const int& amt){
+	entityList = std::vector<Entity*>(amt); //Prealloc mem
+	for(int i = 0; i < amt; ++i){
+		entityList[i] = new Entity();
+	}
+}
 
-	for (size_t i = 0; i < entityList.size(); ++i)
-	{
-		Entity* entity = entityList[i];
-		switch (entity->type)
-		{
-		case Entity::EntityType::PARTICLE:
-			// Do the movement/lifetime for the particles here
-			break;
+Entity* const& EntityManager::FetchEntity(){
+	for(Entity* const& entity: entityList){
+		if(!entity->active){
+			return entity;
+		}
+	}
+	entityList.emplace_back(new Entity());
+	(void)puts("1 entity was added to entityList!\n");
+	return entityList.back();
+}
 
-		case Entity::EntityType::ENEMY:
-			// Do the movement for the enemies here
-			break;
-
-		case Entity::EntityType::BULLET:
-			entity->active = true;
-			entity->pos = entity->pos + entity->storeCamFront * 0.5f;
-			break;
+void EntityManager::Update(const UpdateParams& params){
+	const size_t& size = entityList.size();
+	for(size_t i = 0; i < size; ++i){
+		Entity* const& entity = entityList[i];
+		switch(entity->type){
+			case Entity::EntityType::PARTICLE:
+				// Do the movement/lifetime for the particles here
+				break;
+			case Entity::EntityType::ENEMY:
+				// Do the movement for the enemies here
+				break;
+			case Entity::EntityType::BULLET:
+				entity->active = true;
+				entity->pos = entity->pos + entity->facingDir * .5f;
+				break;
 			// Add others if needed
 		}
 	}
 }
 
-//void EntityManager::Render(void)
-//{
-//	
-//
-//}
-
-const std::vector<Entity*>& EntityManager::getVector()
-{
+const std::vector<Entity*>& EntityManager::GetEntityList() const{
 	return entityList;
 }

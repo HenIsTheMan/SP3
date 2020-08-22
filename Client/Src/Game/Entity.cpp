@@ -1,16 +1,24 @@
 #include "Entity.h"
 
-Entity::Entity(EntityType type, bool active, glm::vec3 pos, glm::vec3 scale, glm::vec4 rotate, glm::vec3 storeCamFront)
-{
-	this->type = type;
-	this->active = active;
-	this->pos = pos;
-	this->scale = scale;
-	this->rotate = rotate;
-	this->storeCamFront = storeCamFront;
-}
+///Default values here are dummy values so all values of member vars shld be set explicitly
+Entity::Entity():
+	type(EntityType::NUM_TYPES),
+	active(false),
+	life(0.f),
+	maxLife(0.f),
+	colour(glm::vec4(.7f, .4f, .1f, 1.f)),
+	diffuseTexIndex(-1),
+	scale(glm::vec3(1.f)),
+	light(nullptr),
 
-Entity::~Entity()
-{
+	pos(glm::vec3(0.f)),
+	vel(glm::vec3(0.f)),
+	mass(0.f),
+	force(glm::vec3(0.f)),
 
+	facingDir(glm::vec3(0.f)),
+	angularVel(0.f),
+	angularMass(0.f),
+	torque(glm::vec3(0.f))
+{
 }

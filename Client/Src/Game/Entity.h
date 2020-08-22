@@ -1,35 +1,45 @@
 #pragma once
+#include <Core.h>
+#include <Engine.h>
 
-#include "Core.h"
-#include "Engine.h"
-
-class Entity {
-public:
-	enum class EntityType
-	{
+class Entity{
+	friend class EntityManager;
+	friend class Scene;
+private:
+	enum class EntityType{
 		PLAYER,
 		ENEMY,
-		//STRUCTURE,
-		//COLLECTIBLE,
 		PARTICLE,
-		PLAYERLIVES,
-		HEALTHBAR,
-		AMMOBAR,
+		PLAYER_LIVES,
+		HEALTH_BAR,
+		AMMO_BAR,
 		BULLET,
-		INVENTORY,
-
+		INV,
 		NUM_TYPES
 	};
 
-	Entity(EntityType type, bool active, glm::vec3 pos, glm::vec3 scale, glm::vec4 rotate, glm::vec3 storeCamFront);
-	virtual ~Entity();
+	Entity();
+	virtual ~Entity() = default;
 
-	EntityType type; // Entity type
-	bool active; // True when entity is being rendered, used to know which particles to reuse
-
-	// To be passed in as parameters for translate, scale, rotate functions in scene.cpp
-	glm::vec3 pos;
+	///Misc
+	EntityType type;
+	bool active;
+	float life;
+	float maxLife;
+	glm::vec4 colour;
+	int diffuseTexIndex;
 	glm::vec3 scale;
-	glm::vec4 rotate;
-	glm::vec3 storeCamFront;
+	Light* light;
+
+	///Linear
+	glm::vec3 pos;
+	glm::vec3 vel;
+	float mass;
+	glm::vec3 force;
+
+	///Angular
+	glm::vec3 facingDir;
+	float angularVel;
+	float angularMass;
+	glm::vec3 torque;
 };

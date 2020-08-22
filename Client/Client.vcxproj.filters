@@ -39,9 +39,6 @@
     <ClCompile Include="Src\Game\EntityManager.cpp">
       <Filter>Src\Game</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Game\GO.cpp">
-      <Filter>Src\Game</Filter>
-    </ClCompile>
     <ClCompile Include="Src\Game\GOManager.cpp">
       <Filter>Src\Game</Filter>
     </ClCompile>
@@ -75,9 +72,6 @@
       <Filter>Src\Game</Filter>
     </ClInclude>
     <ClInclude Include="Src\Game\EntityManager.h">
-      <Filter>Src\Game</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\Game\GO.h">
       <Filter>Src\Game</Filter>
     </ClInclude>
     <ClInclude Include="Src\Game\GOManager.h">
