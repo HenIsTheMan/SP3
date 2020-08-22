@@ -9,12 +9,7 @@ private:
 	enum class EntityType{
 		PLAYER,
 		ENEMY,
-		PARTICLE,
-		PLAYER_LIVES,
-		HEALTH_BAR,
-		AMMO_BAR,
 		BULLET,
-		INV,
 		NUM_TYPES
 	};
 
@@ -30,6 +25,7 @@ private:
 	int diffuseTexIndex;
 	glm::vec3 scale;
 	Light* light;
+	Mesh* mesh;
 
 	///Linear
 	glm::vec3 pos;

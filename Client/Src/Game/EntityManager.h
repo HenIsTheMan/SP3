@@ -15,7 +15,8 @@ public:
 
 	void CreateEntities(const int& amt);
 	Entity* const& FetchEntity();
-	void Update(const UpdateParams& params);
+	void UpdateEntities(const UpdateParams& params);
+	void RenderEntities(const ShaderProg& SP);
 
 	const std::vector<Entity*>& GetEntityList() const;
 protected:

@@ -10,6 +10,7 @@ Entity::Entity():
 	diffuseTexIndex(-1),
 	scale(glm::vec3(1.f)),
 	light(nullptr),
+	mesh(nullptr),
 
 	pos(glm::vec3(0.f)),
 	vel(glm::vec3(0.f)),
