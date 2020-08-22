@@ -202,6 +202,7 @@
     <ClCompile Include="Src\Game\SniperRifle.cpp" />
     <ClCompile Include="Src\Game\Weapon.cpp" />
     <ClCompile Include="Src\World\Cam.cpp" />
+    <ClCompile Include="Src\World\ModelStack.cpp" />
     <ClCompile Include="Src\World\Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -214,6 +215,7 @@
     <ClInclude Include="Src\Game\SniperRifle.h" />
     <ClInclude Include="Src\Game\Weapon.h" />
     <ClInclude Include="Src\World\Cam.h" />
+    <ClInclude Include="Src\World\ModelStack.h" />
     <ClInclude Include="Src\World\Scene.h" />
   </ItemGroup>
   <ItemGroup>

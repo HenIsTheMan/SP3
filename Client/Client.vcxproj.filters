@@ -51,6 +51,9 @@
     <ClCompile Include="Src\Game\CubeSection.cpp">
       <Filter>Src\Game</Filter>
     </ClCompile>
+    <ClCompile Include="Src\World\ModelStack.cpp">
+      <Filter>Src\World</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\World\Cam.h">
@@ -82,6 +85,9 @@
     </ClInclude>
     <ClInclude Include="Src\Game\CubeSection.h">
       <Filter>Src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\World\ModelStack.h">
+      <Filter>Src\World</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

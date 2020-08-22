@@ -3,6 +3,7 @@
 #include "Cam.h"
 #include "../Game/EntityManager.h"
 #include "../Game/Weapon.h"
+#include "ModelStack.h"
 
 class Scene final{
 public:
@@ -64,6 +65,7 @@ private:
 	std::vector<Light*> directionalLights;
 	std::vector<Light*> spotlights;
 
+	ModelStack modelStack;
 	glm::mat4 view;
 	glm::mat4 projection;
 	//std::vector<Mesh::BatchRenderParams> params;
@@ -74,11 +76,4 @@ private:
 	float playerCurrLives;
 	float playerMaxLives;
 	//int polyMode;
-	mutable std::stack<glm::mat4> modelStack;
-	glm::mat4 Translate(const glm::vec3& translate);
-	glm::mat4 Rotate(const glm::vec4& rotate);
-	glm::mat4 Scale(const glm::vec3& scale);
-	glm::mat4 GetTopModel() const;
-	void PushModel(const std::vector<glm::mat4>& vec) const;
-	void PopModel() const;
 };
