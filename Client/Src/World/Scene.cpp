@@ -162,6 +162,15 @@ bool Scene::Init() {
 		glm::vec3(0.f));
 	entityManager->AddEntity(player);
 
+	// For the weapon hold -> Anyhow create the variables because the rendering of entities changed, so the real values are used in the forward render function
+	Entity* weaponhold = new Entity(Entity::EntityType::WEAPONHOLD,
+		true,
+		glm::vec3(0.f),
+		glm::vec3(5.f),
+		glm::vec4(0.f),
+		glm::vec3(0.f));
+	entityManager->AddEntity(weaponhold);
+
 	// Create Particles
 	for (int i = 0; i < 100; ++i)
 	{
@@ -304,7 +313,8 @@ void Scene::Update() {
 		weapon->SetCurrentSlot(2);
 
 	// Update current weapon status to see whether can shoot
-	weapon->GetCurrentWeapon()->Update(elapsedTime);
+	static double lastTime = elapsedTime;
+	weapon->GetCurrentWeapon()->Update(elapsedTime - lastTime);
 	// TESTING ONLY FOR SHOOTING
 	if (Key(GLFW_KEY_5))
 	{
@@ -319,6 +329,8 @@ void Scene::Update() {
 			entityManager->AddEntity(bullet);
 			weapon->GetCurrentWeapon()->SetCanShoot(false); // For the shooting cooldown time
 			weapon->GetCurrentWeapon()->SetCurrentAmmoRound(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() - 1); // Decrease the ammo
+			lastTime = elapsedTime;
+			bullet->lifeTime = 200;
 		}
 	}
 
@@ -568,18 +580,6 @@ void Scene::ForwardRender() {
 		{
 			switch (entity->type)
 			{
-			//case Entity::EntityType::ENEMY:
-			//	PushModel({
-			//		Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
-			//		//Rotate(glm::vec4(entity->rotate.x, entity->rotate.y, entity->rotate.z, entity->rotate.w)), // Not sure about the x,y,z etc
-			//		Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
-			//		});
-			//	// Change the mesh or model accordingly
-			//	meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
-			//	meshes[(int)MeshType::Cube]->Render(forwardSP); // Remeber to change forwardSP etc accordingly
-			//	PopModel();
-			//	break;
-
 			case Entity::EntityType::PARTICLE:
 				PushModel({
 					Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
@@ -767,6 +767,26 @@ void Scene::ForwardRender() {
 				// Change the mesh or model accordingly
 				meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
 				meshes[(int)MeshType::Sphere]->Render(forwardSP); // Remember to change forwardSP etc accordingly
+				PopModel();
+				break;
+
+			case Entity::EntityType::WEAPONHOLD:
+				const glm::vec3 front = cam.CalcFront();
+				const float sign = front.y < 0.f ? -1.f : 1.f;
+
+				auto rotationMat = glm::rotate(glm::mat4(1.f), sign * acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z)))),
+					glm::normalize(glm::vec3(-front.z, 0.f, front.x)));
+				PushModel({
+					Translate(cam.GetPos() +
+						glm::vec3(rotationMat * glm::vec4(RotateVecIn2D(glm::vec3(5.5f, -7.f, -13.f), atan2(front.x, front.z) + glm::radians(180.f), Axis::y), 1.f))
+					),
+					Rotate(glm::vec4(glm::vec3(-front.z, 0.f, front.x), sign * glm::degrees(acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z))))))),
+					Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(front.x, front.z)))),
+					Scale(glm::vec3(5.f)),
+					});
+				// Render the weapon instead, cube is just for testing
+				meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
+				meshes[(int)MeshType::Cube]->Render(forwardSP);
 				PopModel();
 				break;
 			}

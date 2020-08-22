@@ -8,7 +8,13 @@ EntityManager::EntityManager(void)
 EntityManager::~EntityManager(void)
 {
 	for (size_t i = 0; i < entityList.size(); ++i)
-		delete entityList[i];
+	{
+		if (entityList[i])
+		{
+			delete entityList[i];
+			entityList[i] = nullptr;
+		}
+	}
 }
 
 bool EntityManager::Init(void)
@@ -57,8 +63,15 @@ void EntityManager::Update(int numPerFrame, glm::vec3 storeCamFront)
 			break;
 
 		case Entity::EntityType::BULLET:
-			entity->active = true;
-			entity->pos = entity->pos + entity->storeCamFront * 0.5f;
+			if (entity->lifeTime >= 1)
+			{
+				entity->active = true;
+				entity->pos = entity->pos + entity->storeCamFront * 5.f;
+				--entity->lifeTime;
+			}
+			else // Lifetime has reached 0, the bullet shall be deleted
+				entity->active = false;
+
 			break;
 			// Add others if needed
 		}

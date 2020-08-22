@@ -17,6 +17,7 @@ public:
 		AMMOBAR,
 		BULLET,
 		INVENTORY,
+		WEAPONHOLD,
 
 		NUM_TYPES
 	};
@@ -26,6 +27,7 @@ public:
 
 	EntityType type; // Entity type
 	bool active; // True when entity is being rendered, used to know which particles to reuse
+	int lifeTime; // How long the entity will stay rendered (I put it as int for now because of the structure and the update for the entitymanager here)
 
 	// To be passed in as parameters for translate, scale, rotate functions in scene.cpp
 	glm::vec3 pos;
