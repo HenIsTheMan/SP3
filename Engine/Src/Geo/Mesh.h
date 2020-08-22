@@ -36,6 +36,7 @@ public:
 	Mesh& operator=(Mesh&& mesh) noexcept;
 	virtual ~Mesh();
 
+	const MeshType& GetMeshType() const;
 	void AddModelMat(const glm::mat4& modelMat);
 	void AddTexMap(const std::tuple<str, TexType, uint>& texMap);
 	void ClearModelMats();

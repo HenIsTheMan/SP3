@@ -545,6 +545,10 @@ void Mesh::Render(ShaderProg& SP, const bool& autoConfig){
 	}
 }
 
+const Mesh::MeshType& Mesh::GetMeshType() const{
+	return type;
+}
+
 void Mesh::AddModelMat(const glm::mat4& modelMat){
 	modelMats.emplace_back(modelMat);
 }

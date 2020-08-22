@@ -53,7 +53,6 @@ void EntityManager::CreateEntities(const int& amt){ //Shld only be called once i
 void EntityManager::UpdateEntities(const UpdateParams& params){
 	root->Deactivate();
 	root->Partition();
-	//Collision
 
 	const size_t& size = entityList.size();
 	for(size_t i = 0; i < size; ++i){
@@ -65,6 +64,8 @@ void EntityManager::UpdateEntities(const UpdateParams& params){
 				case Entity::EntityType::BULLET:
 					break;
 			}
+
+			root->DetectAndResolveCollision(entity);
 			entity->vel += (entity->force / entity->mass) * dt;
 			entity->pos += entity->vel * dt;
 		}

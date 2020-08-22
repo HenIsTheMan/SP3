@@ -154,6 +154,28 @@ const CubeSection* const CubeSection::SearchForEntity(Entity* const& entity) con
 	return nullptr;
 }
 
+void CubeSection::DetectAndResolveCollision(Entity* const& entity){
+	const CubeSection* const& cubeSection = SearchForEntity(entity);
+	if(!cubeSection){
+		return (void)puts("Entity was not found in quadtree!");
+	}
+
+	const size_t& size = cubeSection->entityList->size();
+	for(size_t i = 0; i < size; ++i){
+		Entity* const& instance = (*cubeSection->entityList)[i];
+		if(instance && instance->active){
+			if(entity->mesh->GetMeshType() == instance->mesh->GetMeshType()){
+				switch(entity->mesh->GetMeshType()){
+					case Mesh::MeshType::Sphere:
+						break;
+					case Mesh::MeshType::Cube:
+						break;
+				}
+			}
+		}
+	}
+}
+
 const glm::vec3& CubeSection::GetOrigin() const{
 	return origin;
 }

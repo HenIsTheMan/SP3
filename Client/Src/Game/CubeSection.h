@@ -10,8 +10,9 @@ public:
 	void AddEntity(Entity* const& entity);
 	void Deactivate();
 	void Partition();
+
 	const CubeSection* const SearchForEntity(Entity* const& entity) const;
-	//void Collision
+	void DetectAndResolveCollision(Entity* const& entity);
 
 	///Getters
 	const glm::vec3& GetOrigin() const;
