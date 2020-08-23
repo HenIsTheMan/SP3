@@ -214,6 +214,24 @@ bool Scene::Init(){
 	spotlights.emplace_back(CreateLight(LightType::Spot));
 	//spotlights.emplace_back(CreateLight(LightType::Spot));
 
+	// Create Player
+	//Entity* player = new Entity(Entity::EntityType::PLAYER,
+	//	true, // Always active
+	//	cam.GetPos(), // Need to check first
+	//	glm::vec3(5.f),
+	//	glm::vec4(0.f),
+	//	glm::vec3(0.f));
+	//entityManager->AddEntity(player);
+
+	// For the weapon hold -> Anyhow create the variables because the rendering of entities changed, so the real values are used in the forward render function
+	//Entity* weaponhold = new Entity(Entity::EntityType::WEAPONHOLD,
+	//	true,
+	//	glm::vec3(0.f),
+	//	glm::vec3(5.f),
+	//	glm::vec4(0.f),
+	//	glm::vec3(0.f));
+	//entityManager->AddEntity(weaponhold);
+
 	return true;
 }
 
@@ -309,7 +327,8 @@ void Scene::Update() {
 		weapon->SetCurrentSlot(2);
 
 	// Update current weapon status to see whether can shoot
-	weapon->GetCurrentWeapon()->Update(elapsedTime);
+	static double lastTime = elapsedTime;
+	weapon->GetCurrentWeapon()->Update(elapsedTime - lastTime);
 
 	// TESTING ONLY FOR SHOOTING
 	if (Key(GLFW_KEY_5))
@@ -328,6 +347,8 @@ void Scene::Update() {
 			bullet->mesh = meshes[(int)MeshType::Sphere];
 			weapon->GetCurrentWeapon()->SetCanShoot(false); // For the shooting cooldown time
 			weapon->GetCurrentWeapon()->SetCurrentAmmoRound(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() - 1); // Decrease the ammo
+			lastTime = elapsedTime;
+			bullet->lifeTime = 200;
 		}
 	}
 
@@ -821,6 +842,28 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		meshes[(int)MeshType::Cylinder]->Render(forwardSP);
 		modelStack.PushModel({
 			modelStack.Translate(glm::vec3(-3.f, 0.f, 0.f)),
+
+
+			//case Entity::EntityType::WEAPONHOLD:
+			//	const glm::vec3 front = cam.CalcFront();
+			//	const float sign = front.y < 0.f ? -1.f : 1.f;
+
+			//	auto rotationMat = glm::rotate(glm::mat4(1.f), sign * acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z)))),
+			//		glm::normalize(glm::vec3(-front.z, 0.f, front.x)));
+			//	PushModel({
+			//		Translate(cam.GetPos() +
+			//			glm::vec3(rotationMat * glm::vec4(RotateVecIn2D(glm::vec3(5.5f, -7.f, -13.f), atan2(front.x, front.z) + glm::radians(180.f), Axis::y), 1.f))
+			//		),
+			//		Rotate(glm::vec4(glm::vec3(-front.z, 0.f, front.x), sign * glm::degrees(acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z))))))),
+			//		Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(front.x, front.z)))),
+			//		Scale(glm::vec3(5.f)),
+			//		});
+			//	// Render the weapon instead, cube is just for testing
+			//	meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
+			//	meshes[(int)MeshType::Cube]->Render(forwardSP);
+			//	PopModel();
+			//	break;
+
 		});
 			forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
 			forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
