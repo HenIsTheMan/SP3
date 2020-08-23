@@ -74,7 +74,7 @@ Scene::Scene() :
 	playerMaxHealth(100.f),
 	playerCurrLives(5.f),
 	playerMaxLives(5.f),
-	enemycount(0)
+	enemyCount(0)
 {
 }
 
@@ -149,7 +149,7 @@ bool Scene::Init(){
 	entityManager->CreateEntities(100);
 
 	Entity* const& enemy = entityManager->FetchEntity();
-	enemy->type = Entity::EntityType::ENEMY;
+	enemy->type = Entity::EntityType::STATIC_ENEMY;
 	enemy->active = true;
 	enemy->life = 0.f;
 	enemy->maxLife = 0.f;
@@ -226,8 +226,8 @@ void Scene::Update() {
 	cam.Update(GLFW_KEY_Q, GLFW_KEY_E, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_W, GLFW_KEY_S);
 	view = cam.LookAt();
 	projection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
-	minimapview = cam.LookAt();
-	minimapproj = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
+	minimapView = cam.LookAt();
+	minimapProjection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
 
 	const glm::vec3& camPos = cam.GetPos();
 	const glm::vec3& camFront = cam.CalcFront();
@@ -340,21 +340,22 @@ void Scene::Update() {
 	
 	for (int i = 0; i < (int)WaveNumber::Total; ++i)
 	{
-		if (enemycount == 0)
+		if (enemyCount == 0)
 		{
 			switch (waves[i])
 			{
 			case (int)WaveNumber::One:
 				for (int i = 0; i < 10; ++i)
 				{
-					Entity* stillenemy = new Entity(Entity::EntityType::STATIC_ENEMY,
-						true,
-						glm::vec3(rand() % 50 - 25, 10.f, rand() % 50 - 25),
-						glm::vec3(1.f),
-						glm::vec4(0.f),
-						cam.CalcFront());
-					entityManager->AddEntity(stillenemy);
-					++enemycount;
+					Entity* const& stillEnemy = entityManager->FetchEntity();
+					stillEnemy->type = Entity::EntityType::STATIC_ENEMY;
+					stillEnemy->active = true;
+					stillEnemy->pos = glm::vec3(rand() % 50 - 25, 10.f, rand() % 50 - 25);
+					stillEnemy->vel = glm::vec3(0.f);
+					stillEnemy->mass = 5.f;
+					stillEnemy->scale = glm::vec3(1.f);
+					stillEnemy->mesh = meshes[(int)MeshType::Sphere];
+					++enemyCount;
 				}
 				break;
 
@@ -389,7 +390,6 @@ void Scene::GeoRenderPass() {
 
 	///Terrain
 	modelStack.PushModel({
-		modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, 45.f)),
 		modelStack.Scale(glm::vec3(500.f, 100.f, 500.f)),
 	});
 		meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
@@ -497,9 +497,9 @@ void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, 
 		modelStack.Translate(translate),
 		modelStack.Scale(scale),
 	});
-		meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
 		meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-	PopModel();
+		meshes[(int)MeshType::Quad]->Render(screenSP, false);
+		modelStack.PopModel();
 	screenSP.ResetTexUnits();
 }
 
@@ -725,20 +725,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		forwardSP.Set1f(("spotlights[" + std::to_string(i) + "].cosInnerCutoff").c_str(), spotlight->cosInnerCutoff);
 		forwardSP.Set1f(("spotlights[" + std::to_string(i) + "].cosOuterCutoff").c_str(), spotlight->cosOuterCutoff);
 	}
-	forwardSP.SetMat4fv("PV", &(projection * glm::mat4(glm::mat3(view)))[0][0]);
-	///Sky
-	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
-	glCullFace(GL_FRONT);
-	forwardSP.Set1i("sky", 1);
-	PushModel({
-		Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
-		});
-	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
-	meshes[(int)MeshType::Sphere]->Render(forwardSP);
-	PopModel();
-	forwardSP.Set1i("sky", 0);
-	glCullFace(GL_BACK);
-	glDepthFunc(GL_LESS);
 
 	forwardSP.SetMat4fv("PV", &(projection * glm::mat4(glm::mat3(view)))[0][0]);
 
@@ -757,45 +743,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	glDepthFunc(GL_LESS);
 
 	forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
-
-	///Terrain
-	PushModel({
-		Rotate(glm::vec4(0.f, 1.f, 0.f, 45.f)),
-		Scale(glm::vec3(500.f, 100.f, 500.f)),
-		});
-	meshes[(int)MeshType::Terrain]->SetModel(GetTopModel());
-	meshes[(int)MeshType::Terrain]->Render(forwardSP);
-	PopModel();
-
-	///Shapes
-	PushModel({
-		Translate(glm::vec3(0.f, 100.f, 0.f)),
-		Scale(glm::vec3(10.f)),
-		});
-	PushModel({
-		Translate(glm::vec3(6.f, 0.f, 0.f)),
-		});
-	forwardSP.Set1i("noNormals", 1);
-	forwardSP.Set1i("useCustomColour", 1);
-	forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(5.f), 1.f));
-	meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
-	meshes[(int)MeshType::Quad]->Render(forwardSP);
-	forwardSP.Set1i("useCustomColour", 0);
-	forwardSP.Set1i("noNormals", 0);
-	PushModel({
-		Translate(glm::vec3(0.f, 0.f, 5.f)),
-		});
-	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
-	meshes[(int)MeshType::Sphere]->Render(forwardSP);
-	PopModel();
-	PushModel({
-		Translate(glm::vec3(0.f, 0.f, -5.f)),
-		});
-	meshes[(int)MeshType::Cylinder]->SetModel(GetTopModel());
-	meshes[(int)MeshType::Cylinder]->Render(forwardSP);
-	PopModel();
-	PopModel();
-	PopModel();
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -1034,35 +981,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			temp = "Sniper Rifle";
 			break;
 	}
-			//case Entity::EntityType::STATIC_ENEMY:
-			//	if (CheckCollision(entity->pos, entity->scale))
-			//	{
-			//		//do stuff here if raycasting detects enemy
-			//	}
-
-			//	PushModel({
-			//		Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
-			//		Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
-			//	});
-			//	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
-			//	meshes[(int)MeshType::Sphere]->Render(forwardSP);
-			//	PopModel();
-			//	break;
-
-			//case Entity::EntityType::MOVING_ENEMY:
-			//	if (CheckCollision(entity->pos, entity->scale))
-			//	{
-			//		//do stuff here if raycasting detects enemy
-			//	}
-
-			//	PushModel({
-			//		Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
-			//		Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
-			//		});
-			//	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
-			//	meshes[(int)MeshType::Sphere]->Render(forwardSP);
-			//	PopModel();
-			//	break;
 
 	// Weapon type
 	textChief.RenderText(textSP, {
@@ -1115,26 +1033,17 @@ void Scene::MinimapRender()
 	minimapcam.SetPos(glm::vec3(cam.GetPos().x, 1000.f, cam.GetPos().z));
 	minimapcam.SetTarget(glm::vec3(cam.GetPos().x, 0.f, cam.GetPos().z));
 	minimapcam.SetUp(glm::vec3(0.f, 0.f, -1.f));
-	minimapview = minimapcam.LookAt();
-	minimapproj = glm::ortho(-float(winWidth) / 5.f, float(winWidth) / 5.f, -float(winHeight) / 5.f, float(winHeight) / 5.f, .1f, 99999.f);
+	minimapView = minimapcam.LookAt();
+	minimapProjection = glm::ortho(-float(winWidth) / 5.f, float(winWidth) / 5.f, -float(winHeight) / 5.f, float(winHeight) / 5.f, .1f, 99999.f);
 
-	forwardSP.SetMat4fv("PV", &(minimapproj* minimapview)[0][0]);
+	forwardSP.SetMat4fv("PV", &(minimapProjection * minimapView)[0][0]);
 
-	//insert entity rendering here
-	PushModel({
-		Rotate(glm::vec4(0.f, 1.f, 0.f, 45.f)),
-		Scale(glm::vec3(800.f, 100.f, 800.f)),
-		});
-	meshes[(int)MeshType::Terrain]->SetModel(GetTopModel());
+	modelStack.PushModel({
+		modelStack.Scale(glm::vec3(500.f, 100.f, 500.f)),
+	});
+	meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
 	meshes[(int)MeshType::Terrain]->Render(forwardSP);
-	PopModel();
-
-	PushModel({
-			Translate(glm::vec3(cam.GetPos().x, 0.f, cam.GetPos().z)),
-			Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(cam.CalcFront().x, cam.CalcFront().z)))),
-			Scale(glm::vec3(20.f)),
-		});
-	PopModel();
+	modelStack.PopModel();
 }
 
 bool Scene::CheckCollision(const glm::vec3& pos, const glm::vec3& scale)

@@ -78,8 +78,8 @@ private:
 	ModelStack modelStack;
 	glm::mat4 view;
 	glm::mat4 projection;
-	glm::mat4 minimapview;
-	glm::mat4 minimapproj;
+	glm::mat4 minimapView;
+	glm::mat4 minimapProjection;
 	//std::vector<Mesh::BatchRenderParams> params;
 
 	float elapsedTime;
@@ -89,5 +89,5 @@ private:
 	float playerMaxLives;
 
 	//int polyMode;
-	int enemycount;
+	int enemyCount;
 };

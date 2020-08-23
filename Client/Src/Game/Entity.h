@@ -10,8 +10,9 @@ class Entity{
 private:
 	enum class EntityType{
 		PLAYER,
-		ENEMY,
 		BULLET,
+		STATIC_ENEMY,
+		MOVING_ENEMY,
 		NUM_TYPES
 	};
 

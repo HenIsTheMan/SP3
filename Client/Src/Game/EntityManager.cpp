@@ -60,9 +60,11 @@ void EntityManager::UpdateEntities(const UpdateParams& params){
 		Entity* const& entity = entityList[i];
 		if(entity && entity->active && entity->type != Entity::EntityType::NUM_TYPES){
 			switch(entity->type){
-				case Entity::EntityType::ENEMY:
-					break;
 				case Entity::EntityType::BULLET:
+					break;
+				case Entity::EntityType::STATIC_ENEMY:
+					break;
+				case Entity::EntityType::MOVING_ENEMY:
 					break;
 			}
 
@@ -82,7 +84,8 @@ void EntityManager::RenderEntities(ShaderProg& SP){
 		if(entity && entity->active){
 			switch(entity->type){
 				case Entity::EntityType::BULLET:
-				case Entity::EntityType::ENEMY:
+				case Entity::EntityType::STATIC_ENEMY:
+				case Entity::EntityType::MOVING_ENEMY:
 					SP.Set1i("noNormals", 1);
 					SP.Set1i("useCustomColour", 1);
 					SP.Set1i("useCustomDiffuseTexIndex", 1);
