@@ -22,6 +22,7 @@ public:
 	void SetParent(CubeSection* const& parent);
 	void SetOrigin(const glm::vec3& origin);
 	void SetSize(const glm::vec3& size);
+	void SetActive(const bool& active);
 
 	static void InitCubeSectionPool(const int& amt);
 	static void DestroyCubeSectionPool();
@@ -38,4 +39,5 @@ private:
 	CubeSection* DL;
 	CubeSection* DR;
 	std::vector<Entity*>* entityList;
+	bool active;
 };

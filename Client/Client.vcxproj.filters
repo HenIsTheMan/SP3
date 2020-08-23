@@ -24,9 +24,6 @@
     <ClCompile Include="Src\World\Scene.cpp">
       <Filter>Src\World</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Client.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="Src\Admin\App.cpp">
       <Filter>Src\Admin</Filter>
     </ClCompile>
@@ -53,6 +50,10 @@
     </ClCompile>
     <ClCompile Include="Src\World\ModelStack.cpp">
       <Filter>Src\World</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Client.cpp" />
+    <ClCompile Include="Src\Game\Collision.cpp">
+      <Filter>Src\Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -88,6 +89,9 @@
     </ClInclude>
     <ClInclude Include="Src\World\ModelStack.h">
       <Filter>Src\World</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\Collision.h">
+      <Filter>Src\Game</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

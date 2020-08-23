@@ -1,4 +1,5 @@
 #include "CubeSection.h"
+#include "Collision.h"
 
 std::vector<CubeSection*> CubeSection::cubeSectionPool;
 
@@ -10,7 +11,8 @@ CubeSection::CubeSection():
 	UR(nullptr),
 	DL(nullptr),
 	DR(nullptr),
-	entityList(new std::vector<Entity*>())
+	entityList(new std::vector<Entity*>()),
+	active(false)
 {
 }
 
@@ -31,82 +33,100 @@ void CubeSection::AddEntity(Entity* const& entity){
 }
 
 void CubeSection::Deactivate(){
-	entityList->clear();
-	if(UL){ //If UL exists...
-		UL->entityList->clear();
+	if(UL){
+		active = false;
+		entityList->clear();
 		UL->Deactivate();
 	}
-	if(UR){ //If UR exists...
-		UR->entityList->clear();
+	if(UR){
+		active = false;
+		entityList->clear();
 		UR->Deactivate();
 	}
-	if(DL){ //If DL exists...
-		DL->entityList->clear();
+	if(DL){
+		active = false;
+		entityList->clear();
 		DL->Deactivate();
 	}
-	if(DR){ //If DR exists...
-		DR->entityList->clear();
+	if(DR){
+		active = false;
+		entityList->clear();
 		DR->Deactivate();
 	}
 }
 
 void CubeSection::Partition(){
-	if(entityList->size() > 4){
+	if(entityList->size() > 7){
 		///Set up UL
 		UL = FetchCubeSection();
+		UL->active = true;
 		UL->SetParent(this);
-		UL->SetOrigin(glm::vec3(origin.x - size.x / 4.f, origin.y + size.y / 4.f, origin.z));
-		UL->SetSize(size / 2.f);
+		UL->SetOrigin(glm::vec3(origin.x - size.x / 4.f, origin.y, origin.z - size.z / 4.f));
+		UL->SetSize(glm::vec3(size.x / 2.f, size.y, size.z / 2.f));
 
 		///Set up UR
 		UR = FetchCubeSection();
+		UR->active = true;
 		UR->SetParent(this);
-		UR->SetOrigin(glm::vec3(origin.x + size.x / 4.f, origin.y + size.y / 4.f, origin.z));
-		UR->SetSize(size / 2.f);
+		UR->SetOrigin(glm::vec3(origin.x + size.x / 4.f, origin.y, origin.z - size.z / 4.f));
+		UR->SetSize(glm::vec3(size.x / 2.f, size.y, size.z / 2.f));
 
 		///Set up DL
 		DL = FetchCubeSection();
+		DL->active = true;
 		DL->SetParent(this);
-		DL->SetOrigin(glm::vec3(origin.x - size.x / 4.f, origin.y - size.y / 4.f, origin.z));
-		DL->SetSize(size / 2.f);
+		DL->SetOrigin(glm::vec3(origin.x - size.x / 4.f, origin.y, origin.z + size.z / 4.f));
+		DL->SetSize(glm::vec3(size.x / 2.f, size.y, size.z / 2.f));
 
 		///Set up DR
 		DR = FetchCubeSection();
+		DR->active = true;
 		DR->SetParent(this);
-		DR->SetOrigin(glm::vec3(origin.x + size.x / 4.f, origin.y - size.y / 4.f, origin.z));
-		DR->SetSize(size / 2.f);
+		DR->SetOrigin(glm::vec3(origin.x + size.x / 4.f, origin.y, origin.z + size.z / 4.f));
+		DR->SetSize(glm::vec3(size.x / 2.f, size.y, size.z / 2.f));
 
+		glm::vec3* prevPos = nullptr;
 		if(entityList){
-			for(Entity*& entity: *entityList){
-				if(entity->pos == origin){
-					switch(PseudorandMinMax(0, 3)){
-						case 0:
-							UR->AddEntity(entity);
-							break;
-						case 1:
-							UL->AddEntity(entity);
-							break;
-						case 2:
-							DR->AddEntity(entity);
-							break;
-						case 3:
-							DL->AddEntity(entity);
-							break;
-					}
-					continue;
-				}
-				if(entity->pos.y > origin.y){
-					if(entity->pos.x > origin.x){
-						UR->AddEntity(entity);
+			for(Entity*& entity : *entityList){
+				if(entity && entity->active){
+					if(prevPos && entity->pos == *prevPos){
+						switch(PseudorandMinMax(0, 3)){
+							case 0:
+								UR->AddEntity(entity);
+								break;
+							case 1:
+								UL->AddEntity(entity);
+								break;
+							case 2:
+								DR->AddEntity(entity);
+								break;
+							case 3:
+								DL->AddEntity(entity);
+								break;
+						}
 					} else{
-						UL->AddEntity(entity);
+						switch(entity->mesh->GetMeshType()){
+							case Mesh::MeshType::Sphere:
+								if(entity->pos.z - entity->scale.z <= origin.z){
+									if(entity->pos.x - entity->scale.x <= origin.x){
+										UR->AddEntity(entity);
+									}
+									if(entity->pos.x + entity->scale.x >= origin.x){
+										UL->AddEntity(entity);
+									}
+								}
+								if(entity->pos.z + entity->scale.z >= origin.z){
+									if(entity->pos.x - entity->scale.x <= origin.x){
+										DR->AddEntity(entity);
+									}
+									if(entity->pos.x + entity->scale.x >= origin.x){
+										DL->AddEntity(entity);
+									}
+								}
+								break;
+						}
 					}
-				} else{
-					if(entity->pos.x > origin.x){
-						DR->AddEntity(entity);
-					} else{
-						DL->AddEntity(entity);
-					}
+					prevPos = &entity->pos;
 				}
 			}
 		}
@@ -121,27 +141,27 @@ void CubeSection::Partition(){
 
 const CubeSection* const CubeSection::SearchForEntity(Entity* const& entity) const{ //Search children 1st
 	if(UL){ //If UL exists...
-		const CubeSection* const& CubeSection = UL->SearchForEntity(entity);
-		if(CubeSection){ //If entity was found in a CubeSection...
-			return CubeSection;
+		const CubeSection* const& cubeSection = UL->SearchForEntity(entity);
+		if(cubeSection){ //If entity was found in a cubeSection...
+			return cubeSection;
 		}
 	}
 	if(UR){ //If UR exists...
-		const CubeSection* const& CubeSection = UR->SearchForEntity(entity);
-		if(CubeSection){ //If entity was found in a CubeSection...
-			return CubeSection;
+		const CubeSection* const& cubeSection = UR->SearchForEntity(entity);
+		if(cubeSection){ //If entity was found in a cubeSection...
+			return cubeSection;
 		}
 	}
 	if(DL){ //If DL exists...
-		const CubeSection* const& CubeSection = DL->SearchForEntity(entity);
-		if(CubeSection){ //If entity was found in a CubeSection...
-			return CubeSection;
+		const CubeSection* const& cubeSection = DL->SearchForEntity(entity);
+		if(cubeSection){ //If entity was found in a cubeSection...
+			return cubeSection;
 		}
 	}
 	if(DR){ //If DR exists...
-		const CubeSection* const& CubeSection = DR->SearchForEntity(entity);
-		if(CubeSection){ //If entity was found in a CubeSection...
-			return CubeSection;
+		const CubeSection* const& cubeSection = DR->SearchForEntity(entity);
+		if(cubeSection){ //If entity was found in a cubeSection...
+			return cubeSection;
 		}
 	}
 	if(entityList){
@@ -163,15 +183,8 @@ void CubeSection::DetectAndResolveCollision(Entity* const& entity){
 	const size_t& size = cubeSection->entityList->size();
 	for(size_t i = 0; i < size; ++i){
 		Entity* const& instance = (*cubeSection->entityList)[i];
-		if(instance && instance->active){
-			if(entity->mesh->GetMeshType() == instance->mesh->GetMeshType()){
-				switch(entity->mesh->GetMeshType()){
-					case Mesh::MeshType::Sphere:
-						break;
-					case Mesh::MeshType::Cube:
-						break;
-				}
-			}
+		if(instance && instance->active && entity != instance){
+			Collision::DetectAndResolveCollision(entity, instance);
 		}
 	}
 }
@@ -196,6 +209,10 @@ void CubeSection::SetSize(const glm::vec3& size){
 	this->size = size;
 }
 
+void CubeSection::SetActive(const bool& active){
+	this->active = active;
+}
+
 void CubeSection::InitCubeSectionPool(const int& amt){
 	cubeSectionPool = std::vector<CubeSection*>(amt);
 	for(int i = 0; i < amt; ++i){
@@ -215,7 +232,7 @@ void CubeSection::DestroyCubeSectionPool(){
 
 CubeSection* const& CubeSection::FetchCubeSection(){
 	for(CubeSection* const& cubeSection: cubeSectionPool){
-		if(!cubeSection->entityList->size()){
+		if(!cubeSection->active){
 			return cubeSection;
 		}
 	}

@@ -146,7 +146,37 @@ bool Scene::Init(){
 	entityManager = EntityManager::GetObjPtr();
 	entityManager->CreateEntities(100);
 
+	Entity* const& enemy = entityManager->FetchEntity();
+	enemy->type = Entity::EntityType::ENEMY;
+	enemy->active = true;
+	enemy->life = 0.f;
+	enemy->maxLife = 0.f;
+	enemy->colour = glm::vec4(1.f, 0.f, 0.f, 1.f);
+	enemy->diffuseTexIndex = -1;
+	enemy->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+	enemy->scale = glm::vec3(20.f);
+	enemy->light = nullptr;
+	enemy->mesh = meshes[(int)MeshType::Sphere];
+	enemy->pos = glm::vec3(-100.f, 200.f, 0.f);
+	enemy->vel = glm::vec3(0.f, 6.f, 3.f);
+	enemy->mass = 1.f;
+	enemy->force = glm::vec3(0.f);
 
+	Entity* const& bullet = entityManager->FetchEntity();
+	bullet->type = Entity::EntityType::BULLET;
+	bullet->active = true;
+	bullet->life = 0.f;
+	bullet->maxLife = 0.f;
+	bullet->colour = glm::vec4(0.f, 0.f, 1.f, 1.f);
+	bullet->diffuseTexIndex = -1;
+	bullet->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+	bullet->scale = glm::vec3(20.f);
+	bullet->light = nullptr;
+	bullet->mesh = meshes[(int)MeshType::Sphere];
+	bullet->pos = glm::vec3(-100.f, 200.f, 150.f);
+	bullet->vel = glm::vec3(0.f, 4.f, -12.f);
+	bullet->mass = 1.f;
+	bullet->force = glm::vec3(0.f);
 
 	//glGetIntegerv(GL_POLYGON_MODE, &polyMode);
 

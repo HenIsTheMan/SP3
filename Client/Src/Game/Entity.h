@@ -3,6 +3,7 @@
 #include <Engine.h>
 
 class Entity{
+	friend struct Collision;
 	friend class CubeSection;
 	friend class EntityManager;
 	friend class Scene;
