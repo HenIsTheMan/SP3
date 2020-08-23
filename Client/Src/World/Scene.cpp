@@ -11,12 +11,13 @@ extern int winHeight;
 
 glm::vec3 Light::globalAmbient = glm::vec3(.2f);
 
-Scene::Scene():
+Scene::Scene() :
 	cam(glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 150.f),
 	dCam(glm::vec3(0.f, 150.f, 0.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
 	sCam(glm::vec3(0.f, 100.f, 200.f), glm::vec3(0.f, 100.f, 0.f), glm::vec3(0.f, 1.f, 0.f), 1.f, 0.f),
 	waterCam(glm::vec3(-15.f, -20.f, -20.f), glm::vec3(-15.f, 0.f, -20.f), glm::vec3(0.f, 0.f, 1.f), 1.f, 0.f),
 	enCam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 1.f, 0.f),
+	minimapcam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 0.f, 0.f),
 	soundEngine(nullptr),
 	music(nullptr),
 	soundFX(nullptr),
@@ -72,49 +73,50 @@ Scene::Scene():
 	playerCurrHealth(100.f),
 	playerMaxHealth(100.f),
 	playerCurrLives(5.f),
-	playerMaxLives(5.f)
+	playerMaxLives(5.f),
+	enemycount(0)
 {
 }
 
-Scene::~Scene(){
+Scene::~Scene() {
 	const size_t& pSize = ptLights.size();
 	const size_t& dSize = directionalLights.size();
 	const size_t& sSize = spotlights.size();
-	for(size_t i = 0; i < pSize; ++i){
-		if(ptLights[i]){
+	for (size_t i = 0; i < pSize; ++i) {
+		if (ptLights[i]) {
 			delete ptLights[i];
 			ptLights[i] = nullptr;
 		}
 	}
-	for(size_t i = 0; i < dSize; ++i){
-		if(directionalLights[i]){
+	for (size_t i = 0; i < dSize; ++i) {
+		if (directionalLights[i]) {
 			delete directionalLights[i];
 			directionalLights[i] = nullptr;
 		}
 	}
-	for(size_t i = 0; i < sSize; ++i){
-		if(spotlights[i]){
+	for (size_t i = 0; i < sSize; ++i) {
+		if (spotlights[i]) {
 			delete spotlights[i];
 			spotlights[i] = nullptr;
 		}
 	}
-	
-	for(int i = 0; i < (int)MeshType::Amt; ++i){
-		if(meshes[i]){
+
+	for (int i = 0; i < (int)MeshType::Amt; ++i) {
+		if (meshes[i]) {
 			delete meshes[i];
 			meshes[i] = nullptr;
 		}
 	}
-	for(int i = 0; i < (int)ModelType::Amt; ++i){
-		if(models[i]){
+	for (int i = 0; i < (int)ModelType::Amt; ++i) {
+		if (models[i]) {
 			delete models[i];
 			models[i] = nullptr;
 		}
 	}
-	if(music){
+	if (music) {
 		music->drop();
 	}
-	if(soundEngine){
+	if (soundEngine) {
 		soundEngine->drop();
 	}
 	if(entityManager){
@@ -181,25 +183,26 @@ bool Scene::Init(){
 	//glGetIntegerv(GL_POLYGON_MODE, &polyMode);
 
 	soundEngine = createIrrKlangDevice(ESOD_AUTO_DETECT, ESEO_MULTI_THREADED | ESEO_LOAD_PLUGINS | ESEO_USE_3D_BUFFERS | ESEO_PRINT_DEBUG_INFO_TO_DEBUGGER);
-	if(!soundEngine){
+	if (!soundEngine) {
 		(void)puts("Failed to init soundEngine!\n");
 	}
 	//soundEngine->play2D("Audio/Music/YellowCafe.mp3", true);
 
 	music = soundEngine->play3D("Audio/Music/YellowCafe.mp3", vec3df(0.f, 0.f, 0.f), true, true, true, ESM_AUTO_DETECT, true);
-	if(music){
+	if (music) {
 		music->setMinDistance(5.f);
 		music->setVolume(0);
 
 		soundFX = music->getSoundEffectControl();
-		if(!soundFX){
+		if (!soundFX) {
 			(void)puts("No soundFX support!\n");
 		}
-	} else{
+	}
+	else {
 		(void)puts("Failed to init music!\n");
 	}
 
-	meshes[(int)MeshType::SpriteAni]->AddTexMap({"Imgs/Fire.png", Mesh::TexType::Diffuse, 0});
+	meshes[(int)MeshType::SpriteAni]->AddTexMap({ "Imgs/Fire.png", Mesh::TexType::Diffuse, 0 });
 	static_cast<SpriteAni*>(meshes[(int)MeshType::SpriteAni])->AddAni("FireSpriteAni", 0, 32);
 	static_cast<SpriteAni*>(meshes[(int)MeshType::SpriteAni])->Play("FireSpriteAni", -1, .5f);
 
@@ -214,15 +217,17 @@ bool Scene::Init(){
 	return true;
 }
 
-void Scene::Update(){
+void Scene::Update() {
 	elapsedTime += dt;
-	if(winHeight){ //Avoid division by 0 when win is minimised
+	if (winHeight) { //Avoid division by 0 when win is minimised
 		cam.SetDefaultAspectRatio(float(winWidth) / float(winHeight));
 		cam.ResetAspectRatio();
 	}
 	cam.Update(GLFW_KEY_Q, GLFW_KEY_E, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_W, GLFW_KEY_S);
 	view = cam.LookAt();
 	projection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
+	minimapview = cam.LookAt();
+	minimapproj = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
 
 	const glm::vec3& camPos = cam.GetPos();
 	const glm::vec3& camFront = cam.CalcFront();
@@ -263,20 +268,20 @@ void Scene::Update(){
 	//	polyModeBT = elapsedTime + .5f;
 	//}
 
-	if(soundFX){
-		if(Key(GLFW_KEY_I) && distortionBT <= elapsedTime){
+	if (soundFX) {
+		if (Key(GLFW_KEY_I) && distortionBT <= elapsedTime) {
 			soundFX->isDistortionSoundEffectEnabled() ? soundFX->disableDistortionSoundEffect() : (void)soundFX->enableDistortionSoundEffect();
 			distortionBT = elapsedTime + .5f;
 		}
-		if(Key(GLFW_KEY_O) && echoBT <= elapsedTime){
+		if (Key(GLFW_KEY_O) && echoBT <= elapsedTime) {
 			soundFX->isEchoSoundEffectEnabled() ? soundFX->disableEchoSoundEffect() : (void)soundFX->enableEchoSoundEffect();
 			echoBT = elapsedTime + .5f;
 		}
-		if(Key(GLFW_KEY_P) && wavesReverbBT <= elapsedTime){
+		if (Key(GLFW_KEY_P) && wavesReverbBT <= elapsedTime) {
 			soundFX->isWavesReverbSoundEffectEnabled() ? soundFX->disableWavesReverbSoundEffect() : (void)soundFX->enableWavesReverbSoundEffect();
 			wavesReverbBT = elapsedTime + .5f;
 		}
-		if(Key(GLFW_KEY_L) && resetSoundFXBT <= elapsedTime){
+		if (Key(GLFW_KEY_L) && resetSoundFXBT <= elapsedTime) {
 			soundFX->disableAllEffects();
 			resetSoundFXBT = elapsedTime + .5f;
 		}
@@ -332,9 +337,37 @@ void Scene::Update(){
 
 	EntityManager::UpdateParams params;
 	entityManager->UpdateEntities(params);
+	
+	for (int i = 0; i < (int)WaveNumber::Total; ++i)
+	{
+		if (enemycount == 0)
+		{
+			switch (waves[i])
+			{
+			case (int)WaveNumber::One:
+				for (int i = 0; i < 10; ++i)
+				{
+					Entity* stillenemy = new Entity(Entity::EntityType::STATIC_ENEMY,
+						true,
+						glm::vec3(rand() % 50 - 25, 10.f, rand() % 50 - 25),
+						glm::vec3(1.f),
+						glm::vec4(0.f),
+						cam.CalcFront());
+					entityManager->AddEntity(stillenemy);
+					++enemycount;
+				}
+				break;
+
+			case (int)WaveNumber::Total:
+				i = 0;
+				break;
+			}
+		}
+		
+	}
 }
 
-void Scene::GeoRenderPass(){
+void Scene::GeoRenderPass() {
 	geoPassSP.Use();
 	geoPassSP.SetMat4fv("PV", &(projection * glm::mat4(glm::mat3(view)))[0][0]);
 
@@ -394,7 +427,7 @@ void Scene::GeoRenderPass(){
 	modelStack.PopModel();
 }
 
-void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID){
+void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID) {
 	lightingPassSP.Use();
 	const int& pAmt = (int)ptLights.size();
 	const int& dAmt = (int)directionalLights.size();
@@ -413,7 +446,7 @@ void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRe
 	lightingPassSP.UseTex(reflectionTexRefID, "reflectionTex");
 
 	int i;
-	for(i = 0; i < pAmt; ++i){
+	for (i = 0; i < pAmt; ++i) {
 		const PtLight* const& ptLight = static_cast<PtLight*>(ptLights[i]);
 		lightingPassSP.Set3fv(("ptLights[" + std::to_string(i) + "].ambient").c_str(), ptLight->ambient);
 		lightingPassSP.Set3fv(("ptLights[" + std::to_string(i) + "].diffuse").c_str(), ptLight->diffuse);
@@ -423,14 +456,14 @@ void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRe
 		lightingPassSP.Set1f(("ptLights[" + std::to_string(i) + "].linear").c_str(), ptLight->linear);
 		lightingPassSP.Set1f(("ptLights[" + std::to_string(i) + "].quadratic").c_str(), ptLight->quadratic);
 	}
-	for(i = 0; i < dAmt; ++i){
+	for (i = 0; i < dAmt; ++i) {
 		const DirectionalLight* const& directionalLight = static_cast<DirectionalLight*>(directionalLights[i]);
 		lightingPassSP.Set3fv(("directionalLights[" + std::to_string(i) + "].ambient").c_str(), directionalLight->ambient);
 		lightingPassSP.Set3fv(("directionalLights[" + std::to_string(i) + "].diffuse").c_str(), directionalLight->diffuse);
 		lightingPassSP.Set3fv(("directionalLights[" + std::to_string(i) + "].spec").c_str(), directionalLight->spec);
 		lightingPassSP.Set3fv(("directionalLights[" + std::to_string(i) + "].dir").c_str(), directionalLight->dir);
 	}
-	for(i = 0; i < sAmt; ++i){
+	for (i = 0; i < sAmt; ++i) {
 		const Spotlight* const& spotlight = static_cast<Spotlight*>(spotlights[i]);
 		lightingPassSP.Set3fv(("spotlights[" + std::to_string(i) + "].ambient").c_str(), spotlight->ambient);
 		lightingPassSP.Set3fv(("spotlights[" + std::to_string(i) + "].diffuse").c_str(), spotlight->diffuse);
@@ -446,7 +479,7 @@ void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRe
 	lightingPassSP.ResetTexUnits();
 }
 
-void Scene::BlurRender(const uint& brightTexRefID, const bool& horizontal){
+void Scene::BlurRender(const uint& brightTexRefID, const bool& horizontal) {
 	blurSP.Use();
 	blurSP.Set1i("horizontal", horizontal);
 	blurSP.UseTex(brightTexRefID, "texSampler");
@@ -455,13 +488,18 @@ void Scene::BlurRender(const uint& brightTexRefID, const bool& horizontal){
 	blurSP.ResetTexUnits();
 }
 
-void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID){
+void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, const glm::vec3& translate, const glm::vec3& scale){
 	screenSP.Use();
 	screenSP.Set1f("exposure", 1.2f);
 	screenSP.UseTex(screenTexRefID, "screenTexSampler");
 	screenSP.UseTex(blurTexRefID, "blurTexSampler");
-	meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-	meshes[(int)MeshType::Quad]->Render(screenSP, false);
+	modelStack.PushModel({
+		modelStack.Translate(translate),
+		modelStack.Scale(scale),
+	});
+		meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+		meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+	PopModel();
 	screenSP.ResetTexUnits();
 }
 
@@ -660,7 +698,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	forwardSP.Set1i("sAmt", sAmt);
 
 	int i;
-	for(i = 0; i < pAmt; ++i){
+	for (i = 0; i < pAmt; ++i) {
 		const PtLight* const& ptLight = static_cast<PtLight*>(ptLights[i]);
 		forwardSP.Set3fv(("ptLights[" + std::to_string(i) + "].ambient").c_str(), ptLight->ambient);
 		forwardSP.Set3fv(("ptLights[" + std::to_string(i) + "].diffuse").c_str(), ptLight->diffuse);
@@ -670,14 +708,14 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		forwardSP.Set1f(("ptLights[" + std::to_string(i) + "].linear").c_str(), ptLight->linear);
 		forwardSP.Set1f(("ptLights[" + std::to_string(i) + "].quadratic").c_str(), ptLight->quadratic);
 	}
-	for(i = 0; i < dAmt; ++i){
+	for (i = 0; i < dAmt; ++i) {
 		const DirectionalLight* const& directionalLight = static_cast<DirectionalLight*>(directionalLights[i]);
 		forwardSP.Set3fv(("directionalLights[" + std::to_string(i) + "].ambient").c_str(), directionalLight->ambient);
 		forwardSP.Set3fv(("directionalLights[" + std::to_string(i) + "].diffuse").c_str(), directionalLight->diffuse);
 		forwardSP.Set3fv(("directionalLights[" + std::to_string(i) + "].spec").c_str(), directionalLight->spec);
 		forwardSP.Set3fv(("directionalLights[" + std::to_string(i) + "].dir").c_str(), directionalLight->dir);
 	}
-	for(i = 0; i < sAmt; ++i){
+	for (i = 0; i < sAmt; ++i) {
 		const Spotlight* const& spotlight = static_cast<Spotlight*>(spotlights[i]);
 		forwardSP.Set3fv(("spotlights[" + std::to_string(i) + "].ambient").c_str(), spotlight->ambient);
 		forwardSP.Set3fv(("spotlights[" + std::to_string(i) + "].diffuse").c_str(), spotlight->diffuse);
@@ -687,6 +725,20 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		forwardSP.Set1f(("spotlights[" + std::to_string(i) + "].cosInnerCutoff").c_str(), spotlight->cosInnerCutoff);
 		forwardSP.Set1f(("spotlights[" + std::to_string(i) + "].cosOuterCutoff").c_str(), spotlight->cosOuterCutoff);
 	}
+	forwardSP.SetMat4fv("PV", &(projection * glm::mat4(glm::mat3(view)))[0][0]);
+	///Sky
+	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
+	glCullFace(GL_FRONT);
+	forwardSP.Set1i("sky", 1);
+	PushModel({
+		Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
+		});
+	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+	meshes[(int)MeshType::Sphere]->Render(forwardSP);
+	PopModel();
+	forwardSP.Set1i("sky", 0);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LESS);
 
 	forwardSP.SetMat4fv("PV", &(projection * glm::mat4(glm::mat3(view)))[0][0]);
 
@@ -705,6 +757,46 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	glDepthFunc(GL_LESS);
 
 	forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
+
+	///Terrain
+	PushModel({
+		Rotate(glm::vec4(0.f, 1.f, 0.f, 45.f)),
+		Scale(glm::vec3(500.f, 100.f, 500.f)),
+		});
+	meshes[(int)MeshType::Terrain]->SetModel(GetTopModel());
+	meshes[(int)MeshType::Terrain]->Render(forwardSP);
+	PopModel();
+
+	///Shapes
+	PushModel({
+		Translate(glm::vec3(0.f, 100.f, 0.f)),
+		Scale(glm::vec3(10.f)),
+		});
+	PushModel({
+		Translate(glm::vec3(6.f, 0.f, 0.f)),
+		});
+	forwardSP.Set1i("noNormals", 1);
+	forwardSP.Set1i("useCustomColour", 1);
+	forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(5.f), 1.f));
+	meshes[(int)MeshType::Quad]->SetModel(GetTopModel());
+	meshes[(int)MeshType::Quad]->Render(forwardSP);
+	forwardSP.Set1i("useCustomColour", 0);
+	forwardSP.Set1i("noNormals", 0);
+	PushModel({
+		Translate(glm::vec3(0.f, 0.f, 5.f)),
+		});
+	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+	meshes[(int)MeshType::Sphere]->Render(forwardSP);
+	PopModel();
+	PushModel({
+		Translate(glm::vec3(0.f, 0.f, -5.f)),
+		});
+	meshes[(int)MeshType::Cylinder]->SetModel(GetTopModel());
+	meshes[(int)MeshType::Cylinder]->Render(forwardSP);
+	PopModel();
+	PopModel();
+	PopModel();
+
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//Test wall
@@ -942,6 +1034,35 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			temp = "Sniper Rifle";
 			break;
 	}
+			//case Entity::EntityType::STATIC_ENEMY:
+			//	if (CheckCollision(entity->pos, entity->scale))
+			//	{
+			//		//do stuff here if raycasting detects enemy
+			//	}
+
+			//	PushModel({
+			//		Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
+			//		Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+			//	});
+			//	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+			//	meshes[(int)MeshType::Sphere]->Render(forwardSP);
+			//	PopModel();
+			//	break;
+
+			//case Entity::EntityType::MOVING_ENEMY:
+			//	if (CheckCollision(entity->pos, entity->scale))
+			//	{
+			//		//do stuff here if raycasting detects enemy
+			//	}
+
+			//	PushModel({
+			//		Translate(glm::vec3(entity->pos.x, entity->pos.y, entity->pos.z)),
+			//		Scale(glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z)),
+			//		});
+			//	meshes[(int)MeshType::Sphere]->SetModel(GetTopModel());
+			//	meshes[(int)MeshType::Sphere]->Render(forwardSP);
+			//	PopModel();
+			//	break;
 
 	// Weapon type
 	textChief.RenderText(textSP, {
@@ -952,7 +1073,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		glm::vec4(1.f),
 		0
 	});
-
 	// Weapon ammo
 	textChief.RenderText(textSP, {
 		std::to_string(weapon->GetCurrentWeapon()->GetCurrentAmmoRound()) + "/" + std::to_string(weapon->GetCurrentWeapon()->GetCurrentTotalAmmo()),
@@ -962,7 +1082,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		glm::vec4(1.f),
 		0
 	});
-
 	// FPS
 	textChief.RenderText(textSP, {
 		"FPS: " + std::to_string(1.f / dt),
@@ -977,4 +1096,48 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	if(music && music->getIsPaused()){
 		music->setIsPaused(false);
 	}
+}
+
+void Scene::MinimapRender()
+{
+	forwardSP.Use();
+	const int& pAmt = 0;
+	const int& dAmt = 0;
+	const int& sAmt = 0;
+	//forwardSP.Set1i("nightVision", 0);
+	forwardSP.Set1f("shininess", 32.f); //More light scattering if lower
+	forwardSP.Set3fv("globalAmbient", Light::globalAmbient);
+	forwardSP.Set3fv("camPos", cam.GetPos());
+	forwardSP.Set1i("pAmt", pAmt);
+	forwardSP.Set1i("dAmt", dAmt);
+	forwardSP.Set1i("sAmt", sAmt);
+
+	minimapcam.SetPos(glm::vec3(cam.GetPos().x, 1000.f, cam.GetPos().z));
+	minimapcam.SetTarget(glm::vec3(cam.GetPos().x, 0.f, cam.GetPos().z));
+	minimapcam.SetUp(glm::vec3(0.f, 0.f, -1.f));
+	minimapview = minimapcam.LookAt();
+	minimapproj = glm::ortho(-float(winWidth) / 5.f, float(winWidth) / 5.f, -float(winHeight) / 5.f, float(winHeight) / 5.f, .1f, 99999.f);
+
+	forwardSP.SetMat4fv("PV", &(minimapproj* minimapview)[0][0]);
+
+	//insert entity rendering here
+	PushModel({
+		Rotate(glm::vec4(0.f, 1.f, 0.f, 45.f)),
+		Scale(glm::vec3(800.f, 100.f, 800.f)),
+		});
+	meshes[(int)MeshType::Terrain]->SetModel(GetTopModel());
+	meshes[(int)MeshType::Terrain]->Render(forwardSP);
+	PopModel();
+
+	PushModel({
+			Translate(glm::vec3(cam.GetPos().x, 0.f, cam.GetPos().z)),
+			Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(cam.CalcFront().x, cam.CalcFront().z)))),
+			Scale(glm::vec3(20.f)),
+		});
+	PopModel();
+}
+
+bool Scene::CheckCollision(const glm::vec3& pos, const glm::vec3& scale)
+{
+	return false;
 }

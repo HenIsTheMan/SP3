@@ -18,6 +18,7 @@ public:
 		DepthS,
 		PlanarReflection,
 		CubemapReflection,
+		Minimap,
 		Amt
 	};
 	enum struct Tex{
@@ -34,6 +35,7 @@ public:
 		DepthS,
 		PlanarReflection,
 		CubemapReflection,
+		Minimap,
 		Amt
 	};
 	enum struct RBO{

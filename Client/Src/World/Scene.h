@@ -14,17 +14,21 @@ public:
 	void GeoRenderPass();
 	void LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID);
 	void BlurRender(const uint& brightTexRefID, const bool& horizontal);
-	void DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID);
+	void DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, const glm::vec3& translate, const glm::vec3& scale);
 	void DepthRender(const short& projectionType);
 	void PlanarReflectionRender();
 	void CubemapReflectionRender(const short& cubemapFace);
 	void ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID, const uint& cubemapReflectionTexID);
+	void MinimapRender();
+	bool CheckCollision(const glm::vec3& pos, const glm::vec3& scale);
 private:
 	Cam cam;
 	Cam dCam;
 	Cam sCam;
 	Cam waterCam;
 	Cam enCam;
+	Cam minimapcam;
+
 	ISoundEngine* soundEngine;
 	ISound* music;
 	ISoundEffectControl* soundFX;
@@ -49,6 +53,12 @@ private:
 	};
 	Model* models[(int)ModelType::Amt];
 
+	enum struct WaveNumber{
+		One,
+		Total
+	};
+	int waves[(int)WaveNumber::Total];
+
 	EntityManager* entityManager;
 	Weapon* weapon;
 
@@ -68,6 +78,8 @@ private:
 	ModelStack modelStack;
 	glm::mat4 view;
 	glm::mat4 projection;
+	glm::mat4 minimapview;
+	glm::mat4 minimapproj;
 	//std::vector<Mesh::BatchRenderParams> params;
 
 	float elapsedTime;
@@ -75,5 +87,7 @@ private:
 	float playerMaxHealth;
 	float playerCurrLives;
 	float playerMaxLives;
+
 	//int polyMode;
+	int enemycount;
 };

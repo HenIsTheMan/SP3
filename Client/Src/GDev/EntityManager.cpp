@@ -8,10 +8,14 @@ EntityManager::EntityManager(void)
 EntityManager::~EntityManager(void)
 {
 	for (size_t i = 0; i < entityList.size(); ++i)
+<<<<<<< HEAD
 		if(entityList[i]){
 			delete entityList[i];
 			entityList[i] = nullptr;
 		}
+=======
+		delete entityList[i];
+>>>>>>> origin/Trina-Lim
 }
 
 bool EntityManager::Init(void)
@@ -55,8 +59,19 @@ void EntityManager::Update(int numPerFrame, glm::vec3 storeCamFront)
 			// Do the movement/lifetime for the particles here
 			break;
 
+<<<<<<< HEAD
 		case Entity::EntityType::ENEMY:
 			// Do the movement for the enemies here
+=======
+		case Entity::EntityType::STATIC_ENEMY:
+			entity->active = true;
+			break;
+
+		case Entity::EntityType::MOVING_ENEMY:
+			// Do the movement for the enemies here
+			entity->active = true;
+			
+>>>>>>> origin/Trina-Lim
 			break;
 
 		case Entity::EntityType::BULLET:

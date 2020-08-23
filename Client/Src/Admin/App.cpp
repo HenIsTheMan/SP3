@@ -176,6 +176,22 @@ bool App::Init(){
 		(void)puts(" is incomplete!\n");
 		return false;
 	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::Minimap]);
+		glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
+		glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)Tex::Minimap]);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_FLOAT, NULL);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texRefIDs[(int)Tex::Minimap], 0);
+		glBindTexture(GL_TEXTURE_2D, currTexRefID);
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+		(void)printf(STR(FBO::Minimap));
+		(void)puts(" is incomplete!\n");
+		return false;
+	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	(void)InitOptions();
@@ -277,6 +293,17 @@ void App::Render(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	scene.ForwardRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthS], texRefIDs[(int)Tex::PlanarReflection], texRefIDs[(int)Tex::CubemapReflection]);
 	#endif
+
+	glViewport(0, 0, 1024, 1024);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[int(FBO::Minimap)]);
+	glClearColor(0.f, .3f, 0.f, 1.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	scene.MinimapRender();
+
+	glViewport(0, 0, winWidth, winHeight);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	scene.DefaultRender(texRefIDs[(int)Tex::Minimap], texRefIDs[(int)Tex::Minimap], glm::vec3(.75f), glm::vec3(.23f)); //??
 }
 
 void App::PostRender() const{

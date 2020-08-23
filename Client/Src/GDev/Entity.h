@@ -8,7 +8,12 @@ public:
 	enum class EntityType
 	{
 		PLAYER,
+<<<<<<< HEAD
 		ENEMY,
+=======
+		STATIC_ENEMY,
+		MOVING_ENEMY,
+>>>>>>> origin/Trina-Lim
 		//STRUCTURE,
 		//COLLECTIBLE,
 		PARTICLE,
@@ -26,6 +31,10 @@ public:
 
 	EntityType type; // Entity type
 	bool active; // True when entity is being rendered, used to know which particles to reuse
+<<<<<<< HEAD
+=======
+	int health;
+>>>>>>> origin/Trina-Lim
 
 	// To be passed in as parameters for translate, scale, rotate functions in scene.cpp
 	glm::vec3 pos;
