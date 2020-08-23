@@ -30,6 +30,11 @@ Scene::Scene() :
 	meshes{
 		new Mesh(Mesh::MeshType::Quad, GL_TRIANGLES, {
 			{"Imgs/BoxAlbedo.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/Heart.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/Slot.tga", Mesh::TexType::Diffuse, 0},
+			{"Imgs/ReticleMain.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/ReticleShotgun.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/ReticleScar.png", Mesh::TexType::Diffuse, 0},
 			{"Imgs/BoxSpec.png", Mesh::TexType::Spec, 0},
 			{"Imgs/BoxEmission.png", Mesh::TexType::Emission, 0},
 		}),
@@ -48,16 +53,15 @@ Scene::Scene() :
 		new Water(24.f, 2.f, 2.f, .5f),
 	},
 	models{
-		new Model("ObjsAndMtls/Skydome.obj", {
-			aiTextureType_DIFFUSE,
-		}),
-		new Model("ObjsAndMtls/nanosuit.obj", {
-			aiTextureType_DIFFUSE,
-			aiTextureType_SPECULAR,
-			aiTextureType_EMISSIVE,
-			aiTextureType_AMBIENT,
-			//aiTextureType_HEIGHT,
-		}),
+		//new Model("ObjsAndMtls/Pistol.obj", {
+		//	aiTextureType_DIFFUSE,
+		//}),
+		//new Model("ObjsAndMtls/AR.obj", {
+		//	aiTextureType_DIFFUSE,
+		//}),
+		//new Model("ObjsAndMtls/Sniper.obj", {
+		//	aiTextureType_DIFFUSE,
+		//}),
 	},
 	blurSP{"Shaders/Quad.vs", "Shaders/Blur.fs"},
 	depthSP{"Shaders/Depth.vs", "Shaders/Depth.fs"},
@@ -79,7 +83,10 @@ Scene::Scene() :
 	playerCurrLives(5.f),
 	playerMaxLives(5.f),
 	enemyCount(0),
-	waves{}
+	waves{},
+	playerStates((int)PlayerState::NoMovement | (int)PlayerState::Standing),
+	sprintOn(false),
+	reticleColour(glm::vec4(1.f))
 {
 }
 
@@ -238,15 +245,132 @@ bool Scene::Init(){
 	return true;
 }
 
-void Scene::Update() {
+void Scene::Update(){
 	elapsedTime += dt;
-	if (winHeight) { //Avoid division by 0 when win is minimised
+	if(winHeight){ //Avoid division by 0 when win is minimised
 		cam.SetDefaultAspectRatio(float(winWidth) / float(winHeight));
 		cam.ResetAspectRatio();
 	}
 
-	float yMin = terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(cam.GetPos().x / terrainXScale, cam.GetPos().z / terrainZScale) + 30.f;
+	////Control player states
+	static float sprintBT = 0.f;
+	static float heightBT = 0.f;
+
+	///Toggle sprint
+	if(Key(VK_SHIFT) && sprintBT <= elapsedTime){
+		sprintOn = !sprintOn;
+		sprintBT = elapsedTime + .5f;
+	}
+
+	///Set movement state
+	if(Key(GLFW_KEY_A) || Key(GLFW_KEY_D) || Key(GLFW_KEY_W) || Key(GLFW_KEY_S)){
+		if(sprintOn){
+			playerStates &= ~(int)PlayerState::NoMovement;
+			playerStates &= ~(int)PlayerState::Walking;
+			playerStates |= (int)PlayerState::Sprinting;
+		} else{
+			playerStates &= ~(int)PlayerState::NoMovement;
+			playerStates |= (int)PlayerState::Walking;
+			playerStates &= ~(int)PlayerState::Sprinting;
+		}
+	} else{
+		playerStates |= (int)PlayerState::NoMovement;
+		playerStates &= ~(int)PlayerState::Walking;
+		playerStates &= ~(int)PlayerState::Sprinting;
+	}
+
+	///Set height state
+	if(heightBT <= elapsedTime){
+		if(Key(GLFW_KEY_C)){
+			if(playerStates & (int)PlayerState::Standing){
+				playerStates |= (int)PlayerState::Crouching;
+				playerStates &= ~(int)PlayerState::Standing;
+			} else if(playerStates & (int)PlayerState::Crouching){
+				playerStates |= (int)PlayerState::Proning;
+				playerStates &= ~(int)PlayerState::Crouching;
+			}
+			heightBT = elapsedTime + .5f;
+		}
+		if(Key(VK_SPACE)){
+			if(playerStates & (int)PlayerState::Proning){
+				playerStates |= (int)PlayerState::Crouching;
+				playerStates &= ~(int)PlayerState::Proning;
+			} else if(playerStates & (int)PlayerState::Crouching){
+				playerStates |= (int)PlayerState::Standing;
+				playerStates &= ~(int)PlayerState::Crouching;
+			} else if(playerStates & (int)PlayerState::Standing){
+				soundEngine->play2D("Audio/Sounds/Jump.wav", false);
+				playerStates |= (int)PlayerState::Jumping;
+				playerStates &= ~(int)PlayerState::Standing;
+			}
+			heightBT = elapsedTime + .5f;
+		} else{
+			if((playerStates & (int)PlayerState::Jumping)){
+				playerStates |= (int)PlayerState::Falling;
+				playerStates &= ~(int)PlayerState::Jumping;
+				cam.SetVel(0.f);
+			}
+		}
+	}
+
+	float yMin = terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(cam.GetPos().x / terrainXScale, cam.GetPos().z / terrainZScale);
 	float yMax = yMin;
+
+	///Update player according to its states
+	int playerStatesTemp = playerStates;
+	int bitMask = 1;
+	while(playerStatesTemp){
+		switch(PlayerState(playerStatesTemp & bitMask)){
+			case PlayerState::NoMovement:
+				cam.SetSpd(0.f);
+				break;
+			case PlayerState::Walking:
+				cam.SetSpd(100.f);
+				break;
+			case PlayerState::Sprinting:
+				cam.SetSpd(250.f);
+				break;
+			case PlayerState::Standing:
+				yMin += 30.f;
+				yMax += 30.f;
+				break;
+			case PlayerState::Jumping:
+				cam.SetVel(300.f);
+			case PlayerState::Falling:
+				cam.SetAccel(-1500.f);
+				yMin += 30.f;
+				yMax += 250.f;
+				break;
+			case PlayerState::Crouching:
+				cam.SetSpd(cam.GetSpd() / 5.f);
+				yMin += 5.f;
+				yMax += 5.f;
+				break;
+			case PlayerState::Proning:
+				cam.SetSpd(5.f);
+				yMin += 1.f;
+				yMax += 1.f;
+				break;
+		}
+		playerStatesTemp &= ~bitMask;
+		bitMask <<= 1;
+	}
+
+	if(playerStates & (int)PlayerState::Jumping){
+		if(cam.GetPos().y >= yMax){
+			playerStates |= (int)PlayerState::Falling;
+			playerStates &= ~(int)PlayerState::Jumping;
+			cam.SetVel(0.f);
+		}
+	}
+	if(playerStates & (int)PlayerState::Falling){
+		if(cam.GetPos().y <= yMin){
+			playerStates |= (int)PlayerState::Standing;
+			playerStates &= ~(int)PlayerState::Falling;
+			cam.SetAccel(0.f);
+			cam.SetVel(0.f);
+		}
+	}
 	cam.UpdateJumpFall();
 	cam.Update(GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_W, GLFW_KEY_S, -terrainXScale / 2.f + 5.f, terrainXScale / 2.f - 5.f, yMin, yMax, -terrainZScale / 2.f + 5.f, terrainZScale / 2.f - 5.f);
 	view = cam.LookAt();
@@ -313,10 +437,10 @@ void Scene::Update() {
 	}
 
 	// TESTING ONLY FOR HEALTHBAR
-	if (Key(GLFW_KEY_SPACE))
-	{
-		playerCurrHealth -= 1.f;
-	}
+	//if (Key(GLFW_KEY_SPACE))
+	//{
+	//	playerCurrHealth -= 1.f;
+	//}
 
 	// Player gets max health again, but loses 1 life
 	if (playerCurrHealth <= 0.f && playerCurrLives > 0.f)
@@ -884,36 +1008,48 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(front.x, front.z)))),
 		modelStack.Scale(glm::vec3(5.f)),
 	});
-		meshes[(int)MeshType::Cube]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Cube]->Render(forwardSP);
+		//switch(weapon->GetCurrentSlot()){
+		//	case 0:
+		//		models[(int)ModelType::Pistol]->SetModelForAll(modelStack.GetTopModel());
+		//		models[(int)ModelType::Pistol]->Render(forwardSP);
+		//		break;
+		//	//case 1:
+		//	//	models[(int)ModelType::AR]->SetModelForAll(modelStack.GetTopModel());
+		//	//	models[(int)ModelType::AR]->Render(forwardSP);
+		//	//	break;
+		//	//case 2:
+		//	//	models[(int)ModelType::Sniper]->SetModelForAll(modelStack.GetTopModel());
+		//	//	models[(int)ModelType::Sniper]->Render(forwardSP);
+		//	//	break;
+		//}
 	modelStack.PopModel();
 
 	////Render GUI
 	forwardSP.SetMat4fv("PV", &(glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f))[0][0]);
-	forwardSP.Set1i("noNormals", 1);
-	forwardSP.Set1i("useCustomColour", 1);
-	forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+	//forwardSP.Set1i("noNormals", 1);
+	//forwardSP.Set1i("useCustomColour", 1);
+	//forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
 
-	///Render health bar
-	modelStack.PushModel({
-		modelStack.Translate(glm::vec3(-float(winWidth) / 2.5f, float(winHeight) / 2.5f, -10.f)),
-		modelStack.Scale(glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f)),
-	});
-		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
-		forwardSP.Set1i("customDiffuseTexIndex", -1);
-		meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Quad]->Render(forwardSP);
+	/////Render health bar
+	//modelStack.PushModel({
+	//	modelStack.Translate(glm::vec3(-float(winWidth) / 2.5f, float(winHeight) / 2.5f, -10.f)),
+	//	modelStack.Scale(glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f)),
+	//});
+	//	forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+	//	forwardSP.Set1i("customDiffuseTexIndex", -1);
+	//	meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+	//	meshes[(int)MeshType::Quad]->Render(forwardSP);
 
-		modelStack.PushModel({
-			modelStack.Translate(glm::vec3((playerCurrHealth - playerMaxHealth) / playerMaxHealth, 0.f, 1.f)), // Translate to the left based on the amount of health to go back to max health
-			modelStack.Scale(glm::vec3(playerCurrHealth / playerMaxHealth, 1.f, 1.f)), // Scale the x component based on the current health
-		});
-			forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
-			forwardSP.Set1i("customDiffuseTexIndex", -1);
-			meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-			meshes[(int)MeshType::Quad]->Render(forwardSP);
-		modelStack.PopModel();
-	modelStack.PopModel();
+	//	modelStack.PushModel({
+	//		modelStack.Translate(glm::vec3((playerCurrHealth - playerMaxHealth) / playerMaxHealth, 0.f, 1.f)), // Translate to the left based on the amount of health to go back to max health
+	//		modelStack.Scale(glm::vec3(playerCurrHealth / playerMaxHealth, 1.f, 1.f)), // Scale the x component based on the current health
+	//	});
+	//		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
+	//		forwardSP.Set1i("customDiffuseTexIndex", -1);
+	//		meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+	//		meshes[(int)MeshType::Quad]->Render(forwardSP);
+	//	modelStack.PopModel();
+	//modelStack.PopModel();
 
 	///Render player lives
 	for(float i = 0; i < playerMaxLives; ++i){
@@ -926,55 +1062,61 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			} else{
 				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.3f), 1.f));
 			}
-			forwardSP.Set1i("customDiffuseTexIndex", -1);
+			forwardSP.Set1i("noNormals", 1);
+			forwardSP.Set1i("useCustomColour", 1);
+			forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+			forwardSP.Set1i("customDiffuseTexIndex", 1);
 			meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
 			meshes[(int)MeshType::Quad]->Render(forwardSP);
+			forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+			forwardSP.Set1i("useCustomColour", 0);
+			forwardSP.Set1i("noNormals", 0);
 		modelStack.PopModel();
 	}
 
-	///Render ammo bar
-	modelStack.PushModel({
-		modelStack.Translate(glm::vec3(float(winWidth) / 3.f, -float(winHeight) / 2.2f, -10.f)),
-		modelStack.Scale(glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f)),
-	});
-		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
-		forwardSP.Set1i("customDiffuseTexIndex", -1);
-		meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Quad]->Render(forwardSP);
+	/////Render ammo bar
+	//modelStack.PushModel({
+	//	modelStack.Translate(glm::vec3(float(winWidth) / 3.f, -float(winHeight) / 2.2f, -10.f)),
+	//	modelStack.Scale(glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f)),
+	//});
+	//	forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+	//	forwardSP.Set1i("customDiffuseTexIndex", -1);
+	//	meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+	//	meshes[(int)MeshType::Quad]->Render(forwardSP);
 
-		///Show status of ammo bar(i.e. curr ammo of the round)
-		modelStack.PushModel({
-			modelStack.Translate(glm::vec3(-float(weapon->GetCurrentWeapon()->GetMaxAmmoRound() - weapon->GetCurrentWeapon()->GetCurrentAmmoRound())
-			/ float(weapon->GetCurrentWeapon()->GetMaxAmmoRound()), 0.f, 1.f)), // Translate to the left based on the amount of ammo to go back to max ammo of the round
-			modelStack.Scale(glm::vec3(float(weapon->GetCurrentWeapon()->GetCurrentAmmoRound())
-			/ float(weapon->GetCurrentWeapon()->GetMaxAmmoRound()), 1.f, 1.f)), // Scale the x component based on the current ammo of the round
-		});
-			forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
-			forwardSP.Set1i("customDiffuseTexIndex", -1);
-			meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-			meshes[(int)MeshType::Quad]->Render(forwardSP);
-		modelStack.PopModel();
-	modelStack.PopModel();
-		
-	for(int i = 0; i < 5; ++i){
-		modelStack.PushModel({
-			modelStack.Translate(glm::vec3(-float(winWidth) / 6.f, -float(winHeight) / 2.2f, -11.f) + glm::vec3(i * 75.f, 0.f, 0.f)),
-			modelStack.Scale(glm::vec3(35.f)),
-		});
-			if(weapon->GetCurrentSlot() == i){
-				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
-			} else{
-				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
-			}
-			forwardSP.Set1i("customDiffuseTexIndex", -1);
-			meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-			meshes[(int)MeshType::Quad]->Render(forwardSP);
-		modelStack.PopModel();
-	}
+	//	///Show status of ammo bar(i.e. curr ammo of the round)
+	//	modelStack.PushModel({
+	//		modelStack.Translate(glm::vec3(-float(weapon->GetCurrentWeapon()->GetMaxAmmoRound() - weapon->GetCurrentWeapon()->GetCurrentAmmoRound())
+	//		/ float(weapon->GetCurrentWeapon()->GetMaxAmmoRound()), 0.f, 1.f)), // Translate to the left based on the amount of ammo to go back to max ammo of the round
+	//		modelStack.Scale(glm::vec3(float(weapon->GetCurrentWeapon()->GetCurrentAmmoRound())
+	//		/ float(weapon->GetCurrentWeapon()->GetMaxAmmoRound()), 1.f, 1.f)), // Scale the x component based on the current ammo of the round
+	//	});
+	//		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
+	//		forwardSP.Set1i("customDiffuseTexIndex", -1);
+	//		meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+	//		meshes[(int)MeshType::Quad]->Render(forwardSP);
+	//	modelStack.PopModel();
+	//modelStack.PopModel();
+	//	
+	//for(int i = 0; i < 5; ++i){ //????????????????
+	//	modelStack.PushModel({
+	//		modelStack.Translate(glm::vec3(-float(winWidth) / 6.f, -float(winHeight) / 2.2f, -11.f) + glm::vec3(i * 75.f, 0.f, 0.f)),
+	//		modelStack.Scale(glm::vec3(35.f)),
+	//	});
+	//		if(weapon->GetCurrentSlot() == i){
+	//			forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
+	//		} else{
+	//			forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+	//		}
+	//		forwardSP.Set1i("customDiffuseTexIndex", -1);
+	//		meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+	//		meshes[(int)MeshType::Quad]->Render(forwardSP);
+	//	modelStack.PopModel();
+	//}
 
-	forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
-	forwardSP.Set1i("useCustomColour", 0);
-	forwardSP.Set1i("noNormals", 0);
+	//forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+	//forwardSP.Set1i("useCustomColour", 0);
+	//forwardSP.Set1i("noNormals", 0);
 	forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
 
 	///SpriteAni

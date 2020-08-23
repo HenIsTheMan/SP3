@@ -5,6 +5,8 @@
 #include "../Game/Weapon.h"
 #include "ModelStack.h"
 
+#define BIT(x) 1 << x
+
 class Scene final{
 public:
 	Scene();
@@ -47,8 +49,9 @@ private:
 	Mesh* meshes[(int)MeshType::Amt];
 
 	enum struct ModelType{
-		Skydome = 0,
-		Suit,
+		Pistol,
+		//AR,
+		//Sniper,
 		Amt
 	};
 	Model* models[(int)ModelType::Amt];
@@ -90,6 +93,20 @@ private:
 
 	//int polyMode;
 	int enemyCount;
+
+	enum struct PlayerState{
+		NoMovement = BIT(1),
+		Walking = BIT(2),
+		Sprinting = BIT(3),
+		Standing = BIT(4),
+		Jumping = BIT(5),
+		Falling = BIT(6),
+		Crouching = BIT(7),
+		Proning = BIT(8),
+	};
+	int playerStates;
+	bool sprintOn;
+	glm::vec4 reticleColour;
 };
 
 enum struct Axis{
