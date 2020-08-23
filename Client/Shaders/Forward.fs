@@ -180,10 +180,16 @@ void main(){
 	if(!useCustomColour && !useDiffuseMap){
 		Colour = fsIn.colour;
 	} else{
-		Colour = (useCustomColour ? customColour : vec4(1.f))
-		* ((useDiffuseMap && (useCustomDiffuseTexIndex ? customDiffuseTexIndex : fsIn.diffuseTexIndex) >= 0
-		? texture(diffuseMaps[useCustomDiffuseTexIndex ? customDiffuseTexIndex : fsIn.diffuseTexIndex], fsIn.texCoords) : vec4(1.f))
-		+ (useEmissionMap && (useCustomDiffuseTexIndex ? customDiffuseTexIndex : fsIn.diffuseTexIndex) >= 0 ? texture(emissionMap, fsIn.texCoords) : vec4(0.f)));
+//		Colour = (useCustomColour ? customColour : vec4(1.f))
+//		* ((useDiffuseMap && (useCustomDiffuseTexIndex ? customDiffuseTexIndex : fsIn.diffuseTexIndex) >= 0
+//		? texture(diffuseMaps[useCustomDiffuseTexIndex ? customDiffuseTexIndex : fsIn.diffuseTexIndex], fsIn.texCoords) : vec4(1.f))
+//		+ (useEmissionMap && (useCustomDiffuseTexIndex ? customDiffuseTexIndex : fsIn.diffuseTexIndex) >= 0 ? texture(emissionMap, fsIn.texCoords) : vec4(0.f)));
+		Colour = (useCustomColour ? customColour : vec4(1.f)) * (useDiffuseMap &&
+            (useCustomDiffuseTexIndex ? customDiffuseTexIndex : fsIn.diffuseTexIndex) >= 0 ?
+            texture(diffuseMaps[useCustomDiffuseTexIndex ? customDiffuseTexIndex : fsIn.diffuseTexIndex], fsIn.texCoords) : vec4(1.f));
+	}
+	if(useEmissionMap){
+		Colour.rgb += texture(emissionMap, fsIn.texCoords).rgb;
 	}
 
     if(Normal == vec3(0.f)){
