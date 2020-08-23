@@ -60,6 +60,8 @@ void EntityManager::UpdateEntities(const UpdateParams& params){
 		Entity* const& entity = entityList[i];
 		if(entity && entity->active && entity->type != Entity::EntityType::NUM_TYPES){
 			switch(entity->type){
+				case Entity::EntityType::PLAYER:
+					break;
 				case Entity::EntityType::BULLET:
 					break;
 				case Entity::EntityType::STATIC_ENEMY:

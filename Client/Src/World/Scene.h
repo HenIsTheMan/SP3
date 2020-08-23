@@ -92,14 +92,14 @@ private:
 	int enemyCount;
 };
 
-enum struct Axis {
+enum struct Axis{
 	x = 0,
 	y,
 	z,
 	Amt
 };
 
-inline static glm::vec3 RotateVecIn2D(const glm::vec3& vec, const float& angleInRad, const Axis& axis) {
+inline static glm::vec3 RotateVecIn2D(const glm::vec3& vec, const float& angleInRad, const Axis& axis){
 	switch (axis) {
 	case Axis::x:
 		return glm::vec3(vec.x, vec.y * cos(angleInRad) + vec.z * -sin(angleInRad), vec.y * sin(angleInRad) + vec.z * cos(angleInRad));

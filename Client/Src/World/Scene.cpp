@@ -74,7 +74,8 @@ Scene::Scene() :
 	playerMaxHealth(100.f),
 	playerCurrLives(5.f),
 	playerMaxLives(5.f),
-	enemyCount(0)
+	enemyCount(0),
+	waves{}
 {
 }
 
@@ -180,6 +181,22 @@ bool Scene::Init(){
 	bullet->mass = 1.f;
 	bullet->force = glm::vec3(0.f);
 
+	Entity* const& player = entityManager->FetchEntity();
+	player->type = Entity::EntityType::PLAYER;
+	player->active = true;
+	player->life = 0.f;
+	player->maxLife = 0.f;
+	player->colour = glm::vec4(0.f, 1.f, 1.f, 1.f);
+	player->diffuseTexIndex = -1;
+	player->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+	player->scale = glm::vec3(5.f);
+	player->light = nullptr;
+	player->mesh = meshes[(int)MeshType::Sphere];
+	player->pos = cam.GetPos();
+	player->vel = glm::vec3(0.f);
+	player->mass = 10.f;
+	player->force = glm::vec3(0.f);
+
 	//glGetIntegerv(GL_POLYGON_MODE, &polyMode);
 
 	soundEngine = createIrrKlangDevice(ESOD_AUTO_DETECT, ESEO_MULTI_THREADED | ESEO_LOAD_PLUGINS | ESEO_USE_3D_BUFFERS | ESEO_PRINT_DEBUG_INFO_TO_DEBUGGER);
@@ -213,24 +230,6 @@ bool Scene::Init(){
 	directionalLights.emplace_back(CreateLight(LightType::Directional));
 	spotlights.emplace_back(CreateLight(LightType::Spot));
 	//spotlights.emplace_back(CreateLight(LightType::Spot));
-
-	// Create Player
-	//Entity* player = new Entity(Entity::EntityType::PLAYER,
-	//	true, // Always active
-	//	cam.GetPos(), // Need to check first
-	//	glm::vec3(5.f),
-	//	glm::vec4(0.f),
-	//	glm::vec3(0.f));
-	//entityManager->AddEntity(player);
-
-	// For the weapon hold -> Anyhow create the variables because the rendering of entities changed, so the real values are used in the forward render function
-	//Entity* weaponhold = new Entity(Entity::EntityType::WEAPONHOLD,
-	//	true,
-	//	glm::vec3(0.f),
-	//	glm::vec3(5.f),
-	//	glm::vec4(0.f),
-	//	glm::vec3(0.f));
-	//entityManager->AddEntity(weaponhold);
 
 	return true;
 }
@@ -341,6 +340,7 @@ void Scene::Update() {
 			bullet->pos = glm::vec3(cam.GetPos() + 10.f * cam.CalcFront());
 			bullet->vel = cam.CalcFront() * 12.f;
 			bullet->mass = 1.f;
+			bullet->life = 200.f;
 			//const glm::vec3& camFront = cam.CalcFront();
 			//bullet->rotate = glm::vec4(cam.CalcUp(), glm::degrees(atan2(camFront.z, camFront.x)));
 			bullet->scale = glm::vec3(1.f);
@@ -348,7 +348,6 @@ void Scene::Update() {
 			weapon->GetCurrentWeapon()->SetCanShoot(false); // For the shooting cooldown time
 			weapon->GetCurrentWeapon()->SetCurrentAmmoRound(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() - 1); // Decrease the ammo
 			lastTime = elapsedTime;
-			bullet->lifeTime = 200;
 		}
 	}
 
@@ -371,7 +370,7 @@ void Scene::Update() {
 					Entity* const& stillEnemy = entityManager->FetchEntity();
 					stillEnemy->type = Entity::EntityType::STATIC_ENEMY;
 					stillEnemy->active = true;
-					stillEnemy->pos = glm::vec3(rand() % 50 - 25, 10.f, rand() % 50 - 25);
+					stillEnemy->pos = glm::vec3(PseudorandMinMax(-25.f, 25.f), 10.f, PseudorandMinMax(-25.f, 25.f));
 					stillEnemy->vel = glm::vec3(0.f);
 					stillEnemy->mass = 5.f;
 					stillEnemy->scale = glm::vec3(1.f);
@@ -842,28 +841,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		meshes[(int)MeshType::Cylinder]->Render(forwardSP);
 		modelStack.PushModel({
 			modelStack.Translate(glm::vec3(-3.f, 0.f, 0.f)),
-
-
-			//case Entity::EntityType::WEAPONHOLD:
-			//	const glm::vec3 front = cam.CalcFront();
-			//	const float sign = front.y < 0.f ? -1.f : 1.f;
-
-			//	auto rotationMat = glm::rotate(glm::mat4(1.f), sign * acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z)))),
-			//		glm::normalize(glm::vec3(-front.z, 0.f, front.x)));
-			//	PushModel({
-			//		Translate(cam.GetPos() +
-			//			glm::vec3(rotationMat * glm::vec4(RotateVecIn2D(glm::vec3(5.5f, -7.f, -13.f), atan2(front.x, front.z) + glm::radians(180.f), Axis::y), 1.f))
-			//		),
-			//		Rotate(glm::vec4(glm::vec3(-front.z, 0.f, front.x), sign * glm::degrees(acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z))))))),
-			//		Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(front.x, front.z)))),
-			//		Scale(glm::vec3(5.f)),
-			//		});
-			//	// Render the weapon instead, cube is just for testing
-			//	meshes[(int)MeshType::Cube]->SetModel(GetTopModel());
-			//	meshes[(int)MeshType::Cube]->Render(forwardSP);
-			//	PopModel();
-			//	break;
-
 		});
 			forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
 			forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
@@ -887,6 +864,21 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	modelStack.PopModel();
 
 	entityManager->RenderEntities(forwardSP); //Render entities
+
+	///Render curr weapon
+	const glm::vec3 front = cam.CalcFront();
+	const float sign = front.y < 0.f ? -1.f : 1.f;
+	auto rotationMat = glm::rotate(glm::mat4(1.f), sign * acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z)))), glm::normalize(glm::vec3(-front.z, 0.f, front.x)));
+	modelStack.PushModel({
+		modelStack.Translate(cam.GetPos() +
+			glm::vec3(rotationMat * glm::vec4(RotateVecIn2D(glm::vec3(5.5f, -7.f, -13.f), atan2(front.x, front.z) + glm::radians(180.f), Axis::y), 1.f))),
+		modelStack.Rotate(glm::vec4(glm::vec3(-front.z, 0.f, front.x), sign * glm::degrees(acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z))))))),
+		modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(front.x, front.z)))),
+		modelStack.Scale(glm::vec3(5.f)),
+	});
+		meshes[(int)MeshType::Cube]->SetModel(modelStack.GetTopModel());
+		meshes[(int)MeshType::Cube]->Render(forwardSP);
+	modelStack.PopModel();
 
 	////Render GUI
 	forwardSP.SetMat4fv("PV", &(glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f))[0][0]);
