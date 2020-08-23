@@ -1147,7 +1147,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		forwardSP.Set1i("water", 1);
 		forwardSP.Set1f("elapsedTime", elapsedTime);
 		forwardSP.Set1i("useCustomColour", 1);
-		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(.7f), .5f));
+		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(.2f), .7f));
 		meshes[(int)MeshType::Water]->SetModel(modelStack.GetTopModel());
 		meshes[(int)MeshType::Water]->Render(forwardSP);
 		forwardSP.Set1i("useCustomColour", 0);
