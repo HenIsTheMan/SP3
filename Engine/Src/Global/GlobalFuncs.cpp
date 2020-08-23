@@ -113,7 +113,7 @@ void SetUpTex(const SetUpTexsParams& params, uint& texRefID){
     if(!data){
         return (void)printf("Failed to load tex at \"%s\"\n", params.texPath.c_str());
     }
-    glTexImage2D(params.texTarget, 0, colourChannelsAmt == 3 ? GL_RGB16F : GL_RGBA16F, width, height, 0, colourChannelsAmt == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(params.texTarget, 0, colourChannelsAmt == 3 ? GL_RGB : GL_RGBA, width, height, 0, colourChannelsAmt == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data); //Free the img mem
     glGenerateMipmap(params.texTarget); //Gen required mipmap lvls for currently bound tex
     glTexParameteri(params.texTarget, GL_TEXTURE_WRAP_S, params.texWrapParam);

@@ -9,6 +9,10 @@ extern float dt;
 extern int winWidth;
 extern int winHeight;
 
+constexpr float terrainXScale = 500.f;
+constexpr float terrainYScale = 100.f;
+constexpr float terrainZScale = 500.f;
+
 glm::vec3 Light::globalAmbient = glm::vec3(.2f);
 
 Scene::Scene() :
@@ -240,12 +244,16 @@ void Scene::Update() {
 		cam.SetDefaultAspectRatio(float(winWidth) / float(winHeight));
 		cam.ResetAspectRatio();
 	}
-	cam.Update(GLFW_KEY_Q, GLFW_KEY_E, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_W, GLFW_KEY_S);
+
+	float yMin = terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(cam.GetPos().x / terrainXScale, cam.GetPos().z / terrainZScale) + 30.f;
+	float yMax = yMin;
+	cam.UpdateJumpFall();
+	cam.Update(GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_W, GLFW_KEY_S, -terrainXScale / 2.f + 5.f, terrainXScale / 2.f - 5.f, yMin, yMax, -terrainZScale / 2.f + 5.f, terrainZScale / 2.f - 5.f);
 	view = cam.LookAt();
 	projection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
+
 	minimapView = cam.LookAt();
 	minimapProjection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
-
 	const glm::vec3& camPos = cam.GetPos();
 	const glm::vec3& camFront = cam.CalcFront();
 	soundEngine->setListenerPosition(vec3df(camPos.x, camPos.y, camPos.z), vec3df(camFront.x, camFront.y, camFront.z));
@@ -779,7 +787,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 
 	///Terrain
 	modelStack.PushModel({
-		modelStack.Scale(glm::vec3(500.f, 100.f, 500.f)),
+		modelStack.Scale(glm::vec3(terrainXScale, terrainYScale, terrainZScale)),
 	});
 		forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
 		forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");

@@ -12,7 +12,10 @@ Cam::Cam():
 	defaultSpd(0.f),
 	defaultPos(glm::vec3(0.f)),
 	defaultTarget(glm::vec3(0.f)),
-	defaultUp(glm::vec3(0.f))
+	defaultUp(glm::vec3(0.f)),
+	accel(0.f),
+	vel(0.f),
+	pitchCheck(0.f)
 {
 }
 
@@ -26,23 +29,23 @@ Cam::Cam(const glm::vec3& pos, const glm::vec3& target, const glm::vec3& up, con
 	defaultSpd(spd),
 	defaultPos(pos),
 	defaultTarget(target),
-	defaultUp(up)
+	defaultUp(up),
+	accel(0.f),
+	vel(0.f),
+	pitchCheck(0.f)
 {
 }
 
 glm::vec3 Cam::CalcFront(const bool& normalised) const{
-	const glm::vec3 camFront = target - pos;
-	return normalised && camFront != glm::vec3(0.f) ? glm::normalize(camFront) : camFront;
+	return normalised ? glm::normalize(target - pos) : target - pos;
 }
 
 glm::vec3 Cam::CalcRight() const{
-	const glm::vec3 camRight = glm::cross(CalcFront(), up);
-	return camRight != glm::vec3(0.f) ? glm::normalize(camRight) : camRight;
+	return glm::normalize(glm::cross(CalcFront(), up));
 }
 
 glm::vec3 Cam::CalcUp() const{
-	const glm::vec3 camUp = glm::cross(CalcRight(), CalcFront());
-	return camUp != glm::vec3(0.f) ? glm::normalize(camUp) : camUp;
+	return glm::normalize(glm::cross(CalcRight(), CalcFront()));
 }
 
 glm::mat4 Cam::LookAt() const{
@@ -57,29 +60,49 @@ glm::mat4 Cam::LookAt() const{
 	return rotation * translation;
 }
 
-void Cam::Update(const int& up, const int& down, const int& left, const int& right, const int& front, const int& back){
-	const float camSpd = spd * dt;
-	float upDown = float(Key(up) - Key(down));
+void Cam::Update(const int& left, const int& right, const int& front, const int& back, const float& xMin, const float& xMax, const float& yMin, const float& yMax, const float& zMin, const float& zMax){
+	const float camSpd = canMove ? spd * dt : 0.f;
 	float leftRight = float(Key(left) - Key(right));
 	float frontBack = float(Key(front) - Key(back));
 
 	const glm::vec3&& camFront = CalcFront();
-	glm::vec3&& xzCamFront = glm::vec3(camFront.x, 0.f, camFront.z);
-	if(xzCamFront != glm::vec3(0.f)){
-		xzCamFront = glm::normalize(xzCamFront);
-	}
+	const glm::vec3&& xzCamFront = glm::vec3(camFront.x, 0.f, camFront.z);
+	glm::vec3&& frontBackDir = glm::normalize(glm::dot(camFront, glm::normalize(xzCamFront)) * glm::normalize(xzCamFront));
+	frontBackDir.y = 1.f;
 
-	glm::vec3&& change = frontBack * xzCamFront + glm::vec3(0.f, upDown, 0.f) + leftRight * -CalcRight() + float(leftMB - rightMB) * camFront;
+	glm::vec3&& change = glm::vec3(frontBack, 0.f, frontBack) * frontBackDir + leftRight * -CalcRight();
 	if(change != glm::vec3(0.f)){
 		change = normalize(change);
 	}
+	trueVel = change;
 	pos += camSpd * change;
+	pos.x = std::max(xMin, std::min(xMax, pos.x));
+	pos.y = std::max(yMin, std::min(yMax, pos.y));
+	pos.z = std::max(zMin, std::min(zMax, pos.z));
 	target = pos + camFront;
 
-	glm::mat4 yawPitch = glm::rotate(glm::rotate(glm::mat4(1.f), glm::radians(yaw), {0.f, 1.f, 0.f}), glm::radians(pitch), CalcRight());
-	target = pos + glm::vec3(yawPitch * glm::vec4(camFront, 0.f));
-	this->up = glm::vec3(yawPitch * glm::vec4(this->up, 0.f));
+	pitchCheck += pitch;
+	if(pitchCheck > 80.f || pitchCheck < -80.f){
+		pitch = 80.f - (pitchCheck - pitch);
+	}
+	if(pitchCheck < 80.f && pitchCheck > -80.f){
+		glm::mat4 yawPitch = glm::rotate(glm::rotate(glm::mat4(1.f), glm::radians(yaw), {0.f, 1.f, 0.f}), glm::radians(pitch), CalcRight());
+		target = pos + glm::vec3(yawPitch * glm::vec4(camFront, 0.f));
+		up = glm::vec3(yawPitch * glm::vec4(up, 0.f));
+	}
+	if(pitchCheck > 80.f){
+		pitchCheck = 80.f;
+	}
+	if(pitchCheck < -80.f){
+		pitchCheck = -80.f;
+	}
 	yaw = pitch = 0.f;
+}
+
+void Cam::UpdateJumpFall(){
+	vel += accel * dt;
+	pos.y += vel * dt;
+	target.y += vel * dt;
 }
 
 void Cam::Reset(){
@@ -188,4 +211,12 @@ void Cam::SetDefaultTarget(const glm::vec3& defaultTarget){
 
 void Cam::SetDefaultUp(const glm::vec3& defaultUp){
 	this->defaultUp = defaultUp;
+}
+
+void Cam::SetAccel(const float& accel){
+	this->accel = accel;
+}
+
+void Cam::SetVel(const float& vel){
+	this->vel = vel;
 }

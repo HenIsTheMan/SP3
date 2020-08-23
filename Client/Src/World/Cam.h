@@ -10,7 +10,8 @@ public:
 	glm::vec3 CalcRight() const;
 	glm::vec3 CalcUp() const;
 	glm::mat4 LookAt() const;
-	void Update(const int& up, const int& down, const int& left, const int& right, const int& front, const int& back);
+	void Update(const int& left, const int& right, const int& front, const int& back, const float& xMin, const float& xMax, const float& yMin, const float& yMax, const float& zMin, const float& zMax);
+	void UpdateJumpFall();
 
 	void Reset();
 	void ResetAspectRatio();
@@ -42,6 +43,12 @@ public:
 	void SetDefaultPos(const glm::vec3 & defaultPos);
 	void SetDefaultTarget(const glm::vec3 & defaultTarget);
 	void SetDefaultUp(const glm::vec3 & defaultUp);
+
+	void SetAccel(const float& accel);
+	void SetVel(const float& vel);
+
+	bool canMove = true;
+	glm::vec3 trueVel = glm::vec3(0.f);
 private:
 	float aspectRatio;
 	float spd;
@@ -54,4 +61,8 @@ private:
 	glm::vec3 defaultPos;
 	glm::vec3 defaultTarget;
 	glm::vec3 defaultUp;
+
+	float accel;
+	float vel;
+	float pitchCheck;
 };
