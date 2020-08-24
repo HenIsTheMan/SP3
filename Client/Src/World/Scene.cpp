@@ -17,7 +17,7 @@ constexpr float terrainZScale = 500.f;
 
 glm::vec3 Light::globalAmbient = glm::vec3(.2f);
 
-Scene::Scene() :
+Scene::Scene():
 	cam(glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 150.f),
 	dCam(glm::vec3(0.f, 150.f, 0.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
 	sCam(glm::vec3(0.f, 100.f, 200.f), glm::vec3(0.f, 100.f, 0.f), glm::vec3(0.f, 1.f, 0.f), 1.f, 0.f),
@@ -1124,7 +1124,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		modelStack.Translate(glm::vec3(-float(winWidth) / 2.5f, float(winHeight) / 2.5f, -10.f)),
 		modelStack.Scale(glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f)),
 	});
-		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(.3f), 1.f));
 		forwardSP.Set1i("customDiffuseTexIndex", -1);
 		meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
 		meshes[(int)MeshType::Quad]->Render(forwardSP);
@@ -1133,7 +1133,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			modelStack.Translate(glm::vec3((playerCurrHealth - playerMaxHealth) / playerMaxHealth, 0.f, 1.f)), // Translate to the left based on the amount of health to go back to max health
 			modelStack.Scale(glm::vec3(playerCurrHealth / playerMaxHealth, 1.f, 1.f)), // Scale the x component based on the current health
 		});
-			forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
+			forwardSP.Set4fv("customColour", glm::vec4(0.f, 1.f, 0.f, 1.f));
 			forwardSP.Set1i("customDiffuseTexIndex", -1);
 			meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
 			meshes[(int)MeshType::Quad]->Render(forwardSP);
@@ -1180,7 +1180,8 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			meshes[(int)MeshType::Quad]->Render(forwardSP);
 		modelStack.PopModel();
 	modelStack.PopModel();
-		
+	
+	///Render inv slots and guns in inv
 	for(int j = 0; j < 5; ++j){
 		modelStack.PushModel({
 			modelStack.Translate(glm::vec3(-float(winWidth) / 6.f, -float(winHeight) / 2.3f, -11.f) + glm::vec3(j * 100.f, 0.f, 0.f)),
@@ -1193,7 +1194,47 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			}
 			forwardSP.Set1i("customDiffuseTexIndex", 2);
 			meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-			meshes[(int)MeshType::Quad]->Render(forwardSP);
+			meshes[(int)MeshType::Quad]->Render(forwardSP);	///Render guns in inv
+
+			forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+			forwardSP.Set1i("useCustomColour", 0);
+			switch(j){
+				case 0:
+					modelStack.PushModel({
+						modelStack.Translate(glm::vec3(-.2f, -.6f, 0.f)),
+						modelStack.Rotate(glm::vec4(0.f, 0.f, 1.f, 45.f)),
+						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, 90.f)),
+						modelStack.Scale(glm::vec3(.6f)),
+					});
+						models[(int)ModelType::Pistol]->SetModelForAll(modelStack.GetTopModel());
+						models[(int)ModelType::Pistol]->Render(forwardSP);
+					modelStack.PopModel();
+					break;
+				case 1:
+					modelStack.PushModel({
+						modelStack.Translate(glm::vec3(0.f, -.1f, 0.f)),
+						modelStack.Rotate(glm::vec4(0.f, 0.f, 1.f, 45.f)),
+						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, 90.f)),
+						modelStack.Scale(glm::vec3(.3f)),
+					});
+						models[(int)ModelType::AR]->SetModelForAll(modelStack.GetTopModel());
+						models[(int)ModelType::AR]->Render(forwardSP);
+					modelStack.PopModel();
+					break;
+				case 2:
+					modelStack.PushModel({
+						modelStack.Translate(glm::vec3(0.f, -.4f, 0.f)),
+						modelStack.Rotate(glm::vec4(0.f, 0.f, 1.f, 45.f)),
+						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, 90.f)),
+						modelStack.Scale(glm::vec3(.3f)),
+					});
+						models[(int)ModelType::Sniper]->SetModelForAll(modelStack.GetTopModel());
+						models[(int)ModelType::Sniper]->Render(forwardSP);
+					modelStack.PopModel();
+					break;
+			}
+			forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+			forwardSP.Set1i("useCustomColour", 1);
 		modelStack.PopModel();
 	}
 
