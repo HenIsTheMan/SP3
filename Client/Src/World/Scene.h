@@ -46,10 +46,12 @@ private:
 
 	enum struct WaveNo {
 		One,
+		Two,
 		Total
 	};
 
 	int waves[(int)WaveNo::Total];
+	int waveNo;
 
 	EntityManager* entityManager;
 	Weapon* weapon;
@@ -78,7 +80,7 @@ private:
 	float playerCurrLives;
 	float playerMaxLives;
 	int enemycount;
-
+	float waveBounceTime;
 	//int polyMode;
 	mutable std::stack<glm::mat4> modelStack;
 	glm::mat4 Translate(const glm::vec3& translate);

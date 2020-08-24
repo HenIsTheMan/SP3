@@ -2,6 +2,7 @@
 
 #include "Core.h"
 #include "Engine.h"
+#include "EnemyMovement.h"
 
 class Entity {
 public:
@@ -22,7 +23,7 @@ public:
 		NUM_TYPES
 	};
 
-	Entity(EntityType type, bool active, glm::vec3 pos, glm::vec3 scale, glm::vec4 rotate, glm::vec3 storeCamFront);
+	Entity(EntityType type, bool active, glm::vec3 pos, glm::vec3 scale, glm::vec4 rotate, glm::vec3 storeCamFront/*, glm::vec3 storeCamPos*/);
 	virtual ~Entity();
 
 	EntityType type; // Entity type
@@ -34,4 +35,5 @@ public:
 	glm::vec3 scale;
 	glm::vec4 rotate;
 	glm::vec3 storeCamFront;
+	glm::vec3 storeCamPos;
 };

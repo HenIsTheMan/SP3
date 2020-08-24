@@ -68,7 +68,9 @@ playerCurrHealth(100.f),
 playerMaxHealth(100.f),
 playerCurrLives(5.f),
 playerMaxLives(5.f),
-enemycount(0)
+enemycount(0),
+waveBounceTime(0.f),
+waveNo(0)
 {
 }
 
@@ -263,6 +265,7 @@ void Scene::Update() {
 	static float wavesReverbBT = 0.f;
 	static float resetSoundFXBT = 0.f;
 
+
 	//if(Key(GLFW_KEY_F2) && polyModeBT <= elapsedTime){
 	//	polyMode += polyMode == GL_FILL ? -2 : 1;
 	//	glPolygonMode(GL_FRONT_AND_BACK, polyMode);
@@ -332,20 +335,25 @@ void Scene::Update() {
 
 	// Can be modified to be used for other entities too
 	entityManager->Update(1, cam.CalcFront()); // Number of particles to be rendered every frame
-	
 
-	for (int i = 0; i < (int)WaveNo::Total; ++i)
-	{
-		if (enemycount == 0)
+
+		if (Key(GLFW_KEY_F))
 		{
-			switch (waves[i])
+			++waveNo;
+		}
+		switch (waves[waveNo])
+		{
+		case (int)WaveNo::One:
+			enemycount = 0;
+			if (waveBounceTime <= GetTickCount64() && enemycount <= 10)
 			{
-			case (int)WaveNo::One:
+				waveBounceTime = GetTickCount64() + 15000.f;
+
 				for (int i = 0; i < 10; ++i)
 				{
 					Entity* stillenemy = new Entity(Entity::EntityType::STATIC_ENEMY,
 						true,
-						glm::vec3(rand() % 50 - 25, 10.f, rand() % 50 - 25),
+						glm::vec3(rand() % 50 - 25, -10.f, rand() % 50 - 25),
 						glm::vec3(1.f),
 						glm::vec4(0.f),
 						cam.CalcFront());
@@ -353,14 +361,31 @@ void Scene::Update() {
 					++enemycount;
 				}
 				break;
+			}
+		case (int)WaveNo::Two:
+			enemycount = 0;
+			if (waveBounceTime <= GetTickCount64() && enemycount <= 30)
+			{
+				waveBounceTime = GetTickCount64() + 15000.f;
 
-			case (int)WaveNo::Total:
-				i = 0;
+				for (int i = 0; i < 10; ++i)
+				{
+					Entity* stillenemy = new Entity(Entity::EntityType::STATIC_ENEMY,
+						true,
+						glm::vec3(rand() % 50 - 25, -10.f, rand() % 50 - 25),
+						glm::vec3(1.f),
+						glm::vec4(0.f),
+						cam.CalcFront());
+					entityManager->AddEntity(stillenemy);
+					++enemycount;
+				}
 				break;
 			}
+
+		case (int)WaveNo::Total:
+			waveNo = 0;
+			break;
 		}
-		
-	}
 }
 
 void Scene::GeoRenderPass() {

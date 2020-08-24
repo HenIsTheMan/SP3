@@ -25,4 +25,5 @@ protected:
 	virtual ~EntityManager(void);
 
 	std::vector<Entity*> entityList;
+	EnemyMovement* enemyMovement;
 };

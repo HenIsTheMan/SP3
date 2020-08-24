@@ -195,6 +195,7 @@
     <ClCompile Include="Src\Admin\App.cpp" />
     <ClCompile Include="Src\Client.cpp" />
     <ClCompile Include="Src\GDev\AssaultRifle.cpp" />
+    <ClCompile Include="Src\GDev\EnemyMovement.cpp" />
     <ClCompile Include="Src\GDev\Entity.cpp" />
     <ClCompile Include="Src\GDev\EntityManager.cpp" />
     <ClCompile Include="Src\GDev\Pistol.cpp" />
@@ -206,6 +207,7 @@
   <ItemGroup>
     <ClInclude Include="Src\Admin\App.h" />
     <ClInclude Include="Src\GDev\AssaultRifle.h" />
+    <ClInclude Include="Src\GDev\EnemyMovement.h" />
     <ClInclude Include="Src\GDev\Entity.h" />
     <ClInclude Include="Src\GDev\EntityManager.h" />
     <ClInclude Include="Src\GDev\Pistol.h" />

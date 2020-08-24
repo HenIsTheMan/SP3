@@ -33,6 +33,7 @@
     <ClCompile Include="Src\GDev\Pistol.cpp" />
     <ClCompile Include="Src\GDev\AssaultRifle.cpp" />
     <ClCompile Include="Src\GDev\SniperRifle.cpp" />
+    <ClCompile Include="Src\GDev\EnemyMovement.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\World\Cam.h">
@@ -50,6 +51,7 @@
     <ClInclude Include="Src\GDev\Pistol.h" />
     <ClInclude Include="Src\GDev\AssaultRifle.h" />
     <ClInclude Include="Src\GDev\SniperRifle.h" />
+    <ClInclude Include="Src\GDev\EnemyMovement.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Screen.fs">

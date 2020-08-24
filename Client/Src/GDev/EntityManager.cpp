@@ -59,7 +59,7 @@ void EntityManager::Update(int numPerFrame, glm::vec3 storeCamFront)
 		case Entity::EntityType::MOVING_ENEMY:
 			// Do the movement for the enemies here
 			entity->active = true;
-			
+			enemyMovement->UpdateMovement(entity->pos, storeCamFront);
 			break;
 
 		case Entity::EntityType::BULLET:
