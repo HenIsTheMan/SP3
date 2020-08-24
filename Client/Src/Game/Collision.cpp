@@ -1,5 +1,7 @@
 #include "Collision.h"
 
+glm::vec3 responseVec = glm::vec3(0.f);
+
 void Collision::DetectAndResolveCollision(Entity* const& entity, Entity* const& instance){
 	if(entity->mesh->GetMeshType() == instance->mesh->GetMeshType()){
 		switch(entity->mesh->GetMeshType()){
@@ -28,8 +30,95 @@ bool Collision::IsSeparatedSphereSphere(Entity* const& entity, Entity* const& in
 		|| glm::dot(relativeVelYZ, -displacementVecYZ) > 0.f));
 }
 
-bool Collision:: IsSeparatedCubeCube(Entity* const& entity, Entity* const& instance){
-	return false;
+bool Collision::IsSeparatedCubeCube(Entity* const& entity, Entity* const& instance){
+	glm::vec3 entityPts[8]{
+		glm::vec3(entity->scale.x, entity->scale.y, entity->scale.z),
+		glm::vec3(entity->scale.x, entity->scale.y, -entity->scale.z),
+		glm::vec3(-entity->scale.x, entity->scale.y, entity->scale.z),
+		glm::vec3(-entity->scale.x, entity->scale.y, -entity->scale.z),
+		glm::vec3(entity->scale.x, -entity->scale.y, entity->scale.z),
+		glm::vec3(entity->scale.x, -entity->scale.y, -entity->scale.z),
+		glm::vec3(-entity->scale.x, -entity->scale.y, entity->scale.z),
+		glm::vec3(-entity->scale.x, -entity->scale.y, -entity->scale.z),
+	};
+	glm::vec3 instancePts[8]{
+		glm::vec3(instance->scale.x, instance->scale.y, instance->scale.z),
+		glm::vec3(instance->scale.x, instance->scale.y, -instance->scale.z),
+		glm::vec3(-instance->scale.x, instance->scale.y, instance->scale.z),
+		glm::vec3(-instance->scale.x, instance->scale.y, -instance->scale.z),
+		glm::vec3(instance->scale.x, -instance->scale.y, instance->scale.z),
+		glm::vec3(instance->scale.x, -instance->scale.y, -instance->scale.z),
+		glm::vec3(-instance->scale.x, -instance->scale.y, instance->scale.z),
+		glm::vec3(-instance->scale.x, -instance->scale.y, -instance->scale.z),
+	};
+	for(short i = 0; i < 8; ++i){
+		entityPts[i] = entity->pos + glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(entity->rotate.w), glm::vec3(entity->rotate)) * glm::vec4(entityPts[i], 1.f));
+	}
+	for(short i = 0; i < 8; ++i){
+		instancePts[i] = instance->pos + glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(instance->rotate.w), glm::vec3(instance->rotate)) * glm::vec4(instancePts[i], 1.f));
+	}
+
+	glm::vec3 front1 = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(entity->rotate.w), glm::vec3(entity->rotate)) * glm::vec4(glm::vec3(0.f, 0.f, 1.f), 1.f));
+	glm::vec3 right1 = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(entity->rotate.w), glm::vec3(entity->rotate)) * glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+	glm::vec3 up1 = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(entity->rotate.w), glm::vec3(entity->rotate)) * glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
+	glm::vec3 front2 = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(instance->rotate.w), glm::vec3(instance->rotate)) * glm::vec4(glm::vec3(0.f, 0.f, 1.f), 1.f));
+	glm::vec3 right2 = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(instance->rotate.w), glm::vec3(instance->rotate)) * glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+	glm::vec3 up2 = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(instance->rotate.w), glm::vec3(instance->rotate)) * glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
+
+	glm::vec3 axes[]{
+		front1,
+		right1,
+		up1,
+		front2,
+		right2,
+		up2,
+		-front1,
+		-right1,
+		-up1,
+		-front2,
+		-right2,
+		-up2,
+		glm::cross(front1, front2),
+		glm::cross(front1, right2),
+		glm::cross(front1, up2),
+		glm::cross(right1, front2),
+		glm::cross(right1, right2),
+		glm::cross(right1, up2),
+		glm::cross(up1, front2),
+		glm::cross(up1, right2),
+		glm::cross(up1, up2),
+	};
+
+	const size_t& size = sizeof(axes) / sizeof(axes[0]);
+	for(size_t i = 0; i < size; ++i){
+		const glm::vec3& axis = axes[i];
+		if(axis == glm::vec3(0.f)){
+			return false;
+		}
+
+		float aMin = FLT_MAX;
+		float aMax = FLT_MIN;
+		float bMin = FLT_MAX;
+		float bMax = FLT_MIN;
+
+		for(short i = 0; i < 8; ++i){
+			float aDist = glm::dot(entityPts[i], axis);
+			aMin = aDist < aMin ? aDist : aMin;
+			aMax = aDist > aMax ? aDist : aMax;
+			float bDist = glm::dot(instancePts[i], axis);
+			bMin = bDist < bMin ? bDist : bMin;
+			bMax = bDist > bMax ? bDist : bMax;
+		}
+
+		///Test for overlap
+		float longSpan = std::max(aMax, bMax) - std::min(aMin, bMin);
+		float sumSpan = aMax - aMin + bMax - bMin;
+
+		if(responseVec == glm::vec3(0.f) || (sumSpan > longSpan && glm::length(responseVec) > sumSpan - longSpan)){
+			responseVec = (sumSpan - longSpan) * axis;
+		}
+		return sumSpan <= longSpan;
+	}
 }
 
 void Collision::CollisionSphereSphere(Entity* const& entity, Entity* const& instance){
@@ -39,4 +128,8 @@ void Collision::CollisionSphereSphere(Entity* const& entity, Entity* const& inst
 }
 
 void Collision::CollisionCubeCube(Entity* const& entity, Entity* const& instance){
+	glm::vec3 responseVec = glm::vec3(0.f);
+	if(!IsSeparatedCubeCube(entity, instance)){
+		entity->pos += responseVec;
+	}
 }
