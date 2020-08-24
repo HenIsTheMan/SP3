@@ -53,15 +53,15 @@ Scene::Scene() :
 		new Water(24.f, 2.f, 2.f, .5f),
 	},
 	models{
-		//new Model("ObjsAndMtls/Pistol.obj", {
-		//	aiTextureType_DIFFUSE,
-		//}),
-		//new Model("ObjsAndMtls/AR.obj", {
-		//	aiTextureType_DIFFUSE,
-		//}),
-		//new Model("ObjsAndMtls/Sniper.obj", {
-		//	aiTextureType_DIFFUSE,
-		//}),
+		new Model("ObjsAndMtls/Pistol.obj", {
+			aiTextureType_DIFFUSE,
+		}),
+		new Model("ObjsAndMtls/AR.obj", {
+			aiTextureType_DIFFUSE,
+		}),
+		new Model("ObjsAndMtls/Sniper.obj", {
+			aiTextureType_DIFFUSE,
+		}),
 	},
 	blurSP{"Shaders/Quad.vs", "Shaders/Blur.fs"},
 	depthSP{"Shaders/Depth.vs", "Shaders/Depth.fs"},
@@ -1043,20 +1043,20 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(front.x, front.z)))),
 		modelStack.Scale(glm::vec3(5.f)),
 	});
-		//switch(weapon->GetCurrentSlot()){
-		//	case 0:
-		//		models[(int)ModelType::Pistol]->SetModelForAll(modelStack.GetTopModel());
-		//		models[(int)ModelType::Pistol]->Render(forwardSP);
-		//		break;
-		//	//case 1:
-		//	//	models[(int)ModelType::AR]->SetModelForAll(modelStack.GetTopModel());
-		//	//	models[(int)ModelType::AR]->Render(forwardSP);
-		//	//	break;
-		//	//case 2:
-		//	//	models[(int)ModelType::Sniper]->SetModelForAll(modelStack.GetTopModel());
-		//	//	models[(int)ModelType::Sniper]->Render(forwardSP);
-		//	//	break;
-		//}
+		switch(weapon->GetCurrentSlot()){
+			case 0:
+				models[(int)ModelType::Pistol]->SetModelForAll(modelStack.GetTopModel());
+				models[(int)ModelType::Pistol]->Render(forwardSP);
+				break;
+			case 1:
+				models[(int)ModelType::AR]->SetModelForAll(modelStack.GetTopModel());
+				models[(int)ModelType::AR]->Render(forwardSP);
+				break;
+			case 2:
+				models[(int)ModelType::Sniper]->SetModelForAll(modelStack.GetTopModel());
+				models[(int)ModelType::Sniper]->Render(forwardSP);
+				break;
+		}
 	modelStack.PopModel();
 
 	////Render GUI

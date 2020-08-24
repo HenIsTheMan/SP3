@@ -50,8 +50,8 @@ private:
 
 	enum struct ModelType{
 		Pistol,
-		//AR,
-		//Sniper,
+		AR,
+		Sniper,
 		Amt
 	};
 	Model* models[(int)ModelType::Amt];
