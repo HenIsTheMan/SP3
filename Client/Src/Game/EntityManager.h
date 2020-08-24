@@ -8,6 +8,9 @@ class EntityManager final: public Singleton<EntityManager>{
 	friend class Singleton<EntityManager>;
 public:
 	struct UpdateParams final{ //Add on here if needed
+		glm::vec3 camPos;
+		glm::vec3 camFront;
+		glm::vec4 reticleColour;
 	};
 
 	~EntityManager(); //Default dtor
@@ -16,7 +19,7 @@ public:
 	Entity* const& FetchEntity();
 
 	void CreateEntities(const int& amt);
-	void UpdateEntities(const UpdateParams& params);
+	void UpdateEntities(UpdateParams& params);
 	void RenderEntities(ShaderProg& SP);
 protected:
 	EntityManager(); //Default ctor

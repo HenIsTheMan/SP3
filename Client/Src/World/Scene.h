@@ -22,7 +22,6 @@ public:
 	void CubemapReflectionRender(const short& cubemapFace);
 	void ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID, const uint& cubemapReflectionTexID);
 	void MinimapRender();
-	bool CheckCollision(const glm::vec3& pos, const glm::vec3& scale);
 private:
 	Cam cam;
 	Cam dCam;

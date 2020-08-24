@@ -512,7 +512,11 @@ void Scene::Update(){
 	}
 
 	EntityManager::UpdateParams params;
+	params.camPos = cam.GetPos();
+	params.camFront = cam.CalcFront();
+	params.reticleColour = reticleColour;
 	entityManager->UpdateEntities(params);
+	reticleColour = params.reticleColour;
 	
 	for (int i = 0; i < (int)WaveNumber::Total; ++i)
 	{
@@ -1317,14 +1321,4 @@ void Scene::MinimapRender()
 	meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
 	meshes[(int)MeshType::Terrain]->Render(forwardSP);
 	modelStack.PopModel();
-}
-
-bool Scene::CheckCollision(const glm::vec3& pos, const glm::vec3& scale){
-	glm::vec3 displacementVec = cam.GetPos() - pos;
-	const float b = glm::dot(cam.CalcFront(), displacementVec);
-	const float c = glm::dot(displacementVec, displacementVec) - scale.x * scale.x;
-	if (b * b - c >= 0.f) {
-		return true;
-	}
-	return false;
 }

@@ -51,7 +51,7 @@ void EntityManager::CreateEntities(const int& amt){ //Shld only be called once i
 	}
 }
 
-void EntityManager::UpdateEntities(const UpdateParams& params){
+void EntityManager::UpdateEntities(UpdateParams& params){
 	root->Deactivate();
 	//root->Partition();
 
@@ -64,10 +64,24 @@ void EntityManager::UpdateEntities(const UpdateParams& params){
 					break;
 				case Entity::EntityType::BULLET:
 					break;
-				case Entity::EntityType::STATIC_ENEMY:
+				case Entity::EntityType::STATIC_ENEMY: {
+					glm::vec3 displacementVec = params.camPos - entity->pos;
+					const float b = glm::dot(params.camFront, displacementVec);
+					const float c = glm::dot(displacementVec, displacementVec) - entity->scale.x * entity->scale.x;
+					if(b * b - c >= 0.f){
+						params.reticleColour = glm::vec4(1.f, 1.f, 0.f, 1.f);
+					}
 					break;
-				case Entity::EntityType::MOVING_ENEMY:
+				}
+				case Entity::EntityType::MOVING_ENEMY: {
+					glm::vec3 displacementVec = params.camPos - entity->pos;
+					const float b = glm::dot(params.camFront, displacementVec);
+					const float c = glm::dot(displacementVec, displacementVec) - entity->scale.x * entity->scale.x;
+					if(b * b - c >= 0.f){
+						params.reticleColour = glm::vec4(1.f, 1.f, 0.f, 1.f);
+					}
 					break;
+				}
 			}
 
 			if(entity->vel != glm::vec3(0.f)){
