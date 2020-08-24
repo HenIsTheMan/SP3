@@ -177,7 +177,7 @@ vec3 CalcSpotlight(Spotlight light){
 }
 
 void main(){
-	if(!useCustomColour && !useDiffuseMap){
+	if((!useCustomColour && !useDiffuseMap) || (useDiffuseMap && useCustomDiffuseTexIndex && customDiffuseTexIndex == -1)){
 		Colour = fsIn.colour;
 	} else{
 		Colour = (useCustomColour ? customColour : vec4(1.f))

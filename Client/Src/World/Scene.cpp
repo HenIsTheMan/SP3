@@ -875,7 +875,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	forwardSP.Set1i("sAmt", sAmt);
 
 	int i;
-	for (i = 0; i < pAmt; ++i) {
+	for(i = 0; i < pAmt; ++i){
 		const PtLight* const& ptLight = static_cast<PtLight*>(ptLights[i]);
 		forwardSP.Set3fv(("ptLights[" + std::to_string(i) + "].ambient").c_str(), ptLight->ambient);
 		forwardSP.Set3fv(("ptLights[" + std::to_string(i) + "].diffuse").c_str(), ptLight->diffuse);
@@ -885,14 +885,14 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		forwardSP.Set1f(("ptLights[" + std::to_string(i) + "].linear").c_str(), ptLight->linear);
 		forwardSP.Set1f(("ptLights[" + std::to_string(i) + "].quadratic").c_str(), ptLight->quadratic);
 	}
-	for (i = 0; i < dAmt; ++i) {
+	for(i = 0; i < dAmt; ++i){
 		const DirectionalLight* const& directionalLight = static_cast<DirectionalLight*>(directionalLights[i]);
 		forwardSP.Set3fv(("directionalLights[" + std::to_string(i) + "].ambient").c_str(), directionalLight->ambient);
 		forwardSP.Set3fv(("directionalLights[" + std::to_string(i) + "].diffuse").c_str(), directionalLight->diffuse);
 		forwardSP.Set3fv(("directionalLights[" + std::to_string(i) + "].spec").c_str(), directionalLight->spec);
 		forwardSP.Set3fv(("directionalLights[" + std::to_string(i) + "].dir").c_str(), directionalLight->dir);
 	}
-	for (i = 0; i < sAmt; ++i) {
+	for(i = 0; i < sAmt; ++i){
 		const Spotlight* const& spotlight = static_cast<Spotlight*>(spotlights[i]);
 		forwardSP.Set3fv(("spotlights[" + std::to_string(i) + "].ambient").c_str(), spotlight->ambient);
 		forwardSP.Set3fv(("spotlights[" + std::to_string(i) + "].diffuse").c_str(), spotlight->diffuse);
