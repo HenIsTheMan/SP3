@@ -431,11 +431,9 @@ void Scene::Update(){
 			static float wavesReverbBT = 0.f;
 			static float resetSoundFXBT = 0.f;
 
-			if(Key(GLFW_KEY_F2) && polyModeBT <= elapsedTime){
+			if(Key(VK_F2) && polyModeBT <= elapsedTime){
 				polyModes[0] += polyModes[0] == GL_FILL ? -2 : 1;
-				polyModes[1] += polyModes[1] == GL_FILL ? -2 : 1;
-				glPolygonMode(GL_FRONT, polyModes[0]);
-				glPolygonMode(GL_BACK, polyModes[1]);
+				glPolygonMode(GL_FRONT_AND_BACK, polyModes[0]);
 				polyModeBT = elapsedTime + .5f;
 			}
 
