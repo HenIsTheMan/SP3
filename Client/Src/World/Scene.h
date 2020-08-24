@@ -107,6 +107,18 @@ private:
 	int playerStates;
 	bool sprintOn;
 	glm::vec4 reticleColour;
+
+	enum struct Screen{
+		Menu = 0,
+		Score,
+		Instructions,
+		Credits,
+		Game,
+		Pause,
+		End,
+		Amt
+	};
+	Screen screen;
 };
 
 enum struct Axis{

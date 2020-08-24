@@ -89,6 +89,7 @@ bool Collision::IsSeparatedCubeCube(Entity* const& entity, Entity* const& instan
 		glm::cross(up1, up2),
 	};
 
+	bool separated = false;
 	const size_t& size = sizeof(axes) / sizeof(axes[0]);
 	for(size_t i = 0; i < size; ++i){
 		const glm::vec3& axis = axes[i];
@@ -117,8 +118,9 @@ bool Collision::IsSeparatedCubeCube(Entity* const& entity, Entity* const& instan
 		if(responseVec == glm::vec3(0.f) || (sumSpan > longSpan && glm::length(responseVec) > sumSpan - longSpan)){
 			responseVec = (sumSpan - longSpan) * axis;
 		}
-		return sumSpan <= longSpan;
+		separated |= (sumSpan <= longSpan);
 	}
+	return separated;
 }
 
 void Collision::CollisionSphereSphere(Entity* const& entity, Entity* const& instance){
@@ -128,7 +130,7 @@ void Collision::CollisionSphereSphere(Entity* const& entity, Entity* const& inst
 }
 
 void Collision::CollisionCubeCube(Entity* const& entity, Entity* const& instance){
-	glm::vec3 responseVec = glm::vec3(0.f);
+	responseVec = glm::vec3(0.f);
 	if(!IsSeparatedCubeCube(entity, instance)){
 		entity->pos += responseVec;
 	}
