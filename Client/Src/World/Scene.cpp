@@ -81,7 +81,7 @@ Scene::Scene():
 	view(glm::mat4(1.f)),
 	projection(glm::mat4(1.f)),
 	elapsedTime(0.f),
-	//polyMode(0),
+	polyModes{},
 	playerCurrHealth(100.f),
 	playerMaxHealth(100.f),
 	playerCurrLives(5.f),
@@ -213,7 +213,7 @@ bool Scene::Init(){
 	player->mass = 10.f;
 	player->force = glm::vec3(0.f);
 
-	//glGetIntegerv(GL_POLYGON_MODE, &polyMode);
+	glGetIntegerv(GL_POLYGON_MODE, polyModes);
 
 	soundEngine = createIrrKlangDevice(ESOD_AUTO_DETECT, ESEO_MULTI_THREADED | ESEO_LOAD_PLUGINS | ESEO_USE_3D_BUFFERS | ESEO_PRINT_DEBUG_INFO_TO_DEBUGGER);
 	if (!soundEngine) {
@@ -245,308 +245,304 @@ bool Scene::Init(){
 
 	directionalLights.emplace_back(CreateLight(LightType::Directional));
 	spotlights.emplace_back(CreateLight(LightType::Spot));
-	//spotlights.emplace_back(CreateLight(LightType::Spot));
 
 	return true;
 }
 
 void Scene::Update(){
-	reticleColour = glm::vec4(1.f);
-
 	elapsedTime += dt;
 	if(winHeight){ //Avoid division by 0 when win is minimised
 		cam.SetDefaultAspectRatio(float(winWidth) / float(winHeight));
 		cam.ResetAspectRatio();
 	}
 
-	////Control player states
-	static float sprintBT = 0.f;
-	static float heightBT = 0.f;
+	switch(screen){
+		case Screen::Game: {
+			reticleColour = glm::vec4(1.f);
 
-	///Toggle sprint
-	if(Key(VK_SHIFT) && sprintBT <= elapsedTime){
-		sprintOn = !sprintOn;
-		sprintBT = elapsedTime + .5f;
-	}
+			////Control player states
+			static float sprintBT = 0.f;
+			static float heightBT = 0.f;
 
-	///Set movement state
-	if(Key(GLFW_KEY_A) || Key(GLFW_KEY_D) || Key(GLFW_KEY_W) || Key(GLFW_KEY_S)){
-		if(sprintOn){
-			playerStates &= ~(int)PlayerState::NoMovement;
-			playerStates &= ~(int)PlayerState::Walking;
-			playerStates |= (int)PlayerState::Sprinting;
-		} else{
-			playerStates &= ~(int)PlayerState::NoMovement;
-			playerStates |= (int)PlayerState::Walking;
-			playerStates &= ~(int)PlayerState::Sprinting;
-		}
-	} else{
-		playerStates |= (int)PlayerState::NoMovement;
-		playerStates &= ~(int)PlayerState::Walking;
-		playerStates &= ~(int)PlayerState::Sprinting;
-	}
-
-	///Set height state
-	if(heightBT <= elapsedTime){
-		if(Key(GLFW_KEY_C)){
-			if(playerStates & (int)PlayerState::Standing){
-				playerStates |= (int)PlayerState::Crouching;
-				playerStates &= ~(int)PlayerState::Standing;
-			} else if(playerStates & (int)PlayerState::Crouching){
-				playerStates |= (int)PlayerState::Proning;
-				playerStates &= ~(int)PlayerState::Crouching;
+			///Toggle sprint
+			if(Key(VK_SHIFT) && sprintBT <= elapsedTime){
+				sprintOn = !sprintOn;
+				sprintBT = elapsedTime + .5f;
 			}
-			heightBT = elapsedTime + .5f;
-		}
-		if(Key(VK_SPACE)){
-			if(playerStates & (int)PlayerState::Proning){
-				playerStates |= (int)PlayerState::Crouching;
-				playerStates &= ~(int)PlayerState::Proning;
-			} else if(playerStates & (int)PlayerState::Crouching){
-				playerStates |= (int)PlayerState::Standing;
-				playerStates &= ~(int)PlayerState::Crouching;
-			} else if(playerStates & (int)PlayerState::Standing){
-				soundEngine->play2D("Audio/Sounds/Jump.wav", false);
-				playerStates |= (int)PlayerState::Jumping;
-				playerStates &= ~(int)PlayerState::Standing;
-			}
-			heightBT = elapsedTime + .5f;
-		} else{
-			if((playerStates & (int)PlayerState::Jumping)){
-				playerStates |= (int)PlayerState::Falling;
-				playerStates &= ~(int)PlayerState::Jumping;
-				cam.SetVel(0.f);
-			}
-		}
-	}
 
-	float yMin = terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(cam.GetPos().x / terrainXScale, cam.GetPos().z / terrainZScale);
-	float yMax = yMin;
-
-	///Update player according to its states
-	int playerStatesTemp = playerStates;
-	int bitMask = 1;
-	while(playerStatesTemp){
-		switch(PlayerState(playerStatesTemp & bitMask)){
-			case PlayerState::NoMovement:
-				cam.SetSpd(0.f);
-				break;
-			case PlayerState::Walking:
-				cam.SetSpd(100.f);
-				break;
-			case PlayerState::Sprinting:
-				cam.SetSpd(250.f);
-				break;
-			case PlayerState::Standing:
-				yMin += 30.f;
-				yMax += 30.f;
-				break;
-			case PlayerState::Jumping:
-				cam.SetVel(300.f);
-			case PlayerState::Falling:
-				cam.SetAccel(-1500.f);
-				yMin += 30.f;
-				yMax += 250.f;
-				break;
-			case PlayerState::Crouching:
-				cam.SetSpd(cam.GetSpd() / 5.f);
-				yMin += 5.f;
-				yMax += 5.f;
-				break;
-			case PlayerState::Proning:
-				cam.SetSpd(5.f);
-				yMin += 1.f;
-				yMax += 1.f;
-				break;
-		}
-		playerStatesTemp &= ~bitMask;
-		bitMask <<= 1;
-	}
-
-	if(playerStates & (int)PlayerState::Jumping){
-		if(cam.GetPos().y >= yMax){
-			playerStates |= (int)PlayerState::Falling;
-			playerStates &= ~(int)PlayerState::Jumping;
-			cam.SetVel(0.f);
-		}
-	}
-	if(playerStates & (int)PlayerState::Falling){
-		if(cam.GetPos().y <= yMin){
-			playerStates |= (int)PlayerState::Standing;
-			playerStates &= ~(int)PlayerState::Falling;
-			cam.SetAccel(0.f);
-			cam.SetVel(0.f);
-		}
-	}
-	cam.UpdateJumpFall();
-	cam.Update(GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_W, GLFW_KEY_S, -terrainXScale / 2.f + 5.f, terrainXScale / 2.f - 5.f, yMin, yMax, -terrainZScale / 2.f + 5.f, terrainZScale / 2.f - 5.f);
-	view = cam.LookAt();
-	projection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
-
-	minimapView = cam.LookAt();
-	minimapProjection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
-	const glm::vec3& camPos = cam.GetPos();
-	const glm::vec3& camFront = cam.CalcFront();
-	soundEngine->setListenerPosition(vec3df(camPos.x, camPos.y, camPos.z), vec3df(camFront.x, camFront.y, camFront.z));
-
-	///Aim
-	if(rightMB){
-		Weapon* const& currWeapon = weapon->GetCurrentWeapon();
-		switch(weapon->GetCurrentSlot()){
-			case 0:
-				angularFOV = 40.f;
-				break;
-			case 1:
-				angularFOV = 30.f;
-				break;
-			case 2:
-				angularFOV = 15.f;
-				break;
-			default:
-				angularFOV = 45.f;
-		}
-	} else{
-		angularFOV = 45.f;
-	}
-
-	directionalLights[0]->ambient = glm::vec3(.05f);
-	directionalLights[0]->diffuse = glm::vec3(.8f);
-	directionalLights[0]->spec = glm::vec3(1.f);
-	static_cast<DirectionalLight*>(directionalLights[0])->dir = dCam.CalcFront();
-
-	spotlights[0]->ambient = glm::vec3(.05f);
-	spotlights[0]->diffuse = glm::vec3(.8f);
-	spotlights[0]->spec = glm::vec3(1.f);
-	static_cast<Spotlight*>(spotlights[0])->pos = sCam.GetPos();
-	static_cast<Spotlight*>(spotlights[0])->dir = sCam.CalcFront();
-	static_cast<Spotlight*>(spotlights[0])->cosInnerCutoff = cosf(glm::radians(12.5f));
-	static_cast<Spotlight*>(spotlights[0])->cosOuterCutoff = cosf(glm::radians(17.5f));
-
-	//spotlights[1]->ambient = glm::vec3(.05f);
-	//spotlights[1]->diffuse = glm::vec3(.8f);
-	//spotlights[1]->spec = glm::vec3(1.f);
-	//static_cast<Spotlight*>(spotlights[1])->pos = camPos;
-	//static_cast<Spotlight*>(spotlights[1])->dir = camFront;
-	//static_cast<Spotlight*>(spotlights[1])->cosInnerCutoff = cosf(glm::radians(12.5f));
-	//static_cast<Spotlight*>(spotlights[1])->cosOuterCutoff = cosf(glm::radians(17.5f));
-
-	static_cast<SpriteAni*>(meshes[(int)MeshType::SpriteAni])->Update();
-
-	static float polyModeBT = 0.f;
-	static float distortionBT = 0.f;
-	static float echoBT = 0.f;
-	static float wavesReverbBT = 0.f;
-	static float resetSoundFXBT = 0.f;
-
-	//if(Key(GLFW_KEY_F2) && polyModeBT <= elapsedTime){
-	//	polyMode += polyMode == GL_FILL ? -2 : 1;
-	//	glPolygonMode(GL_FRONT_AND_BACK, polyMode);
-	//	polyModeBT = elapsedTime + .5f;
-	//}
-
-	if(soundFX){
-		if(Key(GLFW_KEY_I) && distortionBT <= elapsedTime){
-			soundFX->isDistortionSoundEffectEnabled() ? soundFX->disableDistortionSoundEffect() : (void)soundFX->enableDistortionSoundEffect();
-			distortionBT = elapsedTime + .5f;
-		}
-		if(Key(GLFW_KEY_O) && echoBT <= elapsedTime){
-			soundFX->isEchoSoundEffectEnabled() ? soundFX->disableEchoSoundEffect() : (void)soundFX->enableEchoSoundEffect();
-			echoBT = elapsedTime + .5f;
-		}
-		if(Key(GLFW_KEY_P) && wavesReverbBT <= elapsedTime){
-			soundFX->isWavesReverbSoundEffectEnabled() ? soundFX->disableWavesReverbSoundEffect() : (void)soundFX->enableWavesReverbSoundEffect();
-			wavesReverbBT = elapsedTime + .5f;
-		}
-		if(Key(GLFW_KEY_L) && resetSoundFXBT <= elapsedTime){
-			soundFX->disableAllEffects();
-			resetSoundFXBT = elapsedTime + .5f;
-		}
-	}
-
-	// TESTING ONLY FOR HEALTHBAR
-	//if (Key(GLFW_KEY_SPACE))
-	//{
-	//	playerCurrHealth -= 1.f;
-	//}
-
-	// Player gets max health again, but loses 1 life
-	if (playerCurrHealth <= 0.f && playerCurrLives > 0.f)
-	{
-		playerCurrHealth = 100.f;
-		--playerCurrLives;
-	}
-
-	// Change weapon using the inventory slots
-	if (Key(GLFW_KEY_1))
-		weapon->SetCurrentSlot(0);
-	if (Key(GLFW_KEY_2))
-		weapon->SetCurrentSlot(1);
-	if (Key(GLFW_KEY_3))
-		weapon->SetCurrentSlot(2);
-
-	// Update current weapon status to see whether can shoot
-	static double lastTime = elapsedTime;
-	weapon->GetCurrentWeapon()->Update(elapsedTime - lastTime);
-
-	// TESTING ONLY FOR SHOOTING
-	if(leftMB){
-		if(weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0){
-			Entity* const& bullet = entityManager->FetchEntity();
-			bullet->type = Entity::EntityType::BULLET;
-			bullet->active = true;
-			bullet->pos = glm::vec3(cam.GetPos() + 10.f * cam.CalcFront());
-			bullet->vel = cam.CalcFront() * 12.f;
-			bullet->mass = 1.f;
-			bullet->life = 200.f;
-			//const glm::vec3& camFront = cam.CalcFront();
-			//bullet->rotate = glm::vec4(cam.CalcUp(), glm::degrees(atan2(camFront.z, camFront.x)));
-			bullet->scale = glm::vec3(1.f);
-			bullet->mesh = meshes[(int)MeshType::Sphere];
-			weapon->GetCurrentWeapon()->SetCanShoot(false); // For the shooting cooldown time
-			weapon->GetCurrentWeapon()->SetCurrentAmmoRound(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() - 1); // Decrease the ammo
-			lastTime = elapsedTime;
-		}
-	}
-
-	if(Key(GLFW_KEY_R)){ // Reload the curr weapon
-		weapon->GetCurrentWeapon()->Reload();
-	}
-
-	EntityManager::UpdateParams params;
-	params.camPos = cam.GetPos();
-	params.camFront = cam.CalcFront();
-	params.reticleColour = reticleColour;
-	entityManager->UpdateEntities(params);
-	reticleColour = params.reticleColour;
-	
-	for (int i = 0; i < (int)WaveNumber::Total; ++i)
-	{
-		if (enemyCount == 0)
-		{
-			switch (waves[i])
-			{
-			case (int)WaveNumber::One:
-				for (int i = 0; i < 10; ++i)
-				{
-					Entity* const& stillEnemy = entityManager->FetchEntity();
-					stillEnemy->type = Entity::EntityType::STATIC_ENEMY;
-					stillEnemy->active = true;
-					stillEnemy->pos = glm::vec3(PseudorandMinMax(-50.f, 50.f), 200.f, PseudorandMinMax(-50.f, 50.f));
-					stillEnemy->vel = glm::vec3(0.f);
-					stillEnemy->mass = 5.f;
-					stillEnemy->scale = glm::vec3(10.f);
-					stillEnemy->mesh = meshes[(int)MeshType::Sphere];
-					stillEnemy->model = models[(int)ModelType::Virus];
-					++enemyCount;
+			///Set movement state
+			if(Key(GLFW_KEY_A) || Key(GLFW_KEY_D) || Key(GLFW_KEY_W) || Key(GLFW_KEY_S)){
+				if(sprintOn){
+					playerStates &= ~(int)PlayerState::NoMovement;
+					playerStates &= ~(int)PlayerState::Walking;
+					playerStates |= (int)PlayerState::Sprinting;
+				} else{
+					playerStates &= ~(int)PlayerState::NoMovement;
+					playerStates |= (int)PlayerState::Walking;
+					playerStates &= ~(int)PlayerState::Sprinting;
 				}
-				break;
+			} else{
+				playerStates |= (int)PlayerState::NoMovement;
+				playerStates &= ~(int)PlayerState::Walking;
+				playerStates &= ~(int)PlayerState::Sprinting;
+			}
 
-			case (int)WaveNumber::Total:
-				i = 0;
-				break;
+			///Set height state
+			if(heightBT <= elapsedTime){
+				if(Key(GLFW_KEY_C)){
+					if(playerStates & (int)PlayerState::Standing){
+						playerStates |= (int)PlayerState::Crouching;
+						playerStates &= ~(int)PlayerState::Standing;
+					} else if(playerStates & (int)PlayerState::Crouching){
+						playerStates |= (int)PlayerState::Proning;
+						playerStates &= ~(int)PlayerState::Crouching;
+					}
+					heightBT = elapsedTime + .5f;
+				}
+				if(Key(VK_SPACE)){
+					if(playerStates & (int)PlayerState::Proning){
+						playerStates |= (int)PlayerState::Crouching;
+						playerStates &= ~(int)PlayerState::Proning;
+					} else if(playerStates & (int)PlayerState::Crouching){
+						playerStates |= (int)PlayerState::Standing;
+						playerStates &= ~(int)PlayerState::Crouching;
+					} else if(playerStates & (int)PlayerState::Standing){
+						soundEngine->play2D("Audio/Sounds/Jump.wav", false);
+						playerStates |= (int)PlayerState::Jumping;
+						playerStates &= ~(int)PlayerState::Standing;
+					}
+					heightBT = elapsedTime + .5f;
+				} else{
+					if((playerStates & (int)PlayerState::Jumping)){
+						playerStates |= (int)PlayerState::Falling;
+						playerStates &= ~(int)PlayerState::Jumping;
+						cam.SetVel(0.f);
+					}
+				}
+			}
+
+			float yMin = terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(cam.GetPos().x / terrainXScale, cam.GetPos().z / terrainZScale);
+			float yMax = yMin;
+
+			///Update player according to its states
+			int playerStatesTemp = playerStates;
+			int bitMask = 1;
+			while(playerStatesTemp){
+				switch(PlayerState(playerStatesTemp & bitMask)){
+					case PlayerState::NoMovement:
+						cam.SetSpd(0.f);
+						break;
+					case PlayerState::Walking:
+						cam.SetSpd(100.f);
+						break;
+					case PlayerState::Sprinting:
+						cam.SetSpd(250.f);
+						break;
+					case PlayerState::Standing:
+						yMin += 30.f;
+						yMax += 30.f;
+						break;
+					case PlayerState::Jumping:
+						cam.SetVel(300.f);
+					case PlayerState::Falling:
+						cam.SetAccel(-1500.f);
+						yMin += 30.f;
+						yMax += 250.f;
+						break;
+					case PlayerState::Crouching:
+						cam.SetSpd(cam.GetSpd() / 5.f);
+						yMin += 5.f;
+						yMax += 5.f;
+						break;
+					case PlayerState::Proning:
+						cam.SetSpd(5.f);
+						yMin += 1.f;
+						yMax += 1.f;
+						break;
+				}
+				playerStatesTemp &= ~bitMask;
+				bitMask <<= 1;
+			}
+
+			if(playerStates & (int)PlayerState::Jumping){
+				if(cam.GetPos().y >= yMax){
+					playerStates |= (int)PlayerState::Falling;
+					playerStates &= ~(int)PlayerState::Jumping;
+					cam.SetVel(0.f);
+				}
+			}
+			if(playerStates & (int)PlayerState::Falling){
+				if(cam.GetPos().y <= yMin){
+					playerStates |= (int)PlayerState::Standing;
+					playerStates &= ~(int)PlayerState::Falling;
+					cam.SetAccel(0.f);
+					cam.SetVel(0.f);
+				}
+			}
+			cam.UpdateJumpFall();
+			cam.Update(GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_W, GLFW_KEY_S, -terrainXScale / 2.f + 5.f, terrainXScale / 2.f - 5.f, yMin, yMax, -terrainZScale / 2.f + 5.f, terrainZScale / 2.f - 5.f);
+			view = cam.LookAt();
+			projection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
+
+			minimapView = cam.LookAt();
+			minimapProjection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
+			const glm::vec3& camPos = cam.GetPos();
+			const glm::vec3& camFront = cam.CalcFront();
+			soundEngine->setListenerPosition(vec3df(camPos.x, camPos.y, camPos.z), vec3df(camFront.x, camFront.y, camFront.z));
+
+			///Aim
+			if(rightMB){
+				Weapon* const& currWeapon = weapon->GetCurrentWeapon();
+				switch(weapon->GetCurrentSlot()){
+					case 0:
+						angularFOV = 40.f;
+						break;
+					case 1:
+						angularFOV = 30.f;
+						break;
+					case 2:
+						angularFOV = 15.f;
+						break;
+					default:
+						angularFOV = 45.f;
+				}
+			} else{
+				angularFOV = 45.f;
+			}
+
+			directionalLights[0]->ambient = glm::vec3(.05f);
+			directionalLights[0]->diffuse = glm::vec3(.8f);
+			directionalLights[0]->spec = glm::vec3(1.f);
+			static_cast<DirectionalLight*>(directionalLights[0])->dir = dCam.CalcFront();
+
+			spotlights[0]->ambient = glm::vec3(.05f);
+			spotlights[0]->diffuse = glm::vec3(.8f);
+			spotlights[0]->spec = glm::vec3(1.f);
+			static_cast<Spotlight*>(spotlights[0])->pos = sCam.GetPos();
+			static_cast<Spotlight*>(spotlights[0])->dir = sCam.CalcFront();
+			static_cast<Spotlight*>(spotlights[0])->cosInnerCutoff = cosf(glm::radians(12.5f));
+			static_cast<Spotlight*>(spotlights[0])->cosOuterCutoff = cosf(glm::radians(17.5f));
+
+			static_cast<SpriteAni*>(meshes[(int)MeshType::SpriteAni])->Update();
+
+			static float polyModeBT = 0.f;
+			static float distortionBT = 0.f;
+			static float echoBT = 0.f;
+			static float wavesReverbBT = 0.f;
+			static float resetSoundFXBT = 0.f;
+
+			if(Key(GLFW_KEY_F2) && polyModeBT <= elapsedTime){
+				polyModes[0] += polyModes[0] == GL_FILL ? -2 : 1;
+				polyModes[1] += polyModes[1] == GL_FILL ? -2 : 1;
+				glPolygonMode(GL_FRONT, polyModes[0]);
+				glPolygonMode(GL_BACK, polyModes[1]);
+				polyModeBT = elapsedTime + .5f;
+			}
+
+			if(soundFX){
+				if(Key(GLFW_KEY_I) && distortionBT <= elapsedTime){
+					soundFX->isDistortionSoundEffectEnabled() ? soundFX->disableDistortionSoundEffect() : (void)soundFX->enableDistortionSoundEffect();
+					distortionBT = elapsedTime + .5f;
+				}
+				if(Key(GLFW_KEY_O) && echoBT <= elapsedTime){
+					soundFX->isEchoSoundEffectEnabled() ? soundFX->disableEchoSoundEffect() : (void)soundFX->enableEchoSoundEffect();
+					echoBT = elapsedTime + .5f;
+				}
+				if(Key(GLFW_KEY_P) && wavesReverbBT <= elapsedTime){
+					soundFX->isWavesReverbSoundEffectEnabled() ? soundFX->disableWavesReverbSoundEffect() : (void)soundFX->enableWavesReverbSoundEffect();
+					wavesReverbBT = elapsedTime + .5f;
+				}
+				if(Key(GLFW_KEY_L) && resetSoundFXBT <= elapsedTime){
+					soundFX->disableAllEffects();
+					resetSoundFXBT = elapsedTime + .5f;
+				}
+			}
+
+			// TESTING ONLY FOR HEALTHBAR
+			//if (Key(GLFW_KEY_SPACE))
+			//{
+			//	playerCurrHealth -= 1.f;
+			//}
+
+			// Player gets max health again, but loses 1 life
+			if(playerCurrHealth <= 0.f && playerCurrLives > 0.f)
+			{
+				playerCurrHealth = 100.f;
+				--playerCurrLives;
+			}
+
+			// Change weapon using the inventory slots
+			if(Key(GLFW_KEY_1))
+				weapon->SetCurrentSlot(0);
+			if(Key(GLFW_KEY_2))
+				weapon->SetCurrentSlot(1);
+			if(Key(GLFW_KEY_3))
+				weapon->SetCurrentSlot(2);
+
+			// Update current weapon status to see whether can shoot
+			static double lastTime = elapsedTime;
+			weapon->GetCurrentWeapon()->Update(elapsedTime - lastTime);
+
+			// TESTING ONLY FOR SHOOTING
+			if(leftMB){
+				if(weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0){
+					Entity* const& bullet = entityManager->FetchEntity();
+					bullet->type = Entity::EntityType::BULLET;
+					bullet->active = true;
+					bullet->pos = glm::vec3(cam.GetPos() + 10.f * cam.CalcFront());
+					bullet->vel = cam.CalcFront() * 12.f;
+					bullet->mass = 1.f;
+					bullet->life = 200.f;
+					//const glm::vec3& camFront = cam.CalcFront();
+					//bullet->rotate = glm::vec4(cam.CalcUp(), glm::degrees(atan2(camFront.z, camFront.x)));
+					bullet->scale = glm::vec3(1.f);
+					bullet->mesh = meshes[(int)MeshType::Sphere];
+					weapon->GetCurrentWeapon()->SetCanShoot(false); // For the shooting cooldown time
+					weapon->GetCurrentWeapon()->SetCurrentAmmoRound(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() - 1); // Decrease the ammo
+					lastTime = elapsedTime;
+				}
+			}
+
+			if(Key(GLFW_KEY_R)){ // Reload the curr weapon
+				weapon->GetCurrentWeapon()->Reload();
+			}
+
+			EntityManager::UpdateParams params;
+			params.camPos = cam.GetPos();
+			params.camFront = cam.CalcFront();
+			params.reticleColour = reticleColour;
+			entityManager->UpdateEntities(params);
+			reticleColour = params.reticleColour;
+
+			for(int i = 0; i < (int)WaveNumber::Total; ++i)
+			{
+				if(enemyCount == 0)
+				{
+					switch(waves[i])
+					{
+						case (int)WaveNumber::One:
+							for(int i = 0; i < 10; ++i)
+							{
+								Entity* const& stillEnemy = entityManager->FetchEntity();
+								stillEnemy->type = Entity::EntityType::STATIC_ENEMY;
+								stillEnemy->active = true;
+								stillEnemy->pos = glm::vec3(PseudorandMinMax(-50.f, 50.f), 200.f, PseudorandMinMax(-50.f, 50.f));
+								stillEnemy->vel = glm::vec3(0.f);
+								stillEnemy->mass = 5.f;
+								stillEnemy->scale = glm::vec3(10.f);
+								stillEnemy->mesh = meshes[(int)MeshType::Sphere];
+								stillEnemy->model = models[(int)ModelType::Virus];
+								++enemyCount;
+							}
+							break;
+
+						case (int)WaveNumber::Total:
+							i = 0;
+							break;
+					}
+				}
 			}
 		}
-		
 	}
 }
 

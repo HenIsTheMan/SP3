@@ -91,7 +91,7 @@ private:
 	float playerCurrLives;
 	float playerMaxLives;
 
-	//int polyMode;
+	int polyModes[2];
 	int enemyCount;
 
 	enum struct PlayerState{
