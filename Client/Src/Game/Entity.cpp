@@ -12,6 +12,7 @@ Entity::Entity():
 	scale(glm::vec3(1.f)),
 	light(nullptr),
 	mesh(nullptr),
+	model(nullptr),
 	pos(glm::vec3(0.f)),
 	vel(glm::vec3(0.f)),
 	mass(0.f),

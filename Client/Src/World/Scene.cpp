@@ -63,6 +63,9 @@ Scene::Scene() :
 		new Model("ObjsAndMtls/Sniper.obj", {
 			aiTextureType_DIFFUSE,
 		}),
+		new Model("ObjsAndMtls/Virus.obj", {
+			aiTextureType_DIFFUSE,
+		}),
 	},
 	blurSP{"Shaders/Quad.vs", "Shaders/Blur.fs"},
 	depthSP{"Shaders/Depth.vs", "Shaders/Depth.fs"},
@@ -162,7 +165,7 @@ bool Scene::Init(){
 	entityManager->CreateEntities(100);
 
 	Entity* const& enemy = entityManager->FetchEntity();
-	enemy->type = Entity::EntityType::STATIC_ENEMY;
+	enemy->type = Entity::EntityType::MOVING_ENEMY;
 	enemy->active = true;
 	enemy->life = 0.f;
 	enemy->maxLife = 0.f;
@@ -523,11 +526,12 @@ void Scene::Update(){
 					Entity* const& stillEnemy = entityManager->FetchEntity();
 					stillEnemy->type = Entity::EntityType::STATIC_ENEMY;
 					stillEnemy->active = true;
-					stillEnemy->pos = glm::vec3(PseudorandMinMax(-25.f, 25.f), 10.f, PseudorandMinMax(-25.f, 25.f));
+					stillEnemy->pos = glm::vec3(PseudorandMinMax(-50.f, 50.f), 200.f, PseudorandMinMax(-50.f, 50.f));
 					stillEnemy->vel = glm::vec3(0.f);
 					stillEnemy->mass = 5.f;
-					stillEnemy->scale = glm::vec3(1.f);
+					stillEnemy->scale = glm::vec3(10.f);
 					stillEnemy->mesh = meshes[(int)MeshType::Sphere];
+					stillEnemy->model = models[(int)ModelType::Virus];
 					++enemyCount;
 				}
 				break;
@@ -1182,7 +1186,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			modelStack.Translate(glm::vec3(-float(winWidth) / 6.f, -float(winHeight) / 2.3f, -11.f) + glm::vec3(j * 100.f, 0.f, 0.f)),
 			modelStack.Scale(glm::vec3(50.f)),
 		});
-			if(weapon->GetCurrentSlot() == i){
+			if(weapon->GetCurrentSlot() == j){
 				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
 			} else{
 				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));

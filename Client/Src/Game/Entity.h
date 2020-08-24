@@ -30,6 +30,7 @@ private:
 	glm::vec3 scale;
 	Light* light;
 	Mesh* mesh;
+	Model* model;
 
 	///Linear
 	glm::vec3 pos;

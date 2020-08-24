@@ -52,6 +52,7 @@ private:
 		Pistol,
 		AR,
 		Sniper,
+		Virus,
 		Amt
 	};
 	Model* models[(int)ModelType::Amt];

@@ -86,7 +86,6 @@ void EntityManager::RenderEntities(ShaderProg& SP){
 		if(entity && entity->active){
 			switch(entity->type){
 				case Entity::EntityType::BULLET:
-				case Entity::EntityType::STATIC_ENEMY:
 				case Entity::EntityType::MOVING_ENEMY:
 					SP.Set1i("noNormals", 1);
 					SP.Set1i("useCustomColour", 1);
@@ -100,6 +99,24 @@ void EntityManager::RenderEntities(ShaderProg& SP){
 						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
 						entity->mesh->SetModel(modelStack.GetTopModel());
 						entity->mesh->Render(SP);
+					modelStack.PopModel();
+					SP.Set1i("useCustomDiffuseTexIndex", 0);
+					SP.Set1i("useCustomColour", 0);
+					SP.Set1i("noNormals", 0);
+					break;
+				case Entity::EntityType::STATIC_ENEMY:
+					SP.Set1i("noNormals", 1);
+					SP.Set1i("useCustomColour", 1);
+					SP.Set1i("useCustomDiffuseTexIndex", 1);
+					modelStack.PushModel({
+						modelStack.Translate(entity->pos),
+						modelStack.Rotate(entity->rotate),
+						modelStack.Scale(entity->scale),
+					});
+						SP.Set4fv("customColour", entity->colour);
+						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
+						entity->model->SetModelForAll(modelStack.GetTopModel());
+						entity->model->Render(SP);
 					modelStack.PopModel();
 					SP.Set1i("useCustomDiffuseTexIndex", 0);
 					SP.Set1i("useCustomColour", 0);
