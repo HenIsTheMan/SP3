@@ -53,7 +53,7 @@ void EntityManager::CreateEntities(const int& amt){ //Shld only be called once i
 
 void EntityManager::UpdateEntities(const UpdateParams& params){
 	root->Deactivate();
-	root->Partition();
+	//root->Partition();
 
 	const size_t& size = entityList.size();
 	for(size_t i = 0; i < size; ++i){
@@ -106,20 +106,14 @@ void EntityManager::RenderEntities(ShaderProg& SP){
 					break;
 				case Entity::EntityType::STATIC_ENEMY:
 					SP.Set1i("noNormals", 1);
-					SP.Set1i("useCustomColour", 1);
-					SP.Set1i("useCustomDiffuseTexIndex", 1);
 					modelStack.PushModel({
 						modelStack.Translate(entity->pos),
 						modelStack.Rotate(entity->rotate),
 						modelStack.Scale(entity->scale),
 					});
-						SP.Set4fv("customColour", entity->colour);
-						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
 						entity->model->SetModelForAll(modelStack.GetTopModel());
 						entity->model->Render(SP);
 					modelStack.PopModel();
-					SP.Set1i("useCustomDiffuseTexIndex", 0);
-					SP.Set1i("useCustomColour", 0);
 					SP.Set1i("noNormals", 0);
 					break;
 				default:
