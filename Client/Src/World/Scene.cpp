@@ -4,6 +4,8 @@
 #include "../Game/AssaultRifle.h"
 #include "../Game/SniperRifle.h"
 
+extern bool leftMB;
+extern bool rightMB;
 extern float angularFOV;
 extern float dt;
 extern int winWidth;
@@ -30,13 +32,12 @@ Scene::Scene() :
 	meshes{
 		new Mesh(Mesh::MeshType::Quad, GL_TRIANGLES, {
 			{"Imgs/BoxAlbedo.png", Mesh::TexType::Diffuse, 0},
-			{"Imgs/Heart.png", Mesh::TexType::Diffuse, 0},
-			{"Imgs/Slot.tga", Mesh::TexType::Diffuse, 0},
-			{"Imgs/ReticleMain.png", Mesh::TexType::Diffuse, 0},
-			{"Imgs/ReticleShotgun.png", Mesh::TexType::Diffuse, 0},
-			{"Imgs/ReticleScar.png", Mesh::TexType::Diffuse, 0},
 			{"Imgs/BoxSpec.png", Mesh::TexType::Spec, 0},
 			{"Imgs/BoxEmission.png", Mesh::TexType::Emission, 0},
+			{"Imgs/Heart.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/Slot.tga", Mesh::TexType::Diffuse, 0},
+			{"Imgs/ReticlePri.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/ReticleSec.png", Mesh::TexType::Diffuse, 0},
 		}),
 		new Mesh(Mesh::MeshType::Cube, GL_TRIANGLES, {
 			{"Imgs/BoxAlbedo.png", Mesh::TexType::Diffuse, 0},
@@ -246,6 +247,8 @@ bool Scene::Init(){
 }
 
 void Scene::Update(){
+	reticleColour = glm::vec4(1.f);
+
 	elapsedTime += dt;
 	if(winHeight){ //Avoid division by 0 when win is minimised
 		cam.SetDefaultAspectRatio(float(winWidth) / float(winHeight));
@@ -382,6 +385,26 @@ void Scene::Update(){
 	const glm::vec3& camFront = cam.CalcFront();
 	soundEngine->setListenerPosition(vec3df(camPos.x, camPos.y, camPos.z), vec3df(camFront.x, camFront.y, camFront.z));
 
+	///Aim
+	if(rightMB){
+		Weapon* const& currWeapon = weapon->GetCurrentWeapon();
+		switch(weapon->GetCurrentSlot()){
+			case 0:
+				angularFOV = 40.f;
+				break;
+			case 1:
+				angularFOV = 30.f;
+				break;
+			case 2:
+				angularFOV = 15.f;
+				break;
+			default:
+				angularFOV = 45.f;
+		}
+	} else{
+		angularFOV = 45.f;
+	}
+
 	directionalLights[0]->ambient = glm::vec3(.05f);
 	directionalLights[0]->diffuse = glm::vec3(.8f);
 	directionalLights[0]->spec = glm::vec3(1.f);
@@ -417,20 +440,20 @@ void Scene::Update(){
 	//	polyModeBT = elapsedTime + .5f;
 	//}
 
-	if (soundFX) {
-		if (Key(GLFW_KEY_I) && distortionBT <= elapsedTime) {
+	if(soundFX){
+		if(Key(GLFW_KEY_I) && distortionBT <= elapsedTime){
 			soundFX->isDistortionSoundEffectEnabled() ? soundFX->disableDistortionSoundEffect() : (void)soundFX->enableDistortionSoundEffect();
 			distortionBT = elapsedTime + .5f;
 		}
-		if (Key(GLFW_KEY_O) && echoBT <= elapsedTime) {
+		if(Key(GLFW_KEY_O) && echoBT <= elapsedTime){
 			soundFX->isEchoSoundEffectEnabled() ? soundFX->disableEchoSoundEffect() : (void)soundFX->enableEchoSoundEffect();
 			echoBT = elapsedTime + .5f;
 		}
-		if (Key(GLFW_KEY_P) && wavesReverbBT <= elapsedTime) {
+		if(Key(GLFW_KEY_P) && wavesReverbBT <= elapsedTime){
 			soundFX->isWavesReverbSoundEffectEnabled() ? soundFX->disableWavesReverbSoundEffect() : (void)soundFX->enableWavesReverbSoundEffect();
 			wavesReverbBT = elapsedTime + .5f;
 		}
-		if (Key(GLFW_KEY_L) && resetSoundFXBT <= elapsedTime) {
+		if(Key(GLFW_KEY_L) && resetSoundFXBT <= elapsedTime){
 			soundFX->disableAllEffects();
 			resetSoundFXBT = elapsedTime + .5f;
 		}
@@ -462,10 +485,8 @@ void Scene::Update(){
 	weapon->GetCurrentWeapon()->Update(elapsedTime - lastTime);
 
 	// TESTING ONLY FOR SHOOTING
-	if (Key(GLFW_KEY_5))
-	{
-		if (weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0)
-		{
+	if(leftMB){
+		if(weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0){
 			Entity* const& bullet = entityManager->FetchEntity();
 			bullet->type = Entity::EntityType::BULLET;
 			bullet->active = true;
@@ -1065,6 +1086,35 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	forwardSP.Set1i("useCustomColour", 1);
 	forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
 
+	///Render reticle
+	if(weapon->GetCurrentSlot() < 2){
+		modelStack.PushModel({
+			modelStack.Translate(glm::vec3(0.f, 0.f, -9.f)),
+			modelStack.Scale(glm::vec3(40.f, 40.f, 1.f)),
+		});
+			forwardSP.Set4fv("customColour", reticleColour);
+			forwardSP.Set1i("customDiffuseTexIndex", 3);
+			meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+			meshes[(int)MeshType::Quad]->Render(forwardSP);
+
+			modelStack.PushModel({
+				modelStack.Translate(glm::vec3(0.f, 0.f, 1.f)),
+			});
+			if(rightMB){
+				modelStack.PushModel({
+					modelStack.Scale(glm::vec3(.7f, .7f, 1.f)),
+				});
+			}
+				forwardSP.Set1i("customDiffuseTexIndex", 4);
+				meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+				meshes[(int)MeshType::Quad]->Render(forwardSP);
+			if(rightMB){
+				modelStack.PopModel();
+			}
+			modelStack.PopModel();
+		modelStack.PopModel();
+	}
+
 	///Render health bar
 	modelStack.PushModel({
 		modelStack.Translate(glm::vec3(-float(winWidth) / 2.5f, float(winHeight) / 2.5f, -10.f)),
@@ -1087,9 +1137,9 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	modelStack.PopModel();
 
 	///Render player lives
-	for(float i = 0; i < playerMaxLives; ++i){
+	for(float j = 0; j < playerMaxLives; ++j){
 		modelStack.PushModel({
-			modelStack.Translate(glm::vec3(-float(winWidth) / 2.2f, float(winHeight) / 2.2f, -9.f) + glm::vec3(75.f * (float)i, 0.f, 0.f)), //??
+			modelStack.Translate(glm::vec3(-float(winWidth) / 2.2f, float(winHeight) / 2.2f, -9.f) + glm::vec3(75.f * (float)j, 0.f, 0.f)), //??
 			modelStack.Scale(glm::vec3(25.f)),
 		});
 			if(i < playerCurrLives){
@@ -1127,9 +1177,9 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		modelStack.PopModel();
 	modelStack.PopModel();
 		
-	for(int i = 0; i < 5; ++i){
+	for(int j = 0; j < 5; ++j){
 		modelStack.PushModel({
-			modelStack.Translate(glm::vec3(-float(winWidth) / 6.f, -float(winHeight) / 2.3f, -11.f) + glm::vec3(i * 100.f, 0.f, 0.f)),
+			modelStack.Translate(glm::vec3(-float(winWidth) / 6.f, -float(winHeight) / 2.3f, -11.f) + glm::vec3(j * 100.f, 0.f, 0.f)),
 			modelStack.Scale(glm::vec3(50.f)),
 		});
 			if(weapon->GetCurrentSlot() == i){

@@ -146,6 +146,6 @@ static void MouseButtonCallback(GLFWwindow* win, int button, int action, int mod
 }
 
 static void ScrollCallback(GLFWwindow*, double xOffset, double yOffset){
-    angularFOV -= float(xOffset) + float(yOffset);
-    angularFOV = std::max(1.f, std::min(75.f, angularFOV));
+    //angularFOV -= float(xOffset) + float(yOffset);
+    //angularFOV = std::max(1.f, std::min(75.f, angularFOV));
 }
