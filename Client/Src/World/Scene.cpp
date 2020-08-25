@@ -49,7 +49,7 @@ Scene::Scene():
 		new Mesh(Mesh::MeshType::Cylinder, GL_TRIANGLE_STRIP, {
 			{"Imgs/BoxAlbedo.png", Mesh::TexType::Diffuse, 0},
 		}),
-		new SpriteAni(4, 8),
+		new SpriteAni(8, 8),
 		new Terrain("Imgs/hMap.raw", 8.f, 8.f),
 		new Water(24.f, 2.f, 2.f, .5f),
 	},
@@ -213,6 +213,22 @@ bool Scene::Init(){
 	player->mass = 10.f;
 	player->force = glm::vec3(0.f);
 
+	Entity* const& fire = entityManager->FetchEntity();
+	fire->type = Entity::EntityType::FIRE;
+	fire->active = true;
+	fire->life = 0.f;
+	fire->maxLife = 0.f;
+	fire->colour = glm::vec4(1.f);
+	fire->diffuseTexIndex = -1;
+	fire->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+	fire->scale = glm::vec3(40.f);
+	fire->light = nullptr;
+	fire->mesh = meshes[(int)MeshType::Fire];
+	fire->pos = glm::vec3(0.f, 200.f, 0.f);
+	fire->vel = glm::vec3(0.f);
+	fire->mass = .0001f;
+	fire->force = glm::vec3(0.f);
+
 	glGetIntegerv(GL_POLYGON_MODE, polyModes);
 
 	soundEngine = createIrrKlangDevice(ESOD_AUTO_DETECT, ESEO_MULTI_THREADED | ESEO_LOAD_PLUGINS | ESEO_USE_3D_BUFFERS | ESEO_PRINT_DEBUG_INFO_TO_DEBUGGER);
@@ -235,9 +251,9 @@ bool Scene::Init(){
 		(void)puts("Failed to init music!\n");
 	}
 
-	meshes[(int)MeshType::SpriteAni]->AddTexMap({ "Imgs/Fire.png", Mesh::TexType::Diffuse, 0 });
-	static_cast<SpriteAni*>(meshes[(int)MeshType::SpriteAni])->AddAni("FireSpriteAni", 0, 32);
-	static_cast<SpriteAni*>(meshes[(int)MeshType::SpriteAni])->Play("FireSpriteAni", -1, .5f);
+	meshes[(int)MeshType::Fire]->AddTexMap({"Imgs/Fire.png", Mesh::TexType::Diffuse, 0});
+	static_cast<SpriteAni*>(meshes[(int)MeshType::Fire])->AddAni("FireSpriteAni", 0, 64);
+	static_cast<SpriteAni*>(meshes[(int)MeshType::Fire])->Play("FireSpriteAni", -1, 1.2f);
 
 	meshes[(int)MeshType::Terrain]->AddTexMap({"Imgs/GrassGround.jpg", Mesh::TexType::Diffuse, 0});
 	meshes[(int)MeshType::Water]->AddTexMap({"Imgs/Water.jpg", Mesh::TexType::Diffuse, 0});
@@ -422,8 +438,6 @@ void Scene::Update(){
 			static_cast<Spotlight*>(spotlights[0])->dir = sCam.CalcFront();
 			static_cast<Spotlight*>(spotlights[0])->cosInnerCutoff = cosf(glm::radians(12.5f));
 			static_cast<Spotlight*>(spotlights[0])->cosOuterCutoff = cosf(glm::radians(17.5f));
-
-			static_cast<SpriteAni*>(meshes[(int)MeshType::SpriteAni])->Update();
 
 			static float polyModeBT = 0.f;
 			static float distortionBT = 0.f;
@@ -1042,7 +1056,11 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				forwardSP.Set1i("water", 0);
 			modelStack.PopModel();
 
-			entityManager->RenderEntities(forwardSP); //Render entities
+			EntityManager::RenderParams params;
+			params.camPos = cam.GetPos();
+			params.depthDTexRefID = depthDTexRefID;
+			params.depthSTexRefID = depthSTexRefID;
+			entityManager->RenderEntities(forwardSP, params); //Render entities
 
 			///Render curr weapon
 			const glm::vec3 front = cam.CalcFront();
@@ -1245,7 +1263,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			// Weapon type
 			textChief.RenderText(textSP, {
 				temp,
-				1300.f,
+				float(winWidth) / 1.3f,
 				75.f,
 				1.f,
 				glm::vec4(1.f),
@@ -1254,7 +1272,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			// Weapon ammo
 			textChief.RenderText(textSP, {
 				std::to_string(weapon->GetCurrentWeapon()->GetCurrentAmmoRound()) + "/" + std::to_string(weapon->GetCurrentWeapon()->GetCurrentTotalAmmo()),
-				1450.f,
+				float(winWidth) / 1.1f,
 				25.f,
 				1.f,
 				glm::vec4(1.f),

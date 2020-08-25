@@ -82,6 +82,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					}
 					break;
 				}
+				case Entity::EntityType::FIRE:
+					static_cast<SpriteAni*>(entity->mesh)->Update();
+					break;
 			}
 
 			if(entity->vel != glm::vec3(0.f)){
@@ -93,7 +96,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 	}
 }
 
-void EntityManager::RenderEntities(ShaderProg& SP){
+void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 	const size_t& size = entityList.size();
 	for(size_t i = 0; i < size; ++i){
 		Entity* entity = entityList[i];
@@ -101,7 +104,6 @@ void EntityManager::RenderEntities(ShaderProg& SP){
 			switch(entity->type){
 				case Entity::EntityType::BULLET:
 				case Entity::EntityType::MOVING_ENEMY:
-					SP.Set1i("noNormals", 1);
 					SP.Set1i("useCustomColour", 1);
 					SP.Set1i("useCustomDiffuseTexIndex", 1);
 					modelStack.PushModel({
@@ -109,6 +111,8 @@ void EntityManager::RenderEntities(ShaderProg& SP){
 						modelStack.Rotate(entity->rotate),
 						modelStack.Scale(entity->scale),
 					});
+						SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+						SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
 						SP.Set4fv("customColour", entity->colour);
 						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
 						entity->mesh->SetModel(modelStack.GetTopModel());
@@ -116,7 +120,6 @@ void EntityManager::RenderEntities(ShaderProg& SP){
 					modelStack.PopModel();
 					SP.Set1i("useCustomDiffuseTexIndex", 0);
 					SP.Set1i("useCustomColour", 0);
-					SP.Set1i("noNormals", 0);
 					break;
 				case Entity::EntityType::STATIC_ENEMY:
 					SP.Set1i("noNormals", 1);
@@ -125,10 +128,26 @@ void EntityManager::RenderEntities(ShaderProg& SP){
 						modelStack.Rotate(entity->rotate),
 						modelStack.Scale(entity->scale),
 					});
+						SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+						SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
 						entity->model->SetModelForAll(modelStack.GetTopModel());
 						entity->model->Render(SP);
 					modelStack.PopModel();
 					SP.Set1i("noNormals", 0);
+					break;
+				case Entity::EntityType::FIRE:
+					modelStack.PushModel({
+						modelStack.Translate(entity->pos),
+						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),
+						modelStack.Scale(entity->scale),
+					});
+						SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+						SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
+						SP.Set1i("noNormals", 1);
+						entity->mesh->SetModel(modelStack.GetTopModel());
+						entity->mesh->Render(SP);
+						SP.Set1i("noNormals", 0);
+					modelStack.PopModel();
 					break;
 				default:
 					break;

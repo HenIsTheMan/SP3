@@ -13,6 +13,7 @@ private:
 		BULLET,
 		STATIC_ENEMY,
 		MOVING_ENEMY,
+		FIRE,
 		NUM_TYPES
 	};
 

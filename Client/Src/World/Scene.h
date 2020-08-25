@@ -40,7 +40,7 @@ private:
 		Cube,
 		Sphere,
 		Cylinder,
-		SpriteAni,
+		Fire,
 		Terrain,
 		Water,
 		Amt

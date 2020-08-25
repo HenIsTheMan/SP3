@@ -12,6 +12,11 @@ public:
 		glm::vec3 camFront;
 		glm::vec4 reticleColour;
 	};
+	struct RenderParams final{ //Add on here if needed
+		glm::vec3 camPos;
+		uint depthDTexRefID;
+		uint depthSTexRefID;
+	};
 
 	~EntityManager(); //Default dtor
 
@@ -20,7 +25,7 @@ public:
 
 	void CreateEntities(const int& amt);
 	void UpdateEntities(UpdateParams& params);
-	void RenderEntities(ShaderProg& SP);
+	void RenderEntities(ShaderProg& SP, RenderParams& params);
 protected:
 	EntityManager(); //Default ctor
 
