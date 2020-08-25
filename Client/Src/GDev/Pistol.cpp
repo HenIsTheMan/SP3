@@ -20,4 +20,6 @@ void Pistol::Init(void)
 	canShoot = true;
 	elapsedTime = 0.0;
 	timeBetweenShots = 10.0;
+	reloadTime = 10.0;
+	reloading = false;
 }

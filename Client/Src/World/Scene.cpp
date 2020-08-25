@@ -318,7 +318,8 @@ void Scene::Update() {
 	// TESTING ONLY FOR SHOOTING
 	if (Key(GLFW_KEY_5))
 	{
-		if (weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0)
+		if (!weapon->GetCurrentWeapon()->GetReloading() && weapon->GetCurrentWeapon()->GetCanShoot() &&
+			weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0)
 		{
 			Entity* bullet = new Entity(Entity::EntityType::BULLET,
 				false, 
@@ -334,8 +335,24 @@ void Scene::Update() {
 		}
 	}
 
-	if (Key(GLFW_KEY_R)) // Reload the current weapon
+	static bool pressedReload = false; // Will not keep reloading when player pressed 'R' repeatedly
+	if (Key(GLFW_KEY_R))
+	{
+		// Begin to reload
+		if (weapon->GetCurrentWeapon()->GetCurrentAmmoRound() < weapon->GetCurrentWeapon()->GetMaxAmmoRound()
+			&& weapon->GetCurrentWeapon()->GetCurrentTotalAmmo() > 0 && !weapon->GetCurrentWeapon()->GetReloading())
+		{
+			weapon->GetCurrentWeapon()->SetReloading(true);
+			pressedReload = true;
+			lastTime = elapsedTime;
+		}
+	}
+	// Reloaded
+	if (!weapon->GetCurrentWeapon()->GetReloading() && pressedReload)
+	{
 		weapon->GetCurrentWeapon()->Reload();
+		pressedReload = false;
+	}
 
 	// Can be modified to be used for other entities too
 	entityManager->Update(1, cam.CalcFront()); // Number of particles to be rendered every frame
@@ -844,19 +861,24 @@ void Scene::ForwardRender() {
 	PopModel();
 
 	std::string temp;
-	switch (weapon->GetCurrentSlot())
+	if (weapon->GetCurrentWeapon()->GetReloading())
+		temp = "Reloading...";
+	else
 	{
-	case 0:
-		temp = "Pistol";
-		break;
+		switch (weapon->GetCurrentSlot())
+		{
+		case 0:
+			temp = "Pistol";
+			break;
 
-	case 1:
-		temp = "Assault Rifle";
-		break;
+		case 1:
+			temp = "Assault Rifle";
+			break;
 
-	case 2:
-		temp = "Sniper Rifle";
-		break;
+		case 2:
+			temp = "Sniper Rifle";
+			break;
+		}
 	}
 	// Weapon type
 	textChief.RenderText(textSP, {

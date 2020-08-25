@@ -20,4 +20,6 @@ void SniperRifle::Init(void)
 	canShoot = true;
 	elapsedTime = 0.0;
 	timeBetweenShots = 20.0;
+	reloadTime = 30.0;
+	reloading = false;
 }
