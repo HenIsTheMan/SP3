@@ -188,7 +188,7 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 							modelStack.Scale(glm::vec3(.5f, .1f, .1f)),
 						});
 							modelStack.PushModel({
-								modelStack.Translate(glm::vec3((entity->life - entity->maxLife) / entity->maxLife, 0.f, .05f)),
+								modelStack.Translate(glm::vec3((entity->life - entity->maxLife) / entity->maxLife, 0.f, .08f)),
 								modelStack.Scale(glm::vec3(entity->life / entity->maxLife, 1.f, 1.f)),
 							});
 								SP.Set4fv("customColour", glm::vec4(0.f, 1.f, 0.f, 1.f));
@@ -252,6 +252,10 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 					modelStack.PopModel();
 					break;
 				case Entity::EntityType::COIN_GOLD:
+				case Entity::EntityType::COIN_SILVER:
+				case Entity::EntityType::COIN_PINK:
+				case Entity::EntityType::COIN_GREEN:
+				case Entity::EntityType::COIN_BLUE:
 					modelStack.PushModel({
 						modelStack.Translate(entity->pos),
 						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),

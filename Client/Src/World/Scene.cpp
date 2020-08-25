@@ -40,6 +40,7 @@ Scene::Scene():
 			{"Imgs/ReticlePri.png", Mesh::TexType::Diffuse, 0},
 			{"Imgs/ReticleSec.png", Mesh::TexType::Diffuse, 0},
 			{"Imgs/BG.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/Scope.png", Mesh::TexType::Diffuse, 0},
 		}),
 		new Mesh(Mesh::MeshType::Cube, GL_TRIANGLES, {
 			{"Imgs/BoxAlbedo.png", Mesh::TexType::Diffuse, 0},
@@ -100,6 +101,7 @@ Scene::Scene():
 	playerStates((int)PlayerState::NoMovement | (int)PlayerState::Standing),
 	sprintOn(false),
 	reticleColour(glm::vec4(1.f)),
+	scope(false),
 	screen(Screen::Menu),
 	textScaleFactors{
 		1.f,
@@ -632,11 +634,13 @@ void Scene::Update(GLFWwindow* const& win){
 						break;
 					case 2:
 						angularFOV = 15.f;
+						scope = true;
 						break;
 					default:
 						angularFOV = 45.f;
 				}
 			} else{
+				scope = false;
 				angularFOV = 45.f;
 			}
 
@@ -1010,7 +1014,7 @@ void Scene::BlurRender(const uint& brightTexRefID, const bool& horizontal) {
 }
 
 void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, const glm::vec3& translate, const glm::vec3& scale){
-	if(!glm::length(translate) || screen == Screen::Game){
+	if(!glm::length(translate) || (screen == Screen::Game && !scope)){
 		screenSP.Use();
 		screenSP.Set1f("exposure", 1.2f);
 		screenSP.UseTex(screenTexRefID, "screenTexSampler");
@@ -1457,6 +1461,37 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			params.depthSTexRefID = depthSTexRefID;
 			params.quadMesh = meshes[(int)MeshType::Quad];
 			entityManager->RenderEntities(forwardSP, params); //Render entities
+
+			if(scope){ //If scoped in...
+				forwardSP.SetMat4fv("PV", &(glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f))[0][0]);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+				forwardSP.Set1i("noNormals", 1);
+
+				modelStack.PushModel({
+					modelStack.Translate(glm::vec3(0.f, 0.f, -9.f)),
+					modelStack.Scale(glm::vec3(float(winHeight) / 2.f, float(winHeight) / 2.f, 1.f)),
+				});
+					forwardSP.Set1i("customDiffuseTexIndex", 6);
+					meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+					meshes[(int)MeshType::Quad]->Render(forwardSP);
+				modelStack.PopModel();
+				modelStack.PushModel({
+					modelStack.Translate(glm::vec3(0.f, 0.f, -9.1f)),
+					modelStack.Scale(glm::vec3(float(winWidth) / 2.f, float(winHeight) / 2.f, 1.f)),
+				});
+					forwardSP.Set1i("customDiffuseTexIndex", -1);
+					forwardSP.Set1i("useCustomColour", 1);
+					forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f), 1.f));
+					meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+					meshes[(int)MeshType::Quad]->Render(forwardSP);
+					forwardSP.Set1i("useCustomColour", 0);
+				modelStack.PopModel();
+
+				forwardSP.Set1i("noNormals", 0);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+				glBlendFunc(GL_ONE, GL_ZERO);
+				return;
+			}
 
 			///Render curr weapon
 			const glm::vec3 front = cam.CalcFront();

@@ -127,6 +127,7 @@ private:
 	bool sprintOn;
 	glm::vec4 reticleColour;
 
+	bool scope;
 	Screen screen;
 	float textScaleFactors[5];
 	glm::vec4 textColours[5];
