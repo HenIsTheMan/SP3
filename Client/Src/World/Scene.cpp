@@ -4,6 +4,7 @@
 #include "../Game/AssaultRifle.h"
 #include "../Game/SniperRifle.h"
 
+extern bool endLoop;
 extern bool leftMB;
 extern bool rightMB;
 extern float angularFOV;
@@ -87,15 +88,44 @@ Scene::Scene():
 	playerCurrLives(5.f),
 	playerMaxLives(5.f),
 	enemyCount(0),
+	score(0),
+	scores({}),
+	textScaleFactors{
+		1.f,
+		1.f,
+		1.f,
+	},
+	textColours{
+		glm::vec4(1.f),
+		glm::vec4(1.f),
+		glm::vec4(1.f),
+	},
 	waves{},
 	playerStates((int)PlayerState::NoMovement | (int)PlayerState::Standing),
 	sprintOn(false),
 	reticleColour(glm::vec4(1.f)),
-	screen(Screen::Game)
+	screen(Screen::Menu)
 {
 }
 
-Scene::~Scene() {
+Scene::~Scene(){
+	///Create save
+	str line;
+	try{
+		std::ofstream stream("Data/scores.dat", std::ios::out);
+		if(stream.is_open()){
+			const size_t& mySize = scores.size();
+			for(size_t i = 0; i < mySize; ++i){
+				stream << (!i ? "" : "\n") + std::to_string(scores[i]);
+			}
+			stream.close();
+		} else{
+			throw("Failed to save scores!");
+		}
+	} catch(cstr const& errorMsg){
+		(void)puts(errorMsg);
+	}
+
 	const size_t& pSize = ptLights.size();
 	const size_t& dSize = directionalLights.size();
 	const size_t& sSize = spotlights.size();
@@ -147,6 +177,24 @@ Scene::~Scene() {
 }
 
 bool Scene::Init(){
+	///Load save
+	cstr const& fPath = "Data/scores.dat";
+	str line;
+	std::ifstream stream(fPath, std::ios::in);
+	if(stream.is_open()){
+		while(getline(stream, line)){
+			try{
+				scores.emplace_back(stoi(line));
+			} catch(const std::invalid_argument& e){
+				(void)puts(e.what());
+			}
+		}
+		stream.close();
+	}
+	if(scores.size() > 1){
+		std::sort(scores.begin(), scores.end(), std::greater<int>());
+	}
+
 	// Create weapons to be put in the inventory
 	weapon = new Weapon();
 
@@ -265,16 +313,105 @@ bool Scene::Init(){
 	return true;
 }
 
-void Scene::Update(){
+void Scene::Update(GLFWwindow* const& win){
 	elapsedTime += dt;
 	if(winHeight){ //Avoid division by 0 when win is minimised
 		cam.SetDefaultAspectRatio(float(winWidth) / float(winHeight));
 		cam.ResetAspectRatio();
 	}
 
+	POINT mousePos;
+	if(GetCursorPos(&mousePos)){
+		HWND hwnd = ::GetActiveWindow();
+		(void)ScreenToClient(hwnd, &mousePos);
+	} else{
+		(void)puts("Failed to get mouse pos relative to screen!");
+	}
+	static float buttonBT = 0.f;
+
 	switch(screen){
+		case Screen::Menu:{
+			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+			cam.SetPos(glm::vec3(0.f, 0.f, 5.f));
+			cam.SetTarget(glm::vec3(0.f));
+			cam.SetUp(glm::vec3(0.f, 1.f, 0.f));
+			view = cam.LookAt();
+			projection = glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f);
+
+			if(mousePos.x >= 25.f && mousePos.x <= (screen == Screen::Menu ? 100.f : 230.f) && mousePos.y >= winHeight - 160.f && mousePos.y <= winHeight - 125.f){
+				if(textScaleFactors[0] != 1.1f){
+					soundEngine->play2D("Audio/Sounds/Pop.flac", false);
+					textScaleFactors[0] = 1.1f;
+					textColours[0] = glm::vec4(1.f, 1.f, 0.f, 1.f);
+				}
+				if(leftMB - rightMB > 0.f && buttonBT <= elapsedTime){
+					soundEngine->play2D("Audio/Sounds/Select.wav", false);
+					score = 0;
+					playerCurrHealth = playerMaxHealth;
+					playerCurrLives = playerMaxLives;
+					screen = Screen::Game;
+					buttonBT = elapsedTime + .3f;
+					Update(win);
+				}
+			} else{
+				textScaleFactors[0] = 1.f;
+				textColours[0] = glm::vec4(1.f);
+			}
+			if(mousePos.x >= 25.f && mousePos.x <= 230.f && mousePos.y >= winHeight - 110.f && mousePos.y <= winHeight - 75.f){
+				if(textScaleFactors[1] != 1.1f){
+					soundEngine->play2D("Audio/Sounds/Pop.flac", false);
+					textScaleFactors[1] = 1.1f;
+					textColours[1] = glm::vec4(1.f, 1.f, 0.f, 1.f);
+				}
+				if(leftMB - rightMB > 0.f && buttonBT <= elapsedTime){
+					soundEngine->play2D("Audio/Sounds/Select.wav", false);
+					screen = Screen::Score;
+					buttonBT = elapsedTime + .3f;
+				}
+			} else{
+				textScaleFactors[1] = 1.f;
+				textColours[1] = glm::vec4(1.f);
+			}
+			if(mousePos.x >= 25.f && mousePos.x <= 100.f && mousePos.y >= winHeight - 60.f && mousePos.y <= winHeight - 25.f){
+				if(textScaleFactors[2] != 1.1f){
+					soundEngine->play2D("Audio/Sounds/Pop.flac", false);
+					textScaleFactors[2] = 1.1f;
+					textColours[2] = glm::vec4(1.f, 1.f, 0.f, 1.f);
+				}
+				if(leftMB - rightMB > 0.f && buttonBT <= elapsedTime){
+					soundEngine->play2D("Audio/Sounds/Select.wav", false);
+					endLoop = true;
+					buttonBT = elapsedTime + .3f;
+				}
+			} else{
+				textScaleFactors[2] = 1.f;
+				textColours[2] = glm::vec4(1.f);
+			}
+
+			break;
+		}
 		case Screen::Game: {
+			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			reticleColour = glm::vec4(1.f);
+			if(score < 0){
+				score = 0;
+			}
+			if(Key(GLFW_KEY_9)){
+				screen = Screen::End;
+				const size_t& mySize = scores.size();
+				if(mySize == 5){ //Max no. of scores saved
+					std::sort(scores.begin(), scores.end(), std::greater<int>());
+					if(score > scores.back()){
+						scores.pop_back();
+						scores.emplace_back(score);
+					}
+					std::sort(scores.begin(), scores.end(), std::greater<int>());
+				} else{
+					scores.emplace_back(score);
+					std::sort(scores.begin(), scores.end(), std::greater<int>());
+				}
+			}
 
 			////Control player states
 			static float sprintBT = 0.f;
@@ -755,18 +892,20 @@ void Scene::BlurRender(const uint& brightTexRefID, const bool& horizontal) {
 }
 
 void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, const glm::vec3& translate, const glm::vec3& scale){
-	screenSP.Use();
-	screenSP.Set1f("exposure", 1.2f);
-	screenSP.UseTex(screenTexRefID, "screenTexSampler");
-	screenSP.UseTex(blurTexRefID, "blurTexSampler");
-	modelStack.PushModel({
-		modelStack.Translate(translate),
-		modelStack.Scale(scale),
-	});
-		meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Quad]->Render(screenSP, false);
+	if(!glm::length(translate) || screen == Screen::Game){
+		screenSP.Use();
+		screenSP.Set1f("exposure", 1.2f);
+		screenSP.UseTex(screenTexRefID, "screenTexSampler");
+		screenSP.UseTex(blurTexRefID, "blurTexSampler");
+		modelStack.PushModel({
+			modelStack.Translate(translate),
+			modelStack.Scale(scale),
+		});
+			meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+			meshes[(int)MeshType::Quad]->Render(screenSP, false);
 		modelStack.PopModel();
-	screenSP.ResetTexUnits();
+		screenSP.ResetTexUnits();
+	}
 }
 
 void Scene::DepthRender(const short& projectionType){
@@ -993,6 +1132,49 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	}
 
 	switch(screen){
+		case Screen::Menu: {
+			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
+
+			modelStack.PushModel({
+				modelStack.Scale(glm::vec3(float(winWidth) / 2.f, float(winHeight) / 2.f, 1.f)),
+			});
+				forwardSP.Set1i("noNormals", 1);
+				meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+				meshes[(int)MeshType::Quad]->Render(forwardSP);
+				forwardSP.Set1i("noNormals", 0);
+			modelStack.PopModel();
+			
+			glDepthFunc(GL_NOTEQUAL);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			textChief.RenderText(textSP, {
+				"Play",
+				25.f,
+				125.f,
+				textScaleFactors[0],
+				textColours[0],
+				0,
+			});
+			textChief.RenderText(textSP, {
+				"Scoreboard",
+				25.f,
+				75.f,
+				textScaleFactors[1],
+				textColours[1],
+				0,
+			});
+			textChief.RenderText(textSP, {
+				"Exit",
+				25.f,
+				25.f,
+				textScaleFactors[2],
+				textColours[2],
+				0,
+			});
+			glBlendFunc(GL_ONE, GL_ZERO);
+			glDepthFunc(GL_LESS);
+
+			break;
+		}
 		case Screen::Game: {
 			///Sky
 			forwardSP.SetMat4fv("PV", &(projection * glm::mat4(glm::mat3(view)))[0][0]);
@@ -1244,7 +1426,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				modelStack.Translate(glm::vec3(float(winWidth) / 3.f, -float(winHeight) / 2.2f, -10.f)),
 				modelStack.Scale(glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f)),
 			});
-				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(.3f), 1.f));
 				forwardSP.Set1i("customDiffuseTexIndex", -1);
 				meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
 				meshes[(int)MeshType::Quad]->Render(forwardSP);
@@ -1256,7 +1438,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 					modelStack.Scale(glm::vec3(float(weapon->GetCurrentWeapon()->GetCurrentAmmoRound())
 					/ float(weapon->GetCurrentWeapon()->GetMaxAmmoRound()), 1.f, 1.f)), // Scale the x component based on the current ammo of the round
 				});
-					forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
+					forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 1.f), 1.f));
 					forwardSP.Set1i("customDiffuseTexIndex", -1);
 					meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
 					meshes[(int)MeshType::Quad]->Render(forwardSP);
@@ -1337,25 +1519,30 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 					break;
 			}
 
-			// Weapon type
-			textChief.RenderText(textSP, {
+			textChief.RenderText(textSP, { //Weapon type
 				temp,
 				float(winWidth) / 1.3f,
 				75.f,
 				1.f,
 				glm::vec4(1.f),
 				0
-				});
-			// Weapon ammo
-			textChief.RenderText(textSP, {
+			});
+			textChief.RenderText(textSP, { //Weapon ammo
 				std::to_string(weapon->GetCurrentWeapon()->GetCurrentAmmoRound()) + "/" + std::to_string(weapon->GetCurrentWeapon()->GetCurrentTotalAmmo()),
 				float(winWidth) / 1.1f,
 				25.f,
 				1.f,
 				glm::vec4(1.f),
 				0
-				});
-			// FPS
+			});
+			textChief.RenderText(textSP, {
+				"Score: " + std::to_string(score),
+				25.f,
+				75.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0
+			});
 			textChief.RenderText(textSP, {
 				"FPS: " + std::to_string(1.f / dt),
 				25.f,
@@ -1363,7 +1550,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				1.f,
 				glm::vec4(1.f, 1.f, 0.f, 1.f),
 				0
-				});
+			});
 
 			glBlendFunc(GL_ONE, GL_ZERO);
 		}
@@ -1374,19 +1561,14 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	}
 }
 
-void Scene::MinimapRender()
-{
+void Scene::MinimapRender(){
 	forwardSP.Use();
-	const int& pAmt = 0;
-	const int& dAmt = 0;
-	const int& sAmt = 0;
-	//forwardSP.Set1i("nightVision", 0);
 	forwardSP.Set1f("shininess", 32.f); //More light scattering if lower
 	forwardSP.Set3fv("globalAmbient", Light::globalAmbient);
 	forwardSP.Set3fv("camPos", cam.GetPos());
-	forwardSP.Set1i("pAmt", pAmt);
-	forwardSP.Set1i("dAmt", dAmt);
-	forwardSP.Set1i("sAmt", sAmt);
+	forwardSP.Set1i("pAmt", 0);
+	forwardSP.Set1i("dAmt", 0);
+	forwardSP.Set1i("sAmt", 0);
 
 	minimapcam.SetPos(glm::vec3(cam.GetPos().x, 1000.f, cam.GetPos().z));
 	minimapcam.SetTarget(glm::vec3(cam.GetPos().x, 0.f, cam.GetPos().z));
@@ -1399,7 +1581,7 @@ void Scene::MinimapRender()
 	modelStack.PushModel({
 		modelStack.Scale(glm::vec3(500.f, 100.f, 500.f)),
 	});
-	meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
-	meshes[(int)MeshType::Terrain]->Render(forwardSP);
+		meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
+		meshes[(int)MeshType::Terrain]->Render(forwardSP);
 	modelStack.PopModel();
 }

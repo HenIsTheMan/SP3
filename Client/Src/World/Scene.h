@@ -12,7 +12,7 @@ public:
 	Scene();
 	~Scene();
 	bool Init();
-	void Update();
+	void Update(GLFWwindow* const& win);
 	void GeoRenderPass();
 	void LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID);
 	void BlurRender(const uint& brightTexRefID, const bool& horizontal);
@@ -93,6 +93,10 @@ private:
 
 	int polyModes[2];
 	int enemyCount;
+	int score;
+	std::vector<int> scores;
+	float textScaleFactors[3];
+	glm::vec4 textColours[3];
 
 	enum struct PlayerState{
 		NoMovement = BIT(1),

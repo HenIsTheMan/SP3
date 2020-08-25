@@ -247,7 +247,7 @@ void App::Update(){
 		toggleFullscreenBT = elapsedTime + .5f;
 	}
 
-	scene.Update();
+	scene.Update(win);
 }
 
 void App::PreRender() const{
