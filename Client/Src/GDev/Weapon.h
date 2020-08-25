@@ -10,6 +10,7 @@ public:
 
 	void Update(const double dt);
 	void Reload();
+	void ResetWeapons();
 
 	// Setters
 	void SetInventory(const int slot, Weapon* weapon);

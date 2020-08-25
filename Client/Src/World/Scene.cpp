@@ -304,6 +304,17 @@ void Scene::Update() {
 		--playerCurrLives;
 	}
 
+	// TESTING ONLY FOR RESET OF WEAPONS
+	if (Key(GLFW_KEY_9))
+	{
+		for (int i = 0; i < 3; ++i)
+		{
+			weapon->SetCurrentSlot(i);
+			weapon->GetCurrentWeapon()->ResetWeapons(); // Restock all the ammo for all weapons
+		}
+		weapon->SetCurrentSlot(0); // Start with pistol again
+	}
+
 	// Change weapon using the inventory slots
 	if (Key(GLFW_KEY_1))
 		weapon->SetCurrentSlot(0);

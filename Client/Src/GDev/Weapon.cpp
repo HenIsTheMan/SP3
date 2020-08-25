@@ -86,6 +86,12 @@ void Weapon::Reload()
 	SetCurrentTotalAmmo(GetCurrentTotalAmmo() - GetAmmoToReload());
 }
 
+void Weapon::ResetWeapons()
+{
+	SetCurrentAmmoRound(GetMaxAmmoRound());
+	SetCurrentTotalAmmo(GetMaxTotalAmmo());
+}
+
 void Weapon::SetTimeBetweenShots(double timeBetweenShots)
 {
 	this->timeBetweenShots = timeBetweenShots;
