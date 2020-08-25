@@ -116,8 +116,9 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 		Entity* entity = entityList[i];
 		if(entity && entity->active){
 			switch(entity->type){
-				case Entity::EntityType::BULLET:
-				case Entity::EntityType::MOVING_ENEMY:
+				case Entity::EntityType::BULLET: {
+					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
 					SP.Set1i("useCustomColour", 1);
 					SP.Set1i("useCustomDiffuseTexIndex", 1);
 					modelStack.PushModel({
@@ -125,8 +126,6 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 						modelStack.Rotate(entity->rotate),
 						modelStack.Scale(entity->scale),
 					});
-						SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
-						SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
 						SP.Set4fv("customColour", entity->colour);
 						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
 						entity->mesh->SetModel(modelStack.GetTopModel());
@@ -135,20 +134,76 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 					SP.Set1i("useCustomDiffuseTexIndex", 0);
 					SP.Set1i("useCustomColour", 0);
 					break;
-				case Entity::EntityType::STATIC_ENEMY:
-					SP.Set1i("noNormals", 1);
+				}
+				case Entity::EntityType::MOVING_ENEMY: {
+					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
+					SP.Set1i("useCustomColour", 1);
+					SP.Set1i("useCustomDiffuseTexIndex", 1);
 					modelStack.PushModel({
 						modelStack.Translate(entity->pos),
 						modelStack.Rotate(entity->rotate),
 						modelStack.Scale(entity->scale),
 					});
-						SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
-						SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
+						SP.Set4fv("customColour", entity->colour);
+						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
+						entity->mesh->SetModel(modelStack.GetTopModel());
+						entity->mesh->Render(SP);
+					modelStack.PopModel();
+					SP.Set1i("useCustomDiffuseTexIndex", 0);
+					SP.Set1i("useCustomColour", 0);
+					break;
+				}
+				case Entity::EntityType::STATIC_ENEMY: {
+					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
+					SP.Set1i("noNormals", 1);
+					SP.Set1i("useCustomColour", 1);
+					SP.Set1i("useCustomDiffuseTexIndex", 1);
+					modelStack.PushModel({
+						modelStack.Translate(entity->pos),
+						modelStack.Rotate(entity->rotate),
+						modelStack.Scale(entity->scale),
+					});
+						SP.Set1i("useCustomDiffuseTexIndex", 0);
+						SP.Set4fv("customColour", glm::vec4(entity->colour));
 						entity->model->SetModelForAll(modelStack.GetTopModel());
 						entity->model->Render(SP);
+						SP.Set1i("useCustomDiffuseTexIndex", 1);
+
+						SP.Set1i("noNormals", 1);
+						SP.Set1i("customDiffuseTexIndex", -1);
+						modelStack.PushModel({
+							modelStack.Translate(glm::vec3(0.f, 1.5f, 0.f)),
+							modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),
+							modelStack.Scale(glm::vec3(.5f, .1f, .1f)),
+						});
+							SP.Set4fv("customColour", glm::vec4(glm::vec3(.3f), 1.f));
+							params.quadMesh->SetModel(modelStack.GetTopModel());
+							params.quadMesh->Render(SP);
+						modelStack.PopModel();
+
+						modelStack.PushModel({
+							modelStack.Translate(glm::vec3(0.f, 1.5f, 0.f)),
+							modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),
+							modelStack.Scale(glm::vec3(.5f, .1f, .1f)),
+						});
+							modelStack.PushModel({
+								modelStack.Translate(glm::vec3((entity->life - entity->maxLife) / entity->maxLife, 0.f, .05f)),
+								modelStack.Scale(glm::vec3(entity->life / entity->maxLife, 1.f, 1.f)),
+							});
+								SP.Set4fv("customColour", glm::vec4(0.f, 1.f, 0.f, 1.f));
+								params.quadMesh->SetModel(modelStack.GetTopModel());
+								params.quadMesh->Render(SP);
+							modelStack.PopModel();
+						modelStack.PopModel();
+						SP.Set1i("noNormals", 0);
 					modelStack.PopModel();
+					SP.Set1i("useCustomDiffuseTexIndex", 0);
+					SP.Set1i("useCustomColour", 0);
 					SP.Set1i("noNormals", 0);
 					break;
+				}
 				case Entity::EntityType::PARTICLE:
 				case Entity::EntityType::PARTICLE2:
 				case Entity::EntityType::PARTICLE3:
