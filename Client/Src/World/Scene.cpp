@@ -335,9 +335,7 @@ void Scene::Update(GLFWwindow* const& win){
 
 	switch(screen){
 		case Screen::End:
-		case Screen::Menu:{
-			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
+		case Screen::Menu: {
 			cam.SetPos(glm::vec3(0.f, 0.f, 5.f));
 			cam.SetTarget(glm::vec3(0.f));
 			cam.SetUp(glm::vec3(0.f, 1.f, 0.f));
@@ -352,12 +350,19 @@ void Scene::Update(GLFWwindow* const& win){
 				}
 				if(leftMB - rightMB > 0.f && buttonBT <= elapsedTime){
 					soundEngine->play2D("Audio/Sounds/Select.wav", false);
+					glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 					score = 0;
 					playerCurrHealth = playerMaxHealth;
 					playerCurrLives = playerMaxLives;
 					screen = Screen::Game;
+
+					cam.SetPos(glm::vec3(0.f, 0.f, 50.f));
+					cam.SetTarget(glm::vec3(0.f));
+					cam.SetUp(glm::vec3(0.f, 1.f, 0.f));
+
 					buttonBT = elapsedTime + .3f;
-					Update(win);
+					break;
 				}
 			} else{
 				textScaleFactors[0] = 1.f;
@@ -427,7 +432,13 @@ void Scene::Update(GLFWwindow* const& win){
 			break;
 		}
 		case Screen::Game: {
-			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			if(Key(GLFW_KEY_P) && buttonBT <= elapsedTime){
+				screen = Screen::Pause;
+				glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				buttonBT = elapsedTime + .4f;
+				break;
+			}
+
 			reticleColour = glm::vec4(1.f);
 			if(score < 0){
 				score = 0;
@@ -572,8 +583,6 @@ void Scene::Update(GLFWwindow* const& win){
 			view = cam.LookAt();
 			projection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
 
-			minimapView = cam.LookAt();
-			minimapProjection = glm::perspective(glm::radians(angularFOV), cam.GetAspectRatio(), .1f, 9999.f);
 			const glm::vec3& camPos = cam.GetPos();
 			const glm::vec3& camFront = cam.CalcFront();
 			soundEngine->setListenerPosition(vec3df(camPos.x, camPos.y, camPos.z), vec3df(camFront.x, camFront.y, camFront.z));
@@ -804,6 +813,19 @@ void Scene::Update(GLFWwindow* const& win){
 			}
 
 			break;
+		}
+		case Screen::Pause: {
+			if(Key(GLFW_KEY_P) && buttonBT <= elapsedTime){
+				screen = Screen::Game;
+				glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+				cam.SetPos(glm::vec3(0.f, 0.f, 50.f));
+				cam.SetTarget(glm::vec3(0.f));
+				cam.SetUp(glm::vec3(0.f, 1.f, 0.f));
+
+				buttonBT = elapsedTime + .4f;
+				break;
+			}
 		}
 		case Screen::Instructions:
 		case Screen::Credits:
@@ -1626,7 +1648,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				0
 			});
 			textChief.RenderText(textSP, {
-				"FPS: " + std::to_string(1.f / dt),
+				"FPS: " + std::to_string(1.f / dt).substr(0, 2),
 				25.f,
 				25.f,
 				1.f,
@@ -1772,7 +1794,6 @@ void Scene::MinimapRender(){
 	minimapcam.SetUp(glm::vec3(0.f, 0.f, -1.f));
 	minimapView = minimapcam.LookAt();
 	minimapProjection = glm::ortho(-float(winWidth) / 5.f, float(winWidth) / 5.f, -float(winHeight) / 5.f, float(winHeight) / 5.f, .1f, 99999.f);
-
 	forwardSP.SetMat4fv("PV", &(minimapProjection * minimapView)[0][0]);
 
 	modelStack.PushModel({
@@ -1781,4 +1802,8 @@ void Scene::MinimapRender(){
 		meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
 		meshes[(int)MeshType::Terrain]->Render(forwardSP);
 	modelStack.PopModel();
+}
+
+const Scene::Screen& Scene::GetScreen() const{
+	return screen;
 }

@@ -9,6 +9,17 @@
 
 class Scene final{
 public:
+	enum struct Screen{
+		Menu = 0,
+		Score,
+		Instructions,
+		Credits,
+		Game,
+		Pause,
+		End,
+		Amt
+	};
+
 	Scene();
 	~Scene();
 	bool Init();
@@ -22,6 +33,7 @@ public:
 	void CubemapReflectionRender(const short& cubemapFace);
 	void ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID, const uint& cubemapReflectionTexID);
 	void MinimapRender();
+	const Screen& GetScreen() const;
 private:
 	Cam cam;
 	Cam dCam;
@@ -110,16 +122,6 @@ private:
 	bool sprintOn;
 	glm::vec4 reticleColour;
 
-	enum struct Screen{
-		Menu = 0,
-		Score,
-		Instructions,
-		Credits,
-		Game,
-		Pause,
-		End,
-		Amt
-	};
 	Screen screen;
 	float textScaleFactors[5];
 	glm::vec4 textColours[5];

@@ -257,53 +257,55 @@ void App::PreRender() const{
 }
 
 void App::Render(){
-	glViewport(0, 0, 1024, 1024);
+	if(scene.GetScreen() != Scene::Screen::Pause){
+		glViewport(0, 0, 1024, 1024);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::DepthD]);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	scene.DepthRender(0);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::DepthD]);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		scene.DepthRender(0);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::DepthS]);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	scene.DepthRender(1);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::DepthS]);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		scene.DepthRender(1);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::PlanarReflection]);
-	glClearColor(0.f, 0.82f, 0.86f, 1.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	scene.PlanarReflectionRender();
-
-	glViewport(0, 0, 2048, 2048);
-	for(short i = 1; i <= 6; ++i){
-		glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::CubemapReflection]);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i - 1, texRefIDs[(int)Tex::CubemapReflection], 0);
-		glClearColor(.5f, 0.82f, 0.86f, 1.f);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::PlanarReflection]);
+		glClearColor(0.f, 0.82f, 0.86f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		scene.CubemapReflectionRender(i);
+		scene.PlanarReflectionRender();
+
+		glViewport(0, 0, 2048, 2048);
+		for(short i = 1; i <= 6; ++i){
+			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::CubemapReflection]);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i - 1, texRefIDs[(int)Tex::CubemapReflection], 0);
+			glClearColor(.5f, 0.82f, 0.86f, 1.f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			scene.CubemapReflectionRender(i);
+		}
+
+		#ifdef RENDER_OTHER
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClearColor(1.f, 0.82f, 0.86f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		scene.DefaultRender(texRefIDs[(int)Tex::PlanarReflection], texRefIDs[(int)Tex::PlanarReflection]);
+		#else
+		glViewport(0, 0, winWidth, winHeight);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClearColor(1.f, 0.82f, 0.86f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		scene.ForwardRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthS], texRefIDs[(int)Tex::PlanarReflection], texRefIDs[(int)Tex::CubemapReflection]);
+		#endif
+
+		glViewport(0, 0, 1024, 1024);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[int(FBO::Minimap)]);
+		glClearColor(0.f, .3f, 0.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		scene.MinimapRender();
+
+		glViewport(0, 0, winWidth, winHeight);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		scene.DefaultRender(texRefIDs[(int)Tex::Minimap], texRefIDs[(int)Tex::Minimap], glm::vec3(.75f), glm::vec3(.23f)); //??
 	}
-
-	#ifdef RENDER_OTHER
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(1.f, 0.82f, 0.86f, 1.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	scene.DefaultRender(texRefIDs[(int)Tex::PlanarReflection], texRefIDs[(int)Tex::PlanarReflection]);
-	#else
-	glViewport(0, 0, winWidth, winHeight);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(1.f, 0.82f, 0.86f, 1.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	scene.ForwardRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthS], texRefIDs[(int)Tex::PlanarReflection], texRefIDs[(int)Tex::CubemapReflection]);
-	#endif
-
-	glViewport(0, 0, 1024, 1024);
-	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[int(FBO::Minimap)]);
-	glClearColor(0.f, .3f, 0.f, 1.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	scene.MinimapRender();
-
-	glViewport(0, 0, winWidth, winHeight);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	scene.DefaultRender(texRefIDs[(int)Tex::Minimap], texRefIDs[(int)Tex::Minimap], glm::vec3(.75f), glm::vec3(.23f)); //??
 }
 
 void App::PostRender() const{
