@@ -43,8 +43,7 @@ private:
 	Cam minimapcam;
 
 	ISoundEngine* soundEngine;
-	ISound* music;
-	ISoundEffectControl* soundFX;
+	std::vector<ISound*> music;
 	TextChief textChief;
 
 	enum struct MeshType{

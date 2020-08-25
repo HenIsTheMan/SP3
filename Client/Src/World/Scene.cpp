@@ -26,8 +26,7 @@ Scene::Scene():
 	enCam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 1.f, 0.f),
 	minimapcam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 0.f, 0.f),
 	soundEngine(nullptr),
-	music(nullptr),
-	soundFX(nullptr),
+	music({}),
 	entityManager(nullptr),
 	weapon(nullptr),
 	meshes{
@@ -141,41 +140,45 @@ Scene::~Scene(){
 	const size_t& pSize = ptLights.size();
 	const size_t& dSize = directionalLights.size();
 	const size_t& sSize = spotlights.size();
-	for (size_t i = 0; i < pSize; ++i) {
-		if (ptLights[i]) {
+	for(size_t i = 0; i < pSize; ++i){
+		if(ptLights[i]){
 			delete ptLights[i];
 			ptLights[i] = nullptr;
 		}
 	}
-	for (size_t i = 0; i < dSize; ++i) {
-		if (directionalLights[i]) {
+	for(size_t i = 0; i < dSize; ++i){
+		if(directionalLights[i]){
 			delete directionalLights[i];
 			directionalLights[i] = nullptr;
 		}
 	}
-	for (size_t i = 0; i < sSize; ++i) {
-		if (spotlights[i]) {
+	for(size_t i = 0; i < sSize; ++i){
+		if(spotlights[i]){
 			delete spotlights[i];
 			spotlights[i] = nullptr;
 		}
 	}
 
-	for (int i = 0; i < (int)MeshType::Amt; ++i) {
-		if (meshes[i]) {
+	for(int i = 0; i < (int)MeshType::Amt; ++i){
+		if(meshes[i]){
 			delete meshes[i];
 			meshes[i] = nullptr;
 		}
 	}
-	for (int i = 0; i < (int)ModelType::Amt; ++i) {
-		if (models[i]) {
+	for(int i = 0; i < (int)ModelType::Amt; ++i){
+		if(models[i]){
 			delete models[i];
 			models[i] = nullptr;
 		}
 	}
-	if (music) {
-		music->drop();
+
+	const size_t& musicSize = music.size();
+	for(size_t i = 0; i < musicSize; ++i){
+		if(music[i]){
+			music[i]->drop();
+		}
 	}
-	if (soundEngine) {
+	if(soundEngine){
 		soundEngine->drop();
 	}
 	if(entityManager){
@@ -205,6 +208,11 @@ bool Scene::Init(){
 	}
 	if(scores.size() > 1){
 		std::sort(scores.begin(), scores.end(), std::greater<int>());
+	}
+
+	soundEngine = createIrrKlangDevice(ESOD_AUTO_DETECT, ESEO_MULTI_THREADED | ESEO_LOAD_PLUGINS | ESEO_USE_3D_BUFFERS | ESEO_PRINT_DEBUG_INFO_TO_DEBUGGER);
+	if(!soundEngine){
+		(void)puts("Failed to init soundEngine!\n");
 	}
 
 	// Create weapons to be put in the inventory
@@ -273,43 +281,96 @@ bool Scene::Init(){
 	player->mass = 10.f;
 	player->force = glm::vec3(0.f);
 
-	Entity* const& fire = entityManager->FetchEntity();
-	fire->type = Entity::EntityType::FIRE;
-	fire->active = true;
-	fire->life = 0.f;
-	fire->maxLife = 0.f;
-	fire->colour = glm::vec4(1.f);
-	fire->diffuseTexIndex = -1;
-	fire->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-	fire->scale = glm::vec3(40.f);
-	fire->light = nullptr;
-	fire->mesh = meshes[(int)MeshType::Fire];
-	fire->pos = glm::vec3(0.f, 200.f, 0.f);
-	fire->vel = glm::vec3(0.f);
-	fire->mass = .0001f;
-	fire->force = glm::vec3(0.f);
+	///Create fires
+	for(short i = 0; i < 20; ++i){
+		const float scaleFactor = 15.f;
+		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
+		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
+		const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
 
-	glGetIntegerv(GL_POLYGON_MODE, polyModes);
+		Entity* const& fire = entityManager->FetchEntity();
+		fire->type = Entity::EntityType::FIRE;
+		fire->active = true;
+		fire->life = 0.f;
+		fire->maxLife = 0.f;
+		fire->colour = glm::vec4(1.f);
+		fire->diffuseTexIndex = -1;
+		fire->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+		fire->scale = glm::vec3(scaleFactor);
+		fire->light = nullptr;
+		fire->mesh = meshes[(int)MeshType::Fire];
+		fire->pos = pos;
+		fire->vel = glm::vec3(0.f);
+		fire->mass = .0001f;
+		fire->force = glm::vec3(0.f);
 
-	soundEngine = createIrrKlangDevice(ESOD_AUTO_DETECT, ESEO_MULTI_THREADED | ESEO_LOAD_PLUGINS | ESEO_USE_3D_BUFFERS | ESEO_PRINT_DEBUG_INFO_TO_DEBUGGER);
-	if (!soundEngine) {
-		(void)puts("Failed to init soundEngine!\n");
-	}
-	//soundEngine->play2D("Audio/Music/YellowCafe.mp3", true);
-
-	music = soundEngine->play3D("Audio/Music/YellowCafe.mp3", vec3df(0.f, 0.f, 0.f), true, true, true, ESM_AUTO_DETECT, true);
-	if (music) {
-		music->setMinDistance(5.f);
-		music->setVolume(0);
-
-		soundFX = music->getSoundEffectControl();
-		if (!soundFX) {
-			(void)puts("No soundFX support!\n");
+		ISound* myMusic = soundEngine->play3D("Audio/Music/Burn.wav", vec3df(pos.x, pos.y, pos.z), true, true, true, ESM_AUTO_DETECT, true);
+		if(myMusic){
+			myMusic->setMinDistance(2.f);
+			myMusic->setVolume(3);
+			music.emplace_back(myMusic);
+		} else{
+			(void)puts("Failed to init music!\n");
 		}
 	}
-	else {
-		(void)puts("Failed to init music!\n");
+
+	///Create coins
+	for(short i = 0; i < 20; ++i){
+		const float scaleFactor = 15.f;
+		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
+		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
+		const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
+
+		Entity* const& coin = entityManager->FetchEntity();
+		coin->active = true;
+		coin->life = 0.f;
+		coin->maxLife = 0.f;
+		coin->colour = glm::vec4(1.f);
+		coin->diffuseTexIndex = -1;
+		coin->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+		coin->scale = glm::vec3(scaleFactor);
+		coin->light = nullptr;
+		coin->pos = pos;
+		coin->vel = glm::vec3(0.f);
+		coin->mass = .0001f;
+		coin->force = glm::vec3(0.f);
+
+		switch(PseudorandMinMax(1, 5)){
+			case 1:
+				coin->type = Entity::EntityType::COIN_GOLD;
+				coin->mesh = meshes[(int)MeshType::CoinGold];
+				break;
+			case 2:
+				coin->type = Entity::EntityType::COIN_SILVER;
+				coin->mesh = meshes[(int)MeshType::CoinSilver];
+				break;
+			case 3:
+				coin->type = Entity::EntityType::COIN_PINK;
+				coin->mesh = meshes[(int)MeshType::CoinPink];
+				break;
+			case 4:
+				coin->type = Entity::EntityType::COIN_GREEN;
+				coin->mesh = meshes[(int)MeshType::CoinGreen];
+				break;
+			case 5:
+				coin->type = Entity::EntityType::COIN_BLUE;
+				coin->mesh = meshes[(int)MeshType::CoinBlue];
+				break;
+		}
+
+		ISound* myMusic = soundEngine->play3D("Audio/Music/Spin.mp3", vec3df(pos.x, pos.y, pos.z), true, true, true, ESM_AUTO_DETECT, true);
+		if(myMusic){
+			myMusic->setMinDistance(2.f);
+			myMusic->setVolume(3);
+			music.emplace_back(myMusic);
+		} else{
+			(void)puts("Failed to init music!\n");
+		}
 	}
+
+	glGetIntegerv(GL_POLYGON_MODE, polyModes);
+	directionalLights.emplace_back(CreateLight(LightType::Directional));
+	spotlights.emplace_back(CreateLight(LightType::Spot));
 
 	meshes[(int)MeshType::Fire]->AddTexMap({"Imgs/Fire.png", Mesh::TexType::Diffuse, 0});
 	static_cast<SpriteAni*>(meshes[(int)MeshType::Fire])->AddAni("Fire", 0, 32);
@@ -338,9 +399,6 @@ bool Scene::Init(){
 	meshes[(int)MeshType::Terrain]->AddTexMap({"Imgs/GrassGround.jpg", Mesh::TexType::Diffuse, 0});
 	meshes[(int)MeshType::Water]->AddTexMap({"Imgs/Water.jpg", Mesh::TexType::Diffuse, 0});
 	meshes[(int)MeshType::Water]->AddTexMap({"Imgs/Grey.png", Mesh::TexType::Reflection, 0});
-
-	directionalLights.emplace_back(CreateLight(LightType::Directional));
-	spotlights.emplace_back(CreateLight(LightType::Spot));
 
 	return true;
 }
@@ -669,22 +727,56 @@ void Scene::Update(GLFWwindow* const& win){
 				polyModeBT = elapsedTime + .5f;
 			}
 
-			if(soundFX){
-				if(Key(GLFW_KEY_I) && distortionBT <= elapsedTime){
-					soundFX->isDistortionSoundEffectEnabled() ? soundFX->disableDistortionSoundEffect() : (void)soundFX->enableDistortionSoundEffect();
-					distortionBT = elapsedTime + .5f;
+			////Control soundFX
+			if(Key(GLFW_KEY_I) && distortionBT <= elapsedTime){
+				const size_t& musicSize = music.size();
+				for(size_t i = 0; i < musicSize; ++i){
+					ISoundEffectControl* soundFX = music[i]->getSoundEffectControl();
+					if(soundFX){
+						soundFX->isDistortionSoundEffectEnabled() ? soundFX->disableDistortionSoundEffect() : (void)soundFX->enableDistortionSoundEffect();
+						distortionBT = elapsedTime + .5f;
+					} else{
+						(void)puts("No soundFX support!\n");
+					}
 				}
-				if(Key(GLFW_KEY_O) && echoBT <= elapsedTime){
-					soundFX->isEchoSoundEffectEnabled() ? soundFX->disableEchoSoundEffect() : (void)soundFX->enableEchoSoundEffect();
-					echoBT = elapsedTime + .5f;
+			}
+
+			if(Key(GLFW_KEY_O) && echoBT <= elapsedTime){
+				const size_t& musicSize = music.size();
+				for(size_t i = 0; i < musicSize; ++i){
+					ISoundEffectControl* soundFX = music[i]->getSoundEffectControl();
+					if(soundFX){
+						soundFX->isEchoSoundEffectEnabled() ? soundFX->disableEchoSoundEffect() : (void)soundFX->enableEchoSoundEffect();
+						echoBT = elapsedTime + .5f;
+					} else{
+						(void)puts("No soundFX support!\n");
+					}
 				}
-				if(Key(GLFW_KEY_P) && wavesReverbBT <= elapsedTime){
-					soundFX->isWavesReverbSoundEffectEnabled() ? soundFX->disableWavesReverbSoundEffect() : (void)soundFX->enableWavesReverbSoundEffect();
-					wavesReverbBT = elapsedTime + .5f;
+			}
+
+			if(Key(GLFW_KEY_K) && wavesReverbBT <= elapsedTime){
+				const size_t& musicSize = music.size();
+				for(size_t i = 0; i < musicSize; ++i){
+					ISoundEffectControl* soundFX = music[i]->getSoundEffectControl();
+					if(soundFX){
+						soundFX->isWavesReverbSoundEffectEnabled() ? soundFX->disableWavesReverbSoundEffect() : (void)soundFX->enableWavesReverbSoundEffect();
+						wavesReverbBT = elapsedTime + .5f;
+					} else{
+						(void)puts("No soundFX support!\n");
+					}
 				}
-				if(Key(GLFW_KEY_L) && resetSoundFXBT <= elapsedTime){
-					soundFX->disableAllEffects();
-					resetSoundFXBT = elapsedTime + .5f;
+			}
+
+			if(Key(GLFW_KEY_L) && resetSoundFXBT <= elapsedTime){
+				const size_t& musicSize = music.size();
+				for(size_t i = 0; i < musicSize; ++i){
+					ISoundEffectControl* soundFX = music[i]->getSoundEffectControl();
+					if(soundFX){
+						soundFX->disableAllEffects();
+						resetSoundFXBT = elapsedTime + .5f;
+					} else{
+						(void)puts("No soundFX support!\n");
+					}
 				}
 			}
 
@@ -820,6 +912,7 @@ void Scene::Update(GLFWwindow* const& win){
 			entityManager->UpdateEntities(params);
 			reticleColour = params.reticleColour;
 
+			///Waves
 			for(int i = 0; i < (int)WaveNumber::Total; ++i){
 				if(enemyCount == 0){
 					switch(waves[i]){
@@ -843,6 +936,15 @@ void Scene::Update(GLFWwindow* const& win){
 						case (int)WaveNumber::Total:
 							return;
 					}
+				}
+			}
+
+			///Start music
+			const size_t& musicSize = music.size();
+			for(size_t i = 0; i < musicSize; ++i){
+				ISound* const& myMusic = music[i];
+				if(myMusic && myMusic->getIsPaused()){
+					myMusic->setIsPaused(false);
 				}
 			}
 
@@ -1851,10 +1953,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		}
 	}
 	glBlendFunc(GL_ONE, GL_ZERO);
-
-	if(music && music->getIsPaused()){
-		music->setIsPaused(false);
-	}
 }
 
 void Scene::MinimapRender(){
