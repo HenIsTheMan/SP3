@@ -163,7 +163,8 @@ bool Scene::Init() {
 		cam.GetPos(), // Need to check first
 		glm::vec3(5.f),
 		glm::vec4(0.f),
-		glm::vec3(0.f));
+		glm::vec3(0.f),
+		cam.GetPos());
 	entityManager->AddEntity(player);
 
 	// Create Particles
@@ -174,7 +175,8 @@ bool Scene::Init() {
 			glm::vec3(PseudorandMinMax(-100.f, 100.f), PseudorandMinMax(100.f, 200.f), 0.f),  
 			glm::vec3(5.f), 
 			glm::vec4(0.f),
-			glm::vec3(0.f));
+			glm::vec3(0.f),
+			cam.GetPos());
 		entityManager->AddEntity(particle);
 	}
 
@@ -184,7 +186,8 @@ bool Scene::Init() {
 		glm::vec3(-float(winWidth) / 2.5f, float(winHeight) / 2.5f, -10.f),
 		glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f),
 		glm::vec4(0.f),
-		glm::vec3(0.f));
+		glm::vec3(0.f),
+		cam.GetPos());
 	entityManager->AddEntity(healthbar);
 
 	// Create the player lives on top of the HealthBar
@@ -193,7 +196,8 @@ bool Scene::Init() {
 		glm::vec3(-float(winWidth) / 2.2f, float(winHeight) / 2.2f, -9.f),
 		glm::vec3(25.f, 25.f, 1.f),
 		glm::vec4(0.f),
-		glm::vec3(0.f));
+		glm::vec3(0.f),
+		cam.GetPos());
 	entityManager->AddEntity(playerlives);
 
 	// Create Ammo Bar
@@ -202,7 +206,8 @@ bool Scene::Init() {
 		glm::vec3(float(winWidth) / 3.f, -float(winHeight) / 2.2f, -10.f),
 		glm::vec3(float(winWidth) / 15.f, float(winHeight) / 50.f, 1.f),
 		glm::vec4(0.f),
-		glm::vec3(0.f));
+		glm::vec3(0.f),
+		cam.GetPos());
 	entityManager->AddEntity(ammoBar);
 
 	// Create Inventory Slots
@@ -211,7 +216,8 @@ bool Scene::Init() {
 		glm::vec3(-float(winWidth) / 6.f, -float(winHeight) / 2.2f, -11.f),
 		glm::vec3(35.f, 35.f, 1.f),
 		glm::vec4(0.f),
-		glm::vec3(0.f));
+		glm::vec3(0.f),
+		cam.GetPos());
 	entityManager->AddEntity(inventory);
 
 	// Create weapons to be put in the inventory
@@ -323,7 +329,8 @@ void Scene::Update() {
 				glm::vec3(cam.GetPos() + 10.f * cam.CalcFront()),
 				glm::vec3(1.f),
 				glm::vec4(0.f),
-				cam.CalcFront());
+				cam.CalcFront(),
+				cam.GetPos());
 			entityManager->AddEntity(bullet);
 			weapon->GetCurrentWeapon()->SetCanShoot(false); // For the shooting cooldown time
 			weapon->GetCurrentWeapon()->SetCurrentAmmoRound(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() - 1); // Decrease the ammo
@@ -334,7 +341,7 @@ void Scene::Update() {
 		weapon->GetCurrentWeapon()->Reload();
 
 	// Can be modified to be used for other entities too
-	entityManager->Update(1, cam.CalcFront()); // Number of particles to be rendered every frame
+	entityManager->Update(1, cam.CalcFront(), cam.GetPos()); // Number of particles to be rendered every frame
 
 
 		if (Key(GLFW_KEY_F))
@@ -349,14 +356,15 @@ void Scene::Update() {
 			{
 				waveBounceTime = GetTickCount64() + 15000.f;
 
-				for (int i = 0; i < 10; ++i)
+				for (int i = 0; i < 9; ++i)
 				{
-					Entity* stillenemy = new Entity(Entity::EntityType::STATIC_ENEMY,
+					Entity* stillenemy = new Entity(Entity::EntityType::MOVING_ENEMY,
 						true,
-						glm::vec3(rand() % 50 - 25, -10.f, rand() % 50 - 25),
+						glm::vec3((rand() % 50 - 25, -10.f, rand() % 50 - 25)),
 						glm::vec3(1.f),
 						glm::vec4(0.f),
-						cam.CalcFront());
+						cam.CalcFront(),
+						cam.GetPos());
 					entityManager->AddEntity(stillenemy);
 					++enemycount;
 				}
@@ -375,7 +383,8 @@ void Scene::Update() {
 						glm::vec3(rand() % 50 - 25, -10.f, rand() % 50 - 25),
 						glm::vec3(1.f),
 						glm::vec4(0.f),
-						cam.CalcFront());
+						cam.CalcFront(),
+						cam.GetPos());
 					entityManager->AddEntity(stillenemy);
 					++enemycount;
 				}

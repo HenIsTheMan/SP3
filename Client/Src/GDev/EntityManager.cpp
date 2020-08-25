@@ -13,6 +13,7 @@ EntityManager::~EntityManager(void)
 
 bool EntityManager::Init(void)
 {
+	EnemyMovement* enemyMovement();
 	entityList.clear();
 	return true;
 }
@@ -38,7 +39,7 @@ void EntityManager::FetchParticle(int numPerFrame)
 	}
 }
 
-void EntityManager::Update(int numPerFrame, glm::vec3 storeCamFront)
+void EntityManager::Update(int numPerFrame, glm::vec3 storeCamFront, glm::vec3 camPos)
 {
 	FetchParticle(numPerFrame); // Every frame, a certain number of particles will be rendered
 	// Put any function here to match the enemy spawning 
@@ -57,11 +58,13 @@ void EntityManager::Update(int numPerFrame, glm::vec3 storeCamFront)
 			break;
 
 		case Entity::EntityType::MOVING_ENEMY:
+		{
 			// Do the movement for the enemies here
 			entity->active = true;
-			enemyMovement->UpdateMovement(entity->pos, storeCamFront);
+			entity->pos = entity->pos + glm::normalize(glm::vec3(camPos - entity->pos)) * 0.1f;
+			entity->health = 3;
 			break;
-
+		}
 		case Entity::EntityType::BULLET:
 			entity->active = true;
 			entity->pos = entity->pos + entity->storeCamFront * 0.5f;

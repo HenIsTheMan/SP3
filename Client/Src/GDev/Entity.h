@@ -2,7 +2,6 @@
 
 #include "Core.h"
 #include "Engine.h"
-#include "EnemyMovement.h"
 
 class Entity {
 public:
@@ -23,8 +22,9 @@ public:
 		NUM_TYPES
 	};
 
-	Entity(EntityType type, bool active, glm::vec3 pos, glm::vec3 scale, glm::vec4 rotate, glm::vec3 storeCamFront/*, glm::vec3 storeCamPos*/);
+	Entity(EntityType type, bool active, glm::vec3 pos, glm::vec3 scale, glm::vec4 rotate, glm::vec3 storeCamFront, glm::vec3 storeCamPos);
 	virtual ~Entity();
+
 
 	EntityType type; // Entity type
 	bool active; // True when entity is being rendered, used to know which particles to reuse

@@ -4,7 +4,7 @@ class EnemyMovement
 {
 public:
 	EnemyMovement(void);
-	virtual void UpdateMovement(glm::vec3 pos, glm::vec3 playerPos);
+	virtual glm::vec3 UpdateMovement(glm::vec3 pos, glm::vec3 playerPos);
 	virtual ~EnemyMovement(void);
 
 protected:
@@ -18,4 +18,3 @@ protected:
 
 	int currentState;
 };
-

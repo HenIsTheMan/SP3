@@ -4,6 +4,7 @@
 #include "Engine.h"
 #include "../World/Cam.h"
 #include "Entity.h"
+#include "EnemyMovement.h"
 
 class EntityManager :public Singleton<EntityManager>
 {
@@ -16,7 +17,7 @@ public:
 	//virtual void Render(void);
 
 	void FetchParticle(int numPerFrame);
-	void Update(int numPerFrame, glm::vec3 storeCamFront);
+	void Update(int numPerFrame, glm::vec3 storeCamFront, glm::vec3 camPos);
 
 	const std::vector<Entity*>& getVector();
 
