@@ -767,6 +767,35 @@ void Scene::Update(GLFWwindow* const& win){
 					}
 				}
 			}
+
+			break;
+		}
+		case Screen::Score: {
+			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+			cam.SetPos(glm::vec3(0.f, 0.f, 5.f));
+			cam.SetTarget(glm::vec3(0.f));
+			cam.SetUp(glm::vec3(0.f, 1.f, 0.f));
+			view = cam.LookAt();
+			projection = glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f);
+
+			if(mousePos.x >= 25.f && mousePos.x <= 110.f && mousePos.y >= winHeight - 60.f && mousePos.y <= winHeight - 25.f){
+				if(textScaleFactors[2] != 1.1f){
+					soundEngine->play2D("Audio/Sounds/Pop.flac", false);
+					textScaleFactors[2] = 1.1f;
+					textColours[2] = glm::vec4(1.f, 1.f, 0.f, 1.f);
+				}
+				if(leftMB - rightMB > 0.f && buttonBT <= elapsedTime){
+					soundEngine->play2D("Audio/Sounds/Select.wav", false);
+					screen = Screen::Menu;
+					buttonBT = elapsedTime + .3f;
+				}
+			} else{
+				textScaleFactors[2] = 1.f;
+				textColours[2] = glm::vec4(1.f);
+			}
+
+			break;
 		}
 	}
 }
@@ -1131,10 +1160,12 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 		forwardSP.Set1f(("spotlights[" + std::to_string(i) + "].cosOuterCutoff").c_str(), spotlight->cosOuterCutoff);
 	}
 
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	switch(screen){
 		case Screen::Menu: {
 			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
 
+			///BG
 			modelStack.PushModel({
 				modelStack.Scale(glm::vec3(float(winWidth) / 2.f, float(winHeight) / 2.f, 1.f)),
 			});
@@ -1145,7 +1176,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			modelStack.PopModel();
 			
 			glDepthFunc(GL_NOTEQUAL);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			textChief.RenderText(textSP, {
 				"Play",
 				25.f,
@@ -1170,7 +1200,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				textColours[2],
 				0,
 			});
-			glBlendFunc(GL_ONE, GL_ZERO);
 			glDepthFunc(GL_LESS);
 
 			break;
@@ -1192,7 +1221,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			glDepthFunc(GL_LESS);
 
 			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 			//Test wall
 			modelStack.PushModel({
@@ -1551,10 +1579,56 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				glm::vec4(1.f, 1.f, 0.f, 1.f),
 				0
 			});
+		}
+		case Screen::Score: {
+			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
 
-			glBlendFunc(GL_ONE, GL_ZERO);
+			///BG
+			modelStack.PushModel({
+				modelStack.Scale(glm::vec3(float(winWidth) / 2.f, float(winHeight) / 2.f, 1.f)),
+			});
+				forwardSP.Set1i("noNormals", 1);
+				meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+				meshes[(int)MeshType::Quad]->Render(forwardSP);
+				forwardSP.Set1i("noNormals", 0);
+			modelStack.PopModel();
+
+			glDepthFunc(GL_GREATER);
+			textChief.RenderText(textSP, {
+				"Back",
+				25.f,
+				25.f,
+				textScaleFactors[2],
+				textColours[2],
+				0,
+			});
+
+			float currOffset = 0.f;
+			textChief.RenderText(textSP, {
+				"Scoreboard",
+				30.f,
+				float(winHeight) / 1.2f,
+				1.f,
+				glm::vec4(1.f, .5f, 0.f, 1.f),
+				0,
+			});
+			const size_t& mySize = scores.size();
+			for(size_t i = 0; i < mySize; ++i){
+				currOffset += 80.f;
+				textChief.RenderText(textSP, {
+					std::to_string(scores[i]),
+					30.f,
+					float(winHeight) / 1.2f - currOffset,
+					1.f,
+					glm::vec4(1.f, .5f, 0.f, 1.f),
+					0,
+				});
+			}
+			glDepthFunc(GL_LESS);
+			break;
 		}
 	}
+	glBlendFunc(GL_ONE, GL_ZERO);
 
 	if(music && music->getIsPaused()){
 		music->setIsPaused(false);
