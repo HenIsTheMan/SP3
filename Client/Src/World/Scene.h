@@ -95,8 +95,6 @@ private:
 	int enemyCount;
 	int score;
 	std::vector<int> scores;
-	float textScaleFactors[3];
-	glm::vec4 textColours[3];
 
 	enum struct PlayerState{
 		NoMovement = BIT(1),
@@ -123,6 +121,8 @@ private:
 		Amt
 	};
 	Screen screen;
+	float textScaleFactors[5];
+	glm::vec4 textColours[5];
 };
 
 enum struct Axis{

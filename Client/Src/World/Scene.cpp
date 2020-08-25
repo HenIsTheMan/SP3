@@ -90,7 +90,14 @@ Scene::Scene():
 	enemyCount(0),
 	score(0),
 	scores({}),
+	waves{},
+	playerStates((int)PlayerState::NoMovement | (int)PlayerState::Standing),
+	sprintOn(false),
+	reticleColour(glm::vec4(1.f)),
+	screen(Screen::Menu),
 	textScaleFactors{
+		1.f,
+		1.f,
 		1.f,
 		1.f,
 		1.f,
@@ -99,12 +106,9 @@ Scene::Scene():
 		glm::vec4(1.f),
 		glm::vec4(1.f),
 		glm::vec4(1.f),
-	},
-	waves{},
-	playerStates((int)PlayerState::NoMovement | (int)PlayerState::Standing),
-	sprintOn(false),
-	reticleColour(glm::vec4(1.f)),
-	screen(Screen::Menu)
+		glm::vec4(1.f),
+		glm::vec4(1.f),
+	}
 {
 }
 
@@ -330,6 +334,7 @@ void Scene::Update(GLFWwindow* const& win){
 	static float buttonBT = 0.f;
 
 	switch(screen){
+		case Screen::End:
 		case Screen::Menu:{
 			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
@@ -339,7 +344,7 @@ void Scene::Update(GLFWwindow* const& win){
 			view = cam.LookAt();
 			projection = glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f);
 
-			if(mousePos.x >= 25.f && mousePos.x <= (screen == Screen::Menu ? 100.f : 230.f) && mousePos.y >= winHeight - 160.f && mousePos.y <= winHeight - 125.f){
+			if(mousePos.x >= 25.f && mousePos.x <= (screen == Screen::Menu ? 100.f : 230.f) && mousePos.y >= winHeight - 260.f && mousePos.y <= winHeight - 225.f){
 				if(textScaleFactors[0] != 1.1f){
 					soundEngine->play2D("Audio/Sounds/Pop.flac", false);
 					textScaleFactors[0] = 1.1f;
@@ -358,7 +363,7 @@ void Scene::Update(GLFWwindow* const& win){
 				textScaleFactors[0] = 1.f;
 				textColours[0] = glm::vec4(1.f);
 			}
-			if(mousePos.x >= 25.f && mousePos.x <= 230.f && mousePos.y >= winHeight - 110.f && mousePos.y <= winHeight - 75.f){
+			if(mousePos.x >= 25.f && mousePos.x <= 130.f && mousePos.y >= winHeight - 210.f && mousePos.y <= winHeight - 175.f){
 				if(textScaleFactors[1] != 1.1f){
 					soundEngine->play2D("Audio/Sounds/Pop.flac", false);
 					textScaleFactors[1] = 1.1f;
@@ -373,7 +378,7 @@ void Scene::Update(GLFWwindow* const& win){
 				textScaleFactors[1] = 1.f;
 				textColours[1] = glm::vec4(1.f);
 			}
-			if(mousePos.x >= 25.f && mousePos.x <= 100.f && mousePos.y >= winHeight - 60.f && mousePos.y <= winHeight - 25.f){
+			if(mousePos.x >= 25.f && mousePos.x <= 230.f && mousePos.y >= winHeight - 160.f && mousePos.y <= winHeight - 125.f){
 				if(textScaleFactors[2] != 1.1f){
 					soundEngine->play2D("Audio/Sounds/Pop.flac", false);
 					textScaleFactors[2] = 1.1f;
@@ -381,12 +386,42 @@ void Scene::Update(GLFWwindow* const& win){
 				}
 				if(leftMB - rightMB > 0.f && buttonBT <= elapsedTime){
 					soundEngine->play2D("Audio/Sounds/Select.wav", false);
-					endLoop = true;
+					screen = Screen::Instructions;
 					buttonBT = elapsedTime + .3f;
 				}
 			} else{
 				textScaleFactors[2] = 1.f;
 				textColours[2] = glm::vec4(1.f);
+			}
+			if(mousePos.x >= 25.f && mousePos.x <= 150.f && mousePos.y >= winHeight - 110.f && mousePos.y <= winHeight - 75.f){
+				if(textScaleFactors[3] != 1.1f){
+					soundEngine->play2D("Audio/Sounds/Pop.flac", false);
+					textScaleFactors[3] = 1.1f;
+					textColours[3] = glm::vec4(1.f, 1.f, 0.f, 1.f);
+				}
+				if(leftMB - rightMB > 0.f && buttonBT <= elapsedTime){
+					soundEngine->play2D("Audio/Sounds/Select.wav", false);
+					screen = Screen::Credits;
+					buttonBT = elapsedTime + .3f;
+				}
+			} else{
+				textScaleFactors[3] = 1.f;
+				textColours[3] = glm::vec4(1.f);
+			}
+			if(mousePos.x >= 25.f && mousePos.x <= 100.f && mousePos.y >= winHeight - 60.f && mousePos.y <= winHeight - 25.f){
+				if(textScaleFactors[4] != 1.1f){
+					soundEngine->play2D("Audio/Sounds/Pop.flac", false);
+					textScaleFactors[4] = 1.1f;
+					textColours[4] = glm::vec4(1.f, 1.f, 0.f, 1.f);
+				}
+				if(leftMB - rightMB > 0.f && buttonBT <= elapsedTime){
+					soundEngine->play2D("Audio/Sounds/Select.wav", false);
+					endLoop = true;
+					buttonBT = elapsedTime + .3f;
+				}
+			} else{
+				textScaleFactors[4] = 1.f;
+				textColours[4] = glm::vec4(1.f);
 			}
 
 			break;
@@ -770,6 +805,8 @@ void Scene::Update(GLFWwindow* const& win){
 
 			break;
 		}
+		case Screen::Instructions:
+		case Screen::Credits:
 		case Screen::Score: {
 			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
@@ -1162,6 +1199,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	switch(screen){
+		case Screen::End:
 		case Screen::Menu: {
 			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
 
@@ -1177,27 +1215,43 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			
 			glDepthFunc(GL_NOTEQUAL);
 			textChief.RenderText(textSP, {
-				"Play",
+				screen == Screen::Menu ? "Play" : "Play Again",
 				25.f,
-				125.f,
+				225.f,
 				textScaleFactors[0],
 				textColours[0],
 				0,
 			});
 			textChief.RenderText(textSP, {
-				"Scoreboard",
+				"Scores",
 				25.f,
-				75.f,
+				175.f,
 				textScaleFactors[1],
 				textColours[1],
+				0,
+			});
+			textChief.RenderText(textSP, {
+				"Instructions",
+				25.f,
+				125.f,
+				textScaleFactors[2],
+				textColours[2],
+				0,
+			});
+			textChief.RenderText(textSP, {
+				"Credits",
+				25.f,
+				75.f,
+				textScaleFactors[3],
+				textColours[3],
 				0,
 			});
 			textChief.RenderText(textSP, {
 				"Exit",
 				25.f,
 				25.f,
-				textScaleFactors[2],
-				textColours[2],
+				textScaleFactors[4],
+				textColours[4],
 				0,
 			});
 			glDepthFunc(GL_LESS);
@@ -1579,6 +1633,75 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				glm::vec4(1.f, 1.f, 0.f, 1.f),
 				0
 			});
+			break;
+		}
+		case Screen::Instructions: {
+			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
+
+			///BG
+			modelStack.PushModel({
+				modelStack.Scale(glm::vec3(float(winWidth) / 2.f, float(winHeight) / 2.f, 1.f)),
+			});
+				forwardSP.Set1i("noNormals", 1);
+				meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+				meshes[(int)MeshType::Quad]->Render(forwardSP);
+				forwardSP.Set1i("noNormals", 0);
+			modelStack.PopModel();
+
+			glDepthFunc(GL_GREATER);
+			textChief.RenderText(textSP, {
+				"Back",
+				25.f,
+				25.f,
+				textScaleFactors[2],
+				textColours[2],
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"Instructions",
+				30.f,
+				float(winHeight) / 1.2f,
+				1.f,
+				glm::vec4(1.f, .5f, 0.f, 1.f),
+				0,
+			});
+			glDepthFunc(GL_LESS);
+			break;
+		}
+		case Screen::Credits: {
+			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
+
+			///BG
+			modelStack.PushModel({
+				modelStack.Scale(glm::vec3(float(winWidth) / 2.f, float(winHeight) / 2.f, 1.f)),
+			});
+				forwardSP.Set1i("noNormals", 1);
+				meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+				meshes[(int)MeshType::Quad]->Render(forwardSP);
+				forwardSP.Set1i("noNormals", 0);
+			modelStack.PopModel();
+
+			glDepthFunc(GL_GREATER);
+			textChief.RenderText(textSP, {
+				"Back",
+				25.f,
+				25.f,
+				textScaleFactors[2],
+				textColours[2],
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"Credits",
+				30.f,
+				float(winHeight) / 1.2f,
+				1.f,
+				glm::vec4(1.f, .5f, 0.f, 1.f),
+				0,
+			});
+			glDepthFunc(GL_LESS);
+			break;
 		}
 		case Screen::Score: {
 			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
@@ -1605,7 +1728,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 
 			float currOffset = 0.f;
 			textChief.RenderText(textSP, {
-				"Scoreboard",
+				"Scores",
 				30.f,
 				float(winHeight) / 1.2f,
 				1.f,

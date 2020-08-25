@@ -19,5 +19,5 @@ void AssaultRifle::Init(void)
 	ammoToReload = 0;
 	canShoot = true;
 	elapsedTime = 0.0;
-	timeBetweenShots = 350.0;
+	timeBetweenShots = 2.0;
 }
