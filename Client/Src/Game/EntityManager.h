@@ -16,6 +16,7 @@ public:
 		glm::vec3 camPos;
 		uint depthDTexRefID;
 		uint depthSTexRefID;
+		Mesh* quadMesh;
 	};
 
 	~EntityManager(); //Default dtor

@@ -85,6 +85,16 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 				case Entity::EntityType::FIRE:
 					static_cast<SpriteAni*>(entity->mesh)->Update();
 					break;
+				case Entity::EntityType::PARTICLE:
+					// Don't know how to make it check with the terrain
+					// Change the values accordingly to make it nicer
+					if (entity->pos.y < 100.f)
+						entity->pos.y = 350.f;
+					break;
+				case Entity::EntityType::PARTICLE2:
+					if (entity->pos.y > 350.f) // 50.f more than the pos at first
+						entity->pos.y = 300.f;
+					break;
 			}
 
 			if(entity->vel != glm::vec3(0.f)){
@@ -97,6 +107,10 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 }
 
 void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
+	//params.quadMesh->ClearModelMats();
+	//bool particle1 = false;
+	//glm::vec4 rainColour = glm::vec4(1.f);
+
 	const size_t& size = entityList.size();
 	for(size_t i = 0; i < size; ++i){
 		Entity* entity = entityList[i];
@@ -135,6 +149,40 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 					modelStack.PopModel();
 					SP.Set1i("noNormals", 0);
 					break;
+				case Entity::EntityType::PARTICLE:
+				case Entity::EntityType::PARTICLE2:
+				case Entity::EntityType::PARTICLE3:
+					modelStack.PushModel({
+						modelStack.Translate(entity->pos),
+						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),
+						modelStack.Scale(entity->scale),
+					});
+						SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+						SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
+						SP.Set1i("noNormals", 1);
+						SP.Set1i("useCustomColour", 1);
+						SP.Set1i("useCustomDiffuseTexIndex", 1);
+						SP.Set4fv("customColour", entity->colour);
+						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
+						entity->mesh->SetModel(modelStack.GetTopModel());
+						entity->mesh->Render(SP);
+						SP.Set1i("useCustomDiffuseTexIndex", 0);
+						SP.Set1i("useCustomColour", 0);
+						SP.Set1i("noNormals", 0);
+					modelStack.PopModel();
+					break;
+				//case Entity::EntityType::PARTICLE:
+				//	modelStack.PushModel({
+				//		modelStack.Translate(entity->pos),
+				//		modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),
+				//		modelStack.Scale(entity->scale),
+				//	});
+				//		entity->mesh->AddModelMat(modelStack.GetTopModel());
+				//	modelStack.PopModel();
+
+				//	rainColour = entity->colour;
+				//	particle1 = true;
+				//	break;
 				case Entity::EntityType::FIRE:
 					modelStack.PushModel({
 						modelStack.Translate(entity->pos),
@@ -154,4 +202,14 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 			}
 		}
 	}
+
+	//if(particle1){
+	//	SP.Set1i("useCustomColour", 1);
+	//	SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+	//	SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
+	//	SP.Set4fv("customColour", rainColour);
+	//	params.quadMesh->InstancedRender(SP);
+	//	SP.Set1i("useCustomColour", 0);
+	//}
+	//std::cout << quadMesh->modelMats.size() << std::endl;
 }

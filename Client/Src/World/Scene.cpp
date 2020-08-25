@@ -519,6 +519,82 @@ void Scene::Update(){
 				weapon->GetCurrentWeapon()->Reload();
 			}
 
+			// Rain particles
+			static float tmp = elapsedTime;
+			static int count = 0; // To limit the number of rain particles
+			if (elapsedTime - tmp >= 3.f && count < 100)
+			{
+				Entity* const& particle = entityManager->FetchEntity();
+				particle->type = Entity::EntityType::PARTICLE;
+				particle->active = true;
+				particle->life = 0.f;
+				particle->maxLife = 0.f;
+				particle->colour = glm::vec4(0.f, 1.f, 1.f, 1.f);
+				particle->diffuseTexIndex = -1;
+				particle->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+				particle->scale = glm::vec3(3.f);
+				particle->light = nullptr;
+				particle->mesh = meshes[(int)MeshType::Quad];
+				//particle->pos = glm::vec3(150.f, 100.f, 50.f);
+				particle->pos = glm::vec3(PseudorandMinMax(-150.f, 150.f), 350.f, PseudorandMinMax(-150.f, 0.f));
+				particle->vel = glm::vec3(0.f, -20.f, 0.f);
+				particle->mass = 10.f;
+				particle->force = glm::vec3(0.f);
+				tmp = elapsedTime;
+				count++;
+			}
+			static float tmp2 = elapsedTime;
+			static int count2 = 0; // To limit the number of fire particles
+			if (elapsedTime - tmp2 >= 0.5f && count2 < 10)
+			{
+				// Fire particles
+				Entity* const& particle2 = entityManager->FetchEntity();
+				particle2->type = Entity::EntityType::PARTICLE2;
+				particle2->active = true;
+				particle2->life = 0.f;
+				particle2->maxLife = 0.f;
+				particle2->colour = glm::vec4(glm::vec3(.4f), 1.f);
+				particle2->diffuseTexIndex = -1;
+				particle2->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+				particle2->scale = glm::vec3(3.f);
+				particle2->light = nullptr;
+				particle2->mesh = meshes[(int)MeshType::Quad];
+				// Position depends on where the fire is
+				particle2->pos = glm::vec3(0.f, 300.f, 0.f);
+				// Will change accordingly to make it look better
+				particle2->vel = glm::vec3(0.f, 20.f, 0.f);
+				particle2->mass = .0001f;
+				particle2->force = glm::vec3(0.f);
+				tmp2 = elapsedTime;
+				count2++;
+			}
+			// TESTING ONLY -> PARTICLES SPAWN WHEN ENEMY DIE
+			// Need a check statement here to see which enemy died
+			if (Key(GLFW_KEY_0))
+			{
+				for (int i = 0; i < 4; ++i)
+				{
+					Entity* const& particle = entityManager->FetchEntity();
+					particle->type = Entity::EntityType::PARTICLE3;
+					particle->active = true;
+					particle->life = 0.f;
+					particle->maxLife = 0.f;
+					particle->colour = glm::vec4(0.f, 1.f, 1.f, 1.f);
+					particle->diffuseTexIndex = -1;
+					particle->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+					particle->scale = glm::vec3(2.f);
+					particle->light = nullptr;
+					particle->mesh = meshes[(int)MeshType::Quad];
+					// Position depends on where the enemy is
+					particle->pos = glm::vec3(150.f, 0.f, 50.f);
+					// Will change accordingly to make it look better
+					particle->vel = glm::vec3(PseudorandMinMax(-100.f, 100.f),
+						PseudorandMinMax(1.f, 100.f), PseudorandMinMax(-100.f, 100.f));
+					particle->mass = 10.f;
+					particle->force = glm::vec3(0.f, -100.f, 0.f);
+				}
+			}
+
 			EntityManager::UpdateParams params;
 			params.camPos = cam.GetPos();
 			params.camFront = cam.CalcFront();
@@ -1060,6 +1136,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			params.camPos = cam.GetPos();
 			params.depthDTexRefID = depthDTexRefID;
 			params.depthSTexRefID = depthSTexRefID;
+			params.quadMesh = meshes[(int)MeshType::Quad];
 			entityManager->RenderEntities(forwardSP, params); //Render entities
 
 			///Render curr weapon
