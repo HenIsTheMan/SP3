@@ -51,9 +51,14 @@ Scene::Scene():
 		new Mesh(Mesh::MeshType::Cylinder, GL_TRIANGLE_STRIP, {
 			{"Imgs/BoxAlbedo.png", Mesh::TexType::Diffuse, 0},
 		}),
-		new SpriteAni(8, 8),
 		new Terrain("Imgs/hMap.raw", 8.f, 8.f),
 		new Water(24.f, 2.f, 2.f, .5f),
+		new SpriteAni(4, 8),
+		new SpriteAni(1, 6),
+		new SpriteAni(1, 6),
+		new SpriteAni(1, 6),
+		new SpriteAni(1, 6),
+		new SpriteAni(1, 6),
 	},
 	models{
 		new Model("ObjsAndMtls/Pistol.obj", {
@@ -305,8 +310,28 @@ bool Scene::Init(){
 	}
 
 	meshes[(int)MeshType::Fire]->AddTexMap({"Imgs/Fire.png", Mesh::TexType::Diffuse, 0});
-	static_cast<SpriteAni*>(meshes[(int)MeshType::Fire])->AddAni("FireSpriteAni", 0, 64);
-	static_cast<SpriteAni*>(meshes[(int)MeshType::Fire])->Play("FireSpriteAni", -1, 1.2f);
+	static_cast<SpriteAni*>(meshes[(int)MeshType::Fire])->AddAni("Fire", 0, 32);
+	static_cast<SpriteAni*>(meshes[(int)MeshType::Fire])->Play("Fire", -1, .5f);
+
+	meshes[(int)MeshType::CoinGold]->AddTexMap({"Imgs/CoinGold.png", Mesh::TexType::Diffuse, 0});
+	static_cast<SpriteAni*>(meshes[(int)MeshType::CoinGold])->AddAni("CoinGold", 0, 6);
+	static_cast<SpriteAni*>(meshes[(int)MeshType::CoinGold])->Play("CoinGold", -1, .5f);
+
+	meshes[(int)MeshType::CoinSilver]->AddTexMap({"Imgs/CoinSilver.png", Mesh::TexType::Diffuse, 0});
+	static_cast<SpriteAni*>(meshes[(int)MeshType::CoinSilver])->AddAni("CoinSilver", 0, 6);
+	static_cast<SpriteAni*>(meshes[(int)MeshType::CoinSilver])->Play("CoinSilver", -1, .5f);
+
+	meshes[(int)MeshType::CoinPink]->AddTexMap({"Imgs/CoinPink.png", Mesh::TexType::Diffuse, 0});
+	static_cast<SpriteAni*>(meshes[(int)MeshType::CoinPink])->AddAni("CoinPink", 0, 6);
+	static_cast<SpriteAni*>(meshes[(int)MeshType::CoinPink])->Play("CoinPink", -1, .5f);
+
+	meshes[(int)MeshType::CoinGreen]->AddTexMap({"Imgs/CoinGreen.png", Mesh::TexType::Diffuse, 0});
+	static_cast<SpriteAni*>(meshes[(int)MeshType::CoinGreen])->AddAni("CoinGreen", 0, 6);
+	static_cast<SpriteAni*>(meshes[(int)MeshType::CoinGreen])->Play("CoinGreen", -1, .5f);
+
+	meshes[(int)MeshType::CoinBlue]->AddTexMap({"Imgs/CoinBlue.png", Mesh::TexType::Diffuse, 0});
+	static_cast<SpriteAni*>(meshes[(int)MeshType::CoinBlue])->AddAni("CoinBlue", 0, 6);
+	static_cast<SpriteAni*>(meshes[(int)MeshType::CoinBlue])->Play("CoinBlue", -1, .5f);
 
 	meshes[(int)MeshType::Terrain]->AddTexMap({"Imgs/GrassGround.jpg", Mesh::TexType::Diffuse, 0});
 	meshes[(int)MeshType::Water]->AddTexMap({"Imgs/Water.jpg", Mesh::TexType::Diffuse, 0});
@@ -459,6 +484,13 @@ void Scene::Update(GLFWwindow* const& win){
 					std::sort(scores.begin(), scores.end(), std::greater<int>());
 				}
 			}
+
+			static_cast<SpriteAni*>(meshes[(int)MeshType::Fire])->Update();
+			static_cast<SpriteAni*>(meshes[(int)MeshType::CoinGold])->Update();
+			static_cast<SpriteAni*>(meshes[(int)MeshType::CoinSilver])->Update();
+			static_cast<SpriteAni*>(meshes[(int)MeshType::CoinPink])->Update();
+			static_cast<SpriteAni*>(meshes[(int)MeshType::CoinGreen])->Update();
+			static_cast<SpriteAni*>(meshes[(int)MeshType::CoinBlue])->Update();
 
 			////Control player states
 			static float sprintBT = 0.f;

@@ -83,7 +83,6 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					break;
 				}
 				case Entity::EntityType::FIRE:
-					static_cast<SpriteAni*>(entity->mesh)->Update();
 					break;
 				case Entity::EntityType::PARTICLE:
 					// Don't know how to make it check with the terrain
@@ -239,6 +238,20 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 				//	particle1 = true;
 				//	break;
 				case Entity::EntityType::FIRE:
+					modelStack.PushModel({
+						modelStack.Translate(entity->pos + glm::vec3(0.f, entity->scale.y / 2.f, 0.f)),
+						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),
+						modelStack.Scale(glm::vec3(entity->scale.x, entity->scale.y * 2.f, entity->scale.z)),
+					});
+						SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+						SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
+						SP.Set1i("noNormals", 1);
+						entity->mesh->SetModel(modelStack.GetTopModel());
+						entity->mesh->Render(SP);
+						SP.Set1i("noNormals", 0);
+					modelStack.PopModel();
+					break;
+				case Entity::EntityType::COIN_GOLD:
 					modelStack.PushModel({
 						modelStack.Translate(entity->pos),
 						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),

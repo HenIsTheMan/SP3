@@ -52,9 +52,14 @@ private:
 		Cube,
 		Sphere,
 		Cylinder,
-		Fire,
 		Terrain,
 		Water,
+		Fire,
+		CoinGold,
+		CoinSilver,
+		CoinPink,
+		CoinGreen,
+		CoinBlue,
 		Amt
 	};
 	Mesh* meshes[(int)MeshType::Amt];
