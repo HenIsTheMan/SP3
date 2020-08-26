@@ -99,7 +99,7 @@ Scene::Scene():
 	score(0),
 	scores({}),
 	waves{},
-	waveCount(0.f),
+	waveCount(0),
 	playerStates((int)PlayerState::NoMovement | (int)PlayerState::Standing),
 	sprintOn(false),
 	reticleColour(glm::vec4(1.f)),
@@ -1905,6 +1905,105 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				glm::vec4(1.f, .5f, 0.f, 1.f),
 				0,
 			});
+
+			textChief.RenderText(textSP, {
+				"W - Move Forward",
+				25.f,
+				725.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"S - Move Backward",
+				25.f,
+				675.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"A - Move Left",
+				25.f,
+				625.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"D - Move Right",
+				25.f,
+				575.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"R - Reload Weapon",
+				25.f,
+				525.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"Shift - Toggle Sprint",
+				25.f,
+				475.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"Space - Prone --> Crouch --> Stand --> Jump",
+				25.f,
+				425.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"C - Stand --> Crouch --> Prone",
+				25.f,
+				375.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"P - Pause",
+				25.f,
+				325.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"F1 - Toggle Fullscreen" ,
+				25.f,
+				275.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+			});
+
+			textChief.RenderText(textSP, {
+				"F2 - Change Polygon Mode",
+				25.f,
+				225.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+			});
 			glDepthFunc(GL_LESS);
 			break;
 		}
@@ -1942,6 +2041,69 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				glm::vec4(1.f, .5f, 0.f, 1.f),
 				0,
 			});
+
+			textChief.RenderText(textSP, {
+				"NYP SIDM GDT19",
+				25.f, 
+				725.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+				});
+
+			textChief.RenderText(textSP, {
+				"SP3 Team 01",
+				25.f, 
+				625.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+				});
+
+			textChief.RenderText(textSP, {
+				"Studio Project Siblings (SPS)",
+				25.f, 
+				525.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+				});
+
+			textChief.RenderText(textSP, {
+				"Ling Guan Yu (193541T, Team Leader)",
+				25.f,
+				475.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+				});
+
+			textChief.RenderText(textSP, {
+				"Liu Hao (190597T, Game Programmer)",
+				25.f,
+				425.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+				});
+
+			textChief.RenderText(textSP, {
+				"Lim Li Hui, Trina (193020G, Game Programmer)",
+				25.f,
+				375.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+				});
+
+			textChief.RenderText(textSP, {
+				"Goh Bei Lai (191766P, Game Programmer)",
+				25.f,
+				325.f,
+				1.f,
+				glm::vec4(1.f, 1.f, 0.f, 1.f),
+				0,
+				});
 			glDepthFunc(GL_LESS);
 			break;
 		}

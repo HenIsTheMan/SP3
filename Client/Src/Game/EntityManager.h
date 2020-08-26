@@ -8,22 +8,22 @@ class EntityManager final: public Singleton<EntityManager>{
 	friend class Singleton<EntityManager>;
 public:
 	struct UpdateParams final{ //Add on here if needed
-		bool camCanMove;
-		float playerCurrHealth;
-		float playerCurrLives;
+		bool camCanMove = true;
+		float playerCurrHealth = 0.f;
+		float playerCurrLives = 0.f;
 		int enemyCount;
 		int score;
-		glm::vec3 camPos;
-		glm::vec3 camFront;
-		glm::vec3 camTrueVel;
-		glm::vec4 reticleColour;
-		float yGround;
+		glm::vec3 camPos = glm::vec3(0.f);
+		glm::vec3 camFront = glm::vec3(0.f);
+		glm::vec3 camTrueVel = glm::vec3(0.f);
+		glm::vec4 reticleColour = glm::vec4(0.f);
+		float yGround = 0.f;
 	};
 	struct RenderParams final{ //Add on here if needed
-		glm::vec3 camPos;
-		uint depthDTexRefID;
-		uint depthSTexRefID;
-		Mesh* quadMesh;
+		glm::vec3 camPos = glm::vec3(0.f);
+		uint depthDTexRefID = 0;
+		uint depthSTexRefID = 0;
+		Mesh* quadMesh = nullptr;
 	};
 
 	~EntityManager(); //Default dtor
