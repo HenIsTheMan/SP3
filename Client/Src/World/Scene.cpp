@@ -812,7 +812,8 @@ void Scene::Update(GLFWwindow* const& win){
 
 			// TESTING ONLY FOR SHOOTING
 			if(leftMB){
-				if(weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0){
+				if(!weapon->GetCurrentWeapon()->GetReloading() && // Not reloading
+					weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0){
 					Entity* const& bullet = entityManager->FetchEntity();
 					bullet->type = Entity::EntityType::BULLET;
 					bullet->active = true;
@@ -829,9 +830,23 @@ void Scene::Update(GLFWwindow* const& win){
 					lastTime = elapsedTime;
 				}
 			}
-
-			if(Key(GLFW_KEY_R)){ // Reload the curr weapon
+			static bool pressedReload = false; // Will not keep reloading when player pressed 'R' repeatedly
+			if (Key(GLFW_KEY_R))
+			{
+				// Begin to reload
+				if (weapon->GetCurrentWeapon()->GetCurrentAmmoRound() < weapon->GetCurrentWeapon()->GetMaxAmmoRound()
+					&& weapon->GetCurrentWeapon()->GetCurrentTotalAmmo() > 0 && !weapon->GetCurrentWeapon()->GetReloading())
+				{
+					weapon->GetCurrentWeapon()->SetReloading(true);
+					pressedReload = true;
+					lastTime = elapsedTime;
+				}
+			}
+			// Reloaded
+			if (!weapon->GetCurrentWeapon()->GetReloading() && pressedReload)
+			{
 				weapon->GetCurrentWeapon()->Reload();
+				pressedReload = false;
 			}
 
 			// Rain particles
@@ -1784,7 +1799,10 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			forwardSP.Set1i("noNormals", 0);
 
 			str temp;
-			switch(weapon->GetCurrentSlot()){
+			if (weapon->GetCurrentWeapon()->GetReloading())
+				temp = "Reloading...";
+			else {
+				switch (weapon->GetCurrentSlot()) {
 				case 0:
 					temp = "Pistol";
 					break;
@@ -1794,8 +1812,8 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				case 2:
 					temp = "Sniper Rifle";
 					break;
+				}
 			}
-
 			textChief.RenderText(textSP, { //Weapon type
 				temp,
 				float(winWidth) / 1.3f,

@@ -21,7 +21,10 @@ public:
 	void SetMaxTotalAmmo(int maxTotalAmmo);
 	void SetAmmoToReload(int ammoToReload);
 	void SetTimeBetweenShots(double timeBetweenShots);
+	void SetElapsedTime(double elapsedTime);
+	void SetReloadTime(double reloadTime);
 	void SetCanShoot(bool canShoot);
+	void SetReloading(bool reloading);
 
 	// Getters
 	Weapon* GetCurrentWeapon(void) const;
@@ -32,11 +35,15 @@ public:
 	int GetMaxTotalAmmo(void);
 	int GetAmmoToReload(void);
 	double GetTimeBetweenShots(void);
+	double GetElapsedTime(void);
+	double GetReloadTime(void);
 	bool GetCanShoot(void);
+	bool GetReloading(void);
 
 protected:
 	double elapsedTime;
 	double timeBetweenShots;
+	double reloadTime;
 
 	Weapon* primaryWeapon;
 	Weapon* secondaryWeapon;
@@ -49,4 +56,5 @@ protected:
 	int maxTotalAmmo; // Max ammo in the gun
 	int ammoToReload; // Num of ammo to reload to max ammo in the round
 	bool canShoot; // Check whether player can shoot the weapon
+	bool reloading; // Check whether player is still reloading the weapon
 };
