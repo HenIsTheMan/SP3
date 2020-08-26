@@ -523,6 +523,7 @@ void Scene::Update(GLFWwindow* const& win){
 			if(score < 0){
 				score = 0;
 			}
+
 			if(playerCurrLives <= 0.f){
 				screen = Screen::End;
 				glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -671,6 +672,9 @@ void Scene::Update(GLFWwindow* const& win){
 			playerCurrLives = params.playerCurrLives;
 			enemyCount = params.enemyCount;
 			score = params.score;
+
+			playerCurrHealth = std::min(100.f, std::max(0.f, playerCurrHealth));
+			playerCurrLives = std::min(5.f, std::max(0.f, playerCurrLives));
 
 			if(playerStates & (int)PlayerState::Jumping){
 				if(cam.GetPos().y >= yMax){

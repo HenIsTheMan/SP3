@@ -80,6 +80,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					if(entity->life <= 0.f){
 						entity->active = false;
 						--params.enemyCount;
+						params.score += 20;
 					}
 
 					///Enemy movement
@@ -140,6 +141,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						params.score += 100;
+						entity->active = false;
 					}
 
 					break;
@@ -149,6 +151,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						params.score += 10;
+						entity->active = false;
 					}
 
 					break;
@@ -158,6 +161,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						++params.playerCurrLives;
+						entity->active = false;
 					}
 
 					break;
@@ -167,6 +171,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						params.playerCurrHealth += 50.f;
+						entity->active = false;
 					}
 
 					break;
@@ -176,6 +181,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						//Immunity#####
+						entity->active = false;
 					}
 
 					break;
