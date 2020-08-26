@@ -17,14 +17,55 @@ Terrain::Terrain(cstr const& fPath, const float& tileH, const float& tileV): Mes
 	Load();
 }
 
+float Terrain::BarycentricInterpolation(const glm::vec3& pt1, const glm::vec3& pt2, const glm::vec3& pt3, const glm::vec3& pos) const{
+	const float divisor = (pt2.z - pt3.z) * (pt1.x - pt3.x) + (pt3.x - pt2.x) * (pt1.z - pt3.z);
+	const float weight1 = ((pt2.z - pt3.z) * (pos.x - pt3.x) + (pt3.x - pt2.x) * (pos.z - pt3.z)) / divisor;
+	if(weight1 < 0.f){
+		return 0.f;
+	}
+	const float weight2 = ((pt3.z - pt1.z) * (pos.x - pt3.x) + (pt1.x - pt3.x) * (pos.z - pt3.z)) / divisor;
+	if(weight2 < 0.f){
+		return 0.f;
+	}
+	const float weight3 = 1.f - weight1 - weight2;
+	if(weight3 < 0.f){
+		return 0.f;
+	}
+	return weight1 * pt1.y + weight2 * pt2.y + weight3 * pt3.y;
+}
+
 float Terrain::GetHeightAtPt(const float& x, const float& z) const{
 	if(!data.size() || x <= -.5f || x >= .5f || z <= -.5f || z >= .5f){
 		return 0.f;
 	}
+
 	const long long terrainSize = (long long)sqrt((double)data.size());
 	const long long zCoord = (long long)((z + 0.5) * terrainSize);
 	const long long xCoord = (long long)((x + 0.5) * terrainSize);
-	return (float)data[zCoord * terrainSize + xCoord] / 255.f; //[0.f, 1.f]
+	std::vector<std::vector<glm::vec3>> pos = std::vector<std::vector<glm::vec3>>(terrainSize, std::vector<glm::vec3>(terrainSize));
+	for(long long z = 0; z < terrainSize; ++z){
+		for(long long x = 0; x < terrainSize; ++x){
+			float scaledHeight = (float)data[z * terrainSize + x] / 255.f; //[0.f, 1.f]
+			pos[z][x] = glm::vec3(float(x) / terrainSize - .5f, scaledHeight, float(z) / terrainSize - .5f);
+		}
+	}
+
+	std::vector<glm::vec3> possiblePts;
+	possiblePts.emplace_back(pos[zCoord][xCoord]);
+	possiblePts.emplace_back(pos[zCoord][xCoord + 1]);
+	possiblePts.emplace_back(pos[zCoord + 1][xCoord + 1]);
+	possiblePts.emplace_back(pos[zCoord + 1][xCoord]);
+	possiblePts.emplace_back(pos[zCoord][xCoord - 1]);
+	possiblePts.emplace_back(pos[zCoord - 1][xCoord - 1]);
+	possiblePts.emplace_back(pos[zCoord - 1][xCoord]);
+
+	float result = 0.f;
+	result += BarycentricInterpolation(pos[zCoord][xCoord + 1], pos[zCoord + 1][xCoord + 1], pos[zCoord + 1][xCoord], glm::vec3(x, 0.f, z));
+	result += BarycentricInterpolation(pos[zCoord][xCoord + 1], pos[zCoord][xCoord], pos[zCoord + 1][xCoord], glm::vec3(x, 0.f, z));
+	result += BarycentricInterpolation(pos[zCoord][xCoord - 1], pos[zCoord - 1][xCoord - 1], pos[zCoord - 1][xCoord], glm::vec3(x, 0.f, z));
+	result += BarycentricInterpolation(pos[zCoord][xCoord - 1], pos[zCoord][xCoord], pos[zCoord - 1][xCoord], glm::vec3(x, 0.f, z));
+
+	return result;
 }
 
 void Terrain::Render(ShaderProg& SP, const bool& autoConfig){
