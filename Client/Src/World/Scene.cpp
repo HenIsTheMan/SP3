@@ -1477,6 +1477,10 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 
 			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
 
+			if(scope){ //If scoped in...
+				forwardSP.Set1i("nightVision", 1);
+			}
+
 			//Test wall
 			modelStack.PushModel({
 				modelStack.Translate(glm::vec3(0.f, 100.f, -50.f)),
@@ -1815,6 +1819,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
 			forwardSP.Set1i("useCustomColour", 0);
 			forwardSP.Set1i("noNormals", 0);
+			forwardSP.Set1i("nightVision", 0);
 
 			str temp;
 			if(weapon->GetCurrentWeapon()->GetReloading())

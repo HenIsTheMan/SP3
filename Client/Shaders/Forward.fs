@@ -176,6 +176,11 @@ vec3 CalcSpotlight(Spotlight light){
     return CalcAmbient(light.ambient) + NotInShadow(lightDir, sDepthTexSampler, posFromSpotlight) * lightIntensity * (CalcDiffuse(lightDir, light.diffuse) + CalcSpec(lightDir, light.spec));
 }
 
+const vec3 visionColour = vec3(.2f, 1.f, .4f);
+const float luminanceThreshold = .6f;
+const float colourAmplification = 2.f;
+uniform bool nightVision;
+
 void main(){
 	if(!useCustomColour && (!useDiffuseMap || (useDiffuseMap && useCustomDiffuseTexIndex && customDiffuseTexIndex == -1))){
 		Colour = fsIn.colour;
@@ -213,5 +218,13 @@ void main(){
                 fragColour.rgb += texture(cubemapSampler, reflectedRay).rgb * Reflection;
             }
         }
+    }
+
+    if(nightVision){
+        float lum = dot(vec3(.42f, .62f, .14f), fragColour.rgb);
+        if(lum < luminanceThreshold){
+            fragColour.rgb *= colourAmplification; 
+        }
+        fragColour.rgb = fragColour.rgb * visionColour;
     }
 }
