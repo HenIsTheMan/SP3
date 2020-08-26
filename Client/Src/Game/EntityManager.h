@@ -8,8 +8,11 @@ class EntityManager final: public Singleton<EntityManager>{
 	friend class Singleton<EntityManager>;
 public:
 	struct UpdateParams final{ //Add on here if needed
+		bool camCanMove;
+		float playerCurrHealth;
 		glm::vec3 camPos;
 		glm::vec3 camFront;
+		glm::vec3 camTrueVel;
 		glm::vec4 reticleColour;
 	};
 	struct RenderParams final{ //Add on here if needed

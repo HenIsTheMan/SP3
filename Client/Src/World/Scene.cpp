@@ -233,21 +233,21 @@ bool Scene::Init(){
 	entityManager = EntityManager::GetObjPtr();
 	entityManager->CreateEntities(100);
 
-	Entity* const& enemy = entityManager->FetchEntity();
-	enemy->type = Entity::EntityType::STATIC_ENEMY;
-	enemy->active = true;
-	enemy->life = 0.f;
-	enemy->maxLife = 0.f;
-	enemy->colour = glm::vec4(1.f, 0.f, 0.f, 1.f);
-	enemy->diffuseTexIndex = -1;
-	enemy->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-	enemy->scale = glm::vec3(20.f);
-	enemy->light = nullptr;
-	enemy->mesh = meshes[(int)MeshType::Sphere];
-	enemy->pos = glm::vec3(-100.f, 200.f, 0.f);
-	enemy->vel = glm::vec3(0.f, 6.f, 3.f);
-	enemy->mass = 1.f;
-	enemy->force = glm::vec3(0.f);
+	//Entity* const& enemy = entityManager->FetchEntity();
+	//enemy->type = Entity::EntityType::STATIC_ENEMY;
+	//enemy->active = true;
+	//enemy->life = 0.f;
+	//enemy->maxLife = 0.f;
+	//enemy->colour = glm::vec4(1.f, 0.f, 0.f, 1.f);
+	//enemy->diffuseTexIndex = -1;
+	//enemy->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+	//enemy->scale = glm::vec3(20.f);
+	//enemy->light = nullptr;
+	//enemy->mesh = meshes[(int)MeshType::Sphere];
+	//enemy->pos = glm::vec3(-100.f, 200.f, 0.f);
+	//enemy->vel = glm::vec3(0.f, 6.f, 3.f);
+	//enemy->mass = 1.f;
+	//enemy->force = glm::vec3(0.f);
 
 	Entity* const& player = entityManager->FetchEntity();
 	player->type = Entity::EntityType::PLAYER;
@@ -509,6 +509,7 @@ void Scene::Update(GLFWwindow* const& win){
 				break;
 			}
 
+			cam.canMove = true;
 			reticleColour = glm::vec4(1.f);
 			if(score < 0){
 				score = 0;
@@ -639,6 +640,18 @@ void Scene::Update(GLFWwindow* const& win){
 				playerStatesTemp &= ~bitMask;
 				bitMask <<= 1;
 			}
+
+			EntityManager::UpdateParams params;
+			params.camCanMove = cam.canMove;
+			params.playerCurrHealth = playerCurrHealth;
+			params.camPos = cam.GetPos();
+			params.camFront = cam.CalcFront();
+			params.camTrueVel = cam.trueVel;
+			params.reticleColour = reticleColour;
+			entityManager->UpdateEntities(params);
+			reticleColour = params.reticleColour;
+			cam.canMove = params.camCanMove;
+			playerCurrHealth = params.playerCurrHealth;
 
 			if(playerStates & (int)PlayerState::Jumping){
 				if(cam.GetPos().y >= yMax){
@@ -889,19 +902,12 @@ void Scene::Update(GLFWwindow* const& win){
 				}
 			}
 
-			EntityManager::UpdateParams params;
-			params.camPos = cam.GetPos();
-			params.camFront = cam.CalcFront();
-			params.reticleColour = reticleColour;
-			entityManager->UpdateEntities(params);
-			reticleColour = params.reticleColour;
-
 			///Waves
 			for(int i = 0; i < (int)WaveNumber::Total; ++i){
 				if(enemyCount == 0){
 					switch(waves[i]){
 						case (int)WaveNumber::One:
-							for(int i = 0; i < 10; ++i){
+							for(int i = 0; i < 1; ++i){
 								const float scaleFactor = 15.f;
 								const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 								const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);

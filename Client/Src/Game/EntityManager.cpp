@@ -76,15 +76,31 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 				case Entity::EntityType::MOVING_ENEMY: {
 					///Enemy movement
 					entity->pos.y += float(sin(glfwGetTime())) / 5.f;
-					if(glm::length(params.camFront - entity->pos) >= 50.f){
+					if(glm::length(params.camPos - entity->pos) >= 50.f){
 						entity->vel = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(PseudorandMinMax(-10.f, 10.f)), {0.f, 1.f, 0.f}) *
 							glm::vec4(glm::normalize((params.camPos - entity->pos)), 0.f)) * 20.f;
 					} else{
 						entity->vel = glm::vec3(0.f);
 					}
 
+					///Check for collision with cam
+					const glm::vec3& relativeVel = params.camTrueVel - entity->vel;
+					const glm::vec3& relativeVelXY = glm::vec3(relativeVel.x, relativeVel.y, 0.f);
+					const glm::vec3& relativeVelXZ = glm::vec3(relativeVel.x, 0.f, relativeVel.z);
+					const glm::vec3& relativeVelYZ = glm::vec3(0.f, relativeVel.y, relativeVel.z);
+					const glm::vec3& displacementVec = params.camPos - entity->pos;
+					const glm::vec3& displacementVecXY = glm::vec3(displacementVec.x, displacementVec.y, 0.f);
+					const glm::vec3& displacementVecXZ = glm::vec3(displacementVec.x, 0.f, displacementVec.z);
+					const glm::vec3& displacementVecYZ = glm::vec3(0.f, displacementVec.y, displacementVec.z);
+					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)
+						&& (glm::dot(relativeVelXY, -displacementVecXY) > 0.f
+						|| glm::dot(relativeVelXZ, -displacementVecXZ) > 0.f
+						|| glm::dot(relativeVelYZ, -displacementVecYZ) > 0.f)){
+						params.camCanMove = false;
+						params.playerCurrHealth -= 2.f;
+					}
+
 					///Change reticle colour
-					glm::vec3 displacementVec = params.camPos - entity->pos;
 					const float b = glm::dot(params.camFront, displacementVec);
 					const float c = glm::dot(displacementVec, displacementVec) - entity->scale.x * entity->scale.x;
 					if(b * b - c >= 0.f){
