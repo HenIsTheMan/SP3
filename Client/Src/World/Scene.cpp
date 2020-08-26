@@ -820,7 +820,7 @@ void Scene::Update(GLFWwindow* const& win){
 					bullet->pos = glm::vec3(cam.GetPos() + 10.f * cam.CalcFront());
 					bullet->vel = cam.CalcFront() * 12.f;
 					bullet->mass = 1.f;
-					bullet->life = 200.f;
+					bullet->life = 2.f;
 					//const glm::vec3& camFront = cam.CalcFront();
 					//bullet->rotate = glm::vec4(cam.CalcUp(), glm::degrees(atan2(camFront.z, camFront.x)));
 					bullet->scale = glm::vec3(1.f);

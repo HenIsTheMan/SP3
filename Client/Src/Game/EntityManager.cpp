@@ -142,6 +142,10 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 		if(entity && entity->active){
 			switch(entity->type){
 				case Entity::EntityType::BULLET: {
+					entity->life -= dt;
+					if (entity->life <= 0.f) {
+						entity->active = false;
+					}
 					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
 					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
 					SP.Set1i("useCustomColour", 1);
