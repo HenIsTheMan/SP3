@@ -88,15 +88,18 @@ Scene::Scene():
 	view(glm::mat4(1.f)),
 	projection(glm::mat4(1.f)),
 	elapsedTime(0.f),
+	waveBounceTime(0.f),
 	polyModes{},
 	playerCurrHealth(100.f),
 	playerMaxHealth(100.f),
 	playerCurrLives(5.f),
 	playerMaxLives(5.f),
 	enemyCount(0),
+	currentEnemyCount(0),
 	score(0),
 	scores({}),
 	waves{},
+	waveCount(0.f),
 	playerStates((int)PlayerState::NoMovement | (int)PlayerState::Standing),
 	sprintOn(false),
 	reticleColour(glm::vec4(1.f)),
@@ -520,7 +523,7 @@ void Scene::Update(GLFWwindow* const& win){
 			if(score < 0){
 				score = 0;
 			}
-			if(Key(GLFW_KEY_9)){
+			if(playerCurrLives <= 0.f){
 				screen = Screen::End;
 				glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
@@ -608,6 +611,7 @@ void Scene::Update(GLFWwindow* const& win){
 
 			float yMin = terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(cam.GetPos().x / terrainXScale, cam.GetPos().z / terrainZScale);
 			float yMax = yMin;
+			float yGround=yMin;
 
 			///Update player according to its states
 			int playerStatesTemp = playerStates;
@@ -652,14 +656,21 @@ void Scene::Update(GLFWwindow* const& win){
 			EntityManager::UpdateParams params;
 			params.camCanMove = cam.canMove;
 			params.playerCurrHealth = playerCurrHealth;
+			params.playerCurrLives = playerCurrLives;
 			params.camPos = cam.GetPos();
 			params.camFront = cam.CalcFront();
 			params.camTrueVel = cam.trueVel;
 			params.reticleColour = reticleColour;
+			params.enemyCount = enemyCount;
+			params.score = score;
+			params.yGround=yGround;
 			entityManager->UpdateEntities(params);
 			reticleColour = params.reticleColour;
 			cam.canMove = params.camCanMove;
 			playerCurrHealth = params.playerCurrHealth;
+			playerCurrLives = params.playerCurrLives;
+			enemyCount = params.enemyCount;
+			score = params.score;
 
 			if(playerStates & (int)PlayerState::Jumping){
 				if(cam.GetPos().y >= yMax){
@@ -792,8 +803,7 @@ void Scene::Update(GLFWwindow* const& win){
 			//}
 
 			// Player gets max health again, but loses 1 life
-			if(playerCurrHealth <= 0.f && playerCurrLives > 0.f)
-			{
+			if(playerCurrHealth <= 0.f){
 				playerCurrHealth = 100.f;
 				--playerCurrLives;
 			}
@@ -812,17 +822,16 @@ void Scene::Update(GLFWwindow* const& win){
 
 			// TESTING ONLY FOR SHOOTING
 			if(leftMB){
-				if(!weapon->GetCurrentWeapon()->GetReloading() && // Not reloading
+				if(!weapon->GetCurrentWeapon()->GetReloading() && 
 					weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0){
 					Entity* const& bullet = entityManager->FetchEntity();
 					bullet->type = Entity::EntityType::BULLET;
 					bullet->active = true;
 					bullet->pos = glm::vec3(cam.GetPos() + 10.f * cam.CalcFront());
-					bullet->vel = cam.CalcFront() * 12.f;
+					bullet->vel = cam.CalcFront() * 200.f;
 					bullet->mass = 1.f;
 					bullet->life = 2.f;
-					//const glm::vec3& camFront = cam.CalcFront();
-					//bullet->rotate = glm::vec4(cam.CalcUp(), glm::degrees(atan2(camFront.z, camFront.x)));
+					bullet->colour = glm::vec4(1.F, 0.f, 0.f, 1.f);
 					bullet->scale = glm::vec3(1.f);
 					bullet->mesh = meshes[(int)MeshType::Sphere];
 					weapon->GetCurrentWeapon()->SetCanShoot(false); // For the shooting cooldown time
@@ -830,23 +839,19 @@ void Scene::Update(GLFWwindow* const& win){
 					lastTime = elapsedTime;
 				}
 			}
-			static bool pressedReload = false; // Will not keep reloading when player pressed 'R' repeatedly
-			if (Key(GLFW_KEY_R))
-			{
+			static bool pressedReload = false;
+			if(Key(GLFW_KEY_R)){ // Reload the curr weapon
 				// Begin to reload
-				if (weapon->GetCurrentWeapon()->GetCurrentAmmoRound() < weapon->GetCurrentWeapon()->GetMaxAmmoRound()
-					&& weapon->GetCurrentWeapon()->GetCurrentTotalAmmo() > 0 && !weapon->GetCurrentWeapon()->GetReloading())
-				{
+				if(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() < weapon->GetCurrentWeapon()->GetMaxAmmoRound()
+					&& weapon->GetCurrentWeapon()->GetCurrentTotalAmmo() > 0 && !weapon->GetCurrentWeapon()->GetReloading()){
 					weapon->GetCurrentWeapon()->SetReloading(true);
-					pressedReload = true;
-					lastTime = elapsedTime;
+					pressedReload=true;
+					lastTime=elapsedTime;
 				}
 			}
-			// Reloaded
-			if (!weapon->GetCurrentWeapon()->GetReloading() && pressedReload)
-			{
+			if(!weapon->GetCurrentWeapon()->GetReloading() && pressedReload){
 				weapon->GetCurrentWeapon()->Reload();
-				pressedReload = false;
+				pressedReload=false;
 			}
 
 			// Rain particles
@@ -926,11 +931,16 @@ void Scene::Update(GLFWwindow* const& win){
 			}
 
 			///Waves
-			for(int i = 0; i < (int)WaveNumber::Total; ++i){
-				if(enemyCount == 0){
-					switch(waves[i]){
-						case (int)WaveNumber::One:
-							for(int i = 0; i < 1; ++i){
+			///Waves
+			
+				switch(waves[waveCount]){
+					case (int)WaveNumber::One:
+						if (waveBounceTime <= GetTickCount64() && enemyCount <= 10)
+						{
+							currentEnemyCount = 10;
+							waveBounceTime = GetTickCount64() + 10000.f;
+
+							for (int i = 0; i < 1; ++i) {
 								const float scaleFactor = 15.f;
 								const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 								const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
@@ -949,13 +959,21 @@ void Scene::Update(GLFWwindow* const& win){
 								movingEnemy->mesh = meshes[(int)MeshType::Sphere];
 								movingEnemy->model = models[(int)ModelType::Virus];
 								++enemyCount;
+								--currentEnemyCount;
 							}
-							break;
-						case (int)WaveNumber::Total:
-							return;
-					}
+
+						}
+						break;
+					case (int)WaveNumber::Total:
+						return;
 				}
-			}
+
+				if(currentEnemyCount <= 0)
+				{
+					++waveCount;
+					enemyCount = 0;
+				}
+
 
 			///Start music
 			const size_t& musicSize = music.size();
@@ -1697,16 +1715,12 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			modelStack.PopModel();
 
 			///Render player lives
-			for(float j = 0; j < playerMaxLives; ++j){
+			for(float j = 0; j < playerCurrLives; ++j){
 				modelStack.PushModel({
 					modelStack.Translate(glm::vec3(-float(winWidth) / 2.2f, float(winHeight) / 2.2f, -9.f) + glm::vec3(75.f * (float)j, 0.f, 0.f)), //??
 					modelStack.Scale(glm::vec3(25.f)),
 				});
-					if(i < playerCurrLives){
-						forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
-					} else{
-						forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.3f), 1.f));
-					}
+					forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
 					forwardSP.Set1i("customDiffuseTexIndex", 1);
 					meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
 					meshes[(int)MeshType::Quad]->Render(forwardSP);
@@ -1799,19 +1813,19 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			forwardSP.Set1i("noNormals", 0);
 
 			str temp;
-			if (weapon->GetCurrentWeapon()->GetReloading())
-				temp = "Reloading...";
-			else {
-				switch (weapon->GetCurrentSlot()) {
-				case 0:
-					temp = "Pistol";
-					break;
-				case 1:
-					temp = "Assault Rifle";
-					break;
-				case 2:
-					temp = "Sniper Rifle";
-					break;
+			if(weapon->GetCurrentWeapon()->GetReloading())
+				temp="Reloading...";
+			else{
+				switch(weapon->GetCurrentSlot()){
+					case 0:
+						temp = "Pistol";
+							break;
+					case 1:
+						temp = "Assault Rifle";
+							break;
+					case 2:
+						temp = "Sniper Rifle";
+						break;
 				}
 			}
 			textChief.RenderText(textSP, { //Weapon type

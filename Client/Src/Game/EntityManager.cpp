@@ -63,6 +63,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 				case Entity::EntityType::PLAYER:
 					break;
 				case Entity::EntityType::BULLET:
+					entity->life-=dt;
+					if(entity->life <= 0)
+						entity->active=false;
 					break;
 				case Entity::EntityType::STATIC_ENEMY: {
 					glm::vec3 displacementVec = params.camPos - entity->pos;
@@ -74,6 +77,11 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					break;
 				}
 				case Entity::EntityType::MOVING_ENEMY: {
+					if(entity->life <= 0.f){
+						entity->active = false;
+						--params.enemyCount;
+					}
+
 					///Enemy movement
 					entity->pos.y += float(sin(glfwGetTime())) / 5.f;
 					if(glm::length(params.camPos - entity->pos) >= 50.f){
@@ -108,18 +116,70 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					}
 					break;
 				}
-				case Entity::EntityType::FIRE:
-					break;
 				case Entity::EntityType::PARTICLE:
 					// Don't know how to make it check with the terrain
 					// Change the values accordingly to make it nicer
-					if (entity->pos.y < 100.f)
+					if (entity->pos.y < params.yGround)
 						entity->pos.y = 350.f;
 					break;
 				case Entity::EntityType::PARTICLE2:
 					if (entity->pos.y > 350.f) // 50.f more than the pos at first
 						entity->pos.y = 300.f;
 					break;
+				case Entity::EntityType::FIRE: {
+					///Check for collision with cam
+					const glm::vec3& displacementVec = params.camPos - entity->pos;
+					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						params.playerCurrHealth -= 5.f;
+					}
+
+					break;
+				}
+				case Entity::EntityType::COIN_GOLD: {
+					///Check for collision with cam
+					const glm::vec3& displacementVec = params.camPos - entity->pos;
+					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						params.score += 100;
+					}
+
+					break;
+				}
+				case Entity::EntityType::COIN_SILVER: {
+					///Check for collision with cam
+					const glm::vec3& displacementVec = params.camPos - entity->pos;
+					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						params.score += 10;
+					}
+
+					break;
+				}
+				case Entity::EntityType::COIN_PINK: {
+					///Check for collision with cam
+					const glm::vec3& displacementVec = params.camPos - entity->pos;
+					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						++params.playerCurrLives;
+					}
+
+					break;
+				}
+				case Entity::EntityType::COIN_GREEN: {
+					///Check for collision with cam
+					const glm::vec3& displacementVec = params.camPos - entity->pos;
+					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						params.playerCurrHealth += 50.f;
+					}
+
+					break;
+				}
+				case Entity::EntityType::COIN_BLUE: {
+					///Check for collision with cam
+					const glm::vec3& displacementVec = params.camPos - entity->pos;
+					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						//Immunity#####
+					}
+
+					break;
+				}
 			}
 
 			if(entity->vel != glm::vec3(0.f)){
@@ -137,33 +197,36 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 	//glm::vec4 rainColour = glm::vec4(1.f);
 
 	const size_t& size = entityList.size();
+	std::map<int, Entity*> entityListForSorting;
 	for(size_t i = 0; i < size; ++i){
-		Entity* entity = entityList[i];
+		Entity* const& entity = entityList[i];
+		if(entity && entity->active){
+			glm::vec3 displacementVec = params.camPos - entity->pos;
+			entityListForSorting[(const int)glm::dot(displacementVec, displacementVec)] = entity;
+		}
+	}
+
+	for(std::map<int, Entity*>::reverse_iterator iter = entityListForSorting.rbegin(); iter != entityListForSorting.rend(); ++iter){
+		Entity* const& entity = iter->second;
 		if(entity && entity->active){
 			switch(entity->type){
 				case Entity::EntityType::BULLET: {
-					entity->life -= dt;
-					if (entity->life <= 0.f) {
-						entity->active = false;
-					}
-					else {
-						SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
-						SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
-						SP.Set1i("useCustomColour", 1);
-						SP.Set1i("useCustomDiffuseTexIndex", 1);
-						modelStack.PushModel({
-							modelStack.Translate(entity->pos),
-							modelStack.Rotate(entity->rotate),
-							modelStack.Scale(entity->scale),
-							});
+					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
+					SP.Set1i("useCustomColour", 1);
+					SP.Set1i("useCustomDiffuseTexIndex", 1);
+					modelStack.PushModel({
+						modelStack.Translate(entity->pos),
+						modelStack.Rotate(entity->rotate),
+						modelStack.Scale(entity->scale),
+					});
 						SP.Set4fv("customColour", entity->colour);
 						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
 						entity->mesh->SetModel(modelStack.GetTopModel());
 						entity->mesh->Render(SP);
-						modelStack.PopModel();
-						SP.Set1i("useCustomDiffuseTexIndex", 0);
-						SP.Set1i("useCustomColour", 0);
-					}
+					modelStack.PopModel();
+					SP.Set1i("useCustomDiffuseTexIndex", 0);
+					SP.Set1i("useCustomColour", 0);
 					break;
 				}
 				case Entity::EntityType::STATIC_ENEMY: {
@@ -269,7 +332,7 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 				//	rainColour = entity->colour;
 				//	particle1 = true;
 				//	break;
-				case Entity::EntityType::FIRE:
+				case Entity::EntityType::FIRE: {
 					modelStack.PushModel({
 						modelStack.Translate(entity->pos + glm::vec3(0.f, entity->scale.y / 2.f, 0.f)),
 						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),
@@ -283,11 +346,12 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 						SP.Set1i("noNormals", 0);
 					modelStack.PopModel();
 					break;
+				}
 				case Entity::EntityType::COIN_GOLD:
 				case Entity::EntityType::COIN_SILVER:
 				case Entity::EntityType::COIN_PINK:
 				case Entity::EntityType::COIN_GREEN:
-				case Entity::EntityType::COIN_BLUE:
+				case Entity::EntityType::COIN_BLUE: {
 					modelStack.PushModel({
 						modelStack.Translate(entity->pos),
 						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),
@@ -301,6 +365,7 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 						SP.Set1i("noNormals", 0);
 					modelStack.PopModel();
 					break;
+				}
 				default:
 					break;
 			}

@@ -20,6 +20,6 @@ void AssaultRifle::Init(void)
 	canShoot = true;
 	elapsedTime = 0.0;
 	timeBetweenShots = 0.2;
-	reloadTime = 20.0;
-	reloading = false;
+	reloadTime=20.0;
+	reloading=false;
 }

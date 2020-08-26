@@ -10,10 +10,14 @@ public:
 	struct UpdateParams final{ //Add on here if needed
 		bool camCanMove;
 		float playerCurrHealth;
+		float playerCurrLives;
+		int enemyCount;
+		int score;
 		glm::vec3 camPos;
 		glm::vec3 camFront;
 		glm::vec3 camTrueVel;
 		glm::vec4 reticleColour;
+		float yGround;
 	};
 	struct RenderParams final{ //Add on here if needed
 		glm::vec3 camPos;

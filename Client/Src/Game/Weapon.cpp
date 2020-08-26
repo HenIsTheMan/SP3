@@ -14,7 +14,7 @@ Weapon::Weapon() :
 	reloading(false),
 	elapsedTime(0.0),
 	timeBetweenShots(1.0),
-	reloadTime(0.0)
+	reloadTime(1.0)
 {
 }
 
@@ -39,18 +39,14 @@ void Weapon::Update(const double dt)
 		return;
 
 	elapsedTime += dt;
-
-	if (reloading) // Player is reloading
-	{
-		if (elapsedTime > reloadTime)
-		{
-			reloading = false;
-			elapsedTime = 0.0;
+	if(reloading){
+		if(elapsedTime > reloadTime){
+			reloading=false;
+			elapsedTime=0.0;
 		}
 	}
-	else // Player is not reloading, but cannot shoot
-	{
-		if (elapsedTime > timeBetweenShots)
+	else {
+		if(elapsedTime > timeBetweenShots)
 		{
 			canShoot = true;
 			elapsedTime = 0.0;
@@ -99,7 +95,12 @@ void Weapon::SetElapsedTime(double elapsedTime)
 
 void Weapon::SetReloadTime(double reloadTime)
 {
-	this->reloadTime = reloadTime;
+	this->reloadTime=reloadTime;
+}
+
+void Weapon::SetReloading(bool reloading)
+{
+	this->reloading=reloading;
 }
 
 void Weapon::SetInventory(const int slot, Weapon* weapon)
@@ -147,11 +148,6 @@ void Weapon::SetCanShoot(bool canShoot)
 	this->canShoot = canShoot;
 }
 
-void Weapon::SetReloading(bool reloading)
-{
-	this->reloading = reloading;
-}
-
 double Weapon::GetTimeBetweenShots(void)
 {
 	return timeBetweenShots;
@@ -165,6 +161,11 @@ double Weapon::GetElapsedTime(void)
 double Weapon::GetReloadTime(void)
 {
 	return reloadTime;
+}
+
+bool Weapon::GetReloading(void)
+{
+	return reloading;
 }
 
 Weapon* Weapon::GetCurrentWeapon(void) const
@@ -212,9 +213,4 @@ int Weapon::GetAmmoToReload(void)
 bool Weapon::GetCanShoot(void)
 {
 	return canShoot;
-}
-
-bool Weapon::GetReloading(void)
-{
-	return reloading;
 }

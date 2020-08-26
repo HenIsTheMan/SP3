@@ -77,6 +77,7 @@ private:
 		Total
 	};
 	int waves[(int)WaveNumber::Total];
+	int waveCount;
 
 	EntityManager* entityManager;
 	Weapon* weapon;
@@ -106,9 +107,11 @@ private:
 	float playerMaxHealth;
 	float playerCurrLives;
 	float playerMaxLives;
+	float waveBounceTime;
 
 	int polyModes[2];
 	int enemyCount;
+	int currentEnemyCount;
 	int score;
 	std::vector<int> scores;
 

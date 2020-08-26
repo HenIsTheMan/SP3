@@ -56,5 +56,5 @@ protected:
 	int maxTotalAmmo; // Max ammo in the gun
 	int ammoToReload; // Num of ammo to reload to max ammo in the round
 	bool canShoot; // Check whether player can shoot the weapon
-	bool reloading; // Check whether player is still reloading the weapon
+	bool reloading;
 };
