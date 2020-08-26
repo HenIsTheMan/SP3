@@ -9,6 +9,7 @@ public:
 	~Weapon();
 
 	void Update(const double dt);
+	void ResetWeapon();
 	void Reload();
 
 	// Setters

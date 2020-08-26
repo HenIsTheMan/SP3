@@ -125,7 +125,22 @@ bool Collision::IsSeparatedCubeCube(Entity* const& entity, Entity* const& instan
 
 void Collision::CollisionSphereSphere(Entity* const& entity, Entity* const& instance){
 	if(!IsSeparatedSphereSphere(entity, instance)){
-		entity->vel = glm::vec3(0.f);
+		switch(entity->type){
+			case Entity::EntityType::BULLET:
+				entity->active = false;
+				break;
+			case Entity::EntityType::MOVING_ENEMY:
+				entity->life -= 2.f;
+				break;
+		}
+		switch(instance->type){
+			case Entity::EntityType::BULLET:
+				instance->active = false;
+				break;
+			case Entity::EntityType::MOVING_ENEMY:
+				instance->life -= 2.f;
+				break;
+		}
 	}
 }
 
@@ -135,3 +150,5 @@ void Collision::CollisionCubeCube(Entity* const& entity, Entity* const& instance
 		entity->pos += responseVec;
 	}
 }
+
+///Prevent double collision??

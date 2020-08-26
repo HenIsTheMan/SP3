@@ -44,6 +44,11 @@ void Weapon::Update(const double dt)
 	}
 }
 
+void Weapon::ResetWeapon(){
+	SetCurrentAmmoRound(GetMaxAmmoRound());
+	SetCurrentTotalAmmo(GetMaxTotalAmmo());
+}
+
 void Weapon::Reload()
 {
 	if (GetCurrentAmmoRound() == GetMaxAmmoRound() || GetCurrentTotalAmmo() == 0) // Do not need to reload

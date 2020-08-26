@@ -425,6 +425,12 @@ void Scene::Update(GLFWwindow* const& win){
 					score = 0;
 					playerCurrHealth = playerMaxHealth;
 					playerCurrLives = playerMaxLives;
+
+					for(int i = 0; i < 3; ++i){
+						weapon->SetCurrentSlot(i);
+						weapon->GetCurrentWeapon()->ResetWeapon(); // Restock all the ammo for all weapons
+					}
+					weapon->SetCurrentSlot(0); // Start with pistol again
 					screen = Screen::Game;
 
 					cam.SetPos(glm::vec3(0.f, 0.f, 50.f));
@@ -516,6 +522,8 @@ void Scene::Update(GLFWwindow* const& win){
 			}
 			if(Key(GLFW_KEY_9)){
 				screen = Screen::End;
+				glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
 				const size_t& mySize = scores.size();
 				if(mySize == 5){ //Max no. of scores saved
 					std::sort(scores.begin(), scores.end(), std::greater<int>());
