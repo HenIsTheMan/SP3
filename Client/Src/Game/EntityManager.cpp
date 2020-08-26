@@ -74,6 +74,16 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					break;
 				}
 				case Entity::EntityType::MOVING_ENEMY: {
+					///Enemy movement
+					entity->pos.y += float(sin(glfwGetTime())) / 5.f;
+					if(glm::length(params.camFront - entity->pos) >= 50.f){
+						entity->vel = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(PseudorandMinMax(-10.f, 10.f)), {0.f, 1.f, 0.f}) *
+							glm::vec4(glm::normalize((params.camPos - entity->pos)), 0.f)) * 20.f;
+					} else{
+						entity->vel = glm::vec3(0.f);
+					}
+
+					///Change reticle colour
 					glm::vec3 displacementVec = params.camPos - entity->pos;
 					const float b = glm::dot(params.camFront, displacementVec);
 					const float c = glm::dot(displacementVec, displacementVec) - entity->scale.x * entity->scale.x;
@@ -134,7 +144,7 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 					SP.Set1i("useCustomColour", 0);
 					break;
 				}
-				case Entity::EntityType::MOVING_ENEMY: {
+				case Entity::EntityType::STATIC_ENEMY: {
 					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
 					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
 					SP.Set1i("useCustomColour", 1);
@@ -153,7 +163,7 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 					SP.Set1i("useCustomColour", 0);
 					break;
 				}
-				case Entity::EntityType::STATIC_ENEMY: {
+				case Entity::EntityType::MOVING_ENEMY: {
 					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
 					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
 					SP.Set1i("noNormals", 1);

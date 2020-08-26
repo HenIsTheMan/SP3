@@ -234,7 +234,7 @@ bool Scene::Init(){
 	entityManager->CreateEntities(100);
 
 	Entity* const& enemy = entityManager->FetchEntity();
-	enemy->type = Entity::EntityType::MOVING_ENEMY;
+	enemy->type = Entity::EntityType::STATIC_ENEMY;
 	enemy->active = true;
 	enemy->life = 0.f;
 	enemy->maxLife = 0.f;
@@ -248,22 +248,6 @@ bool Scene::Init(){
 	enemy->vel = glm::vec3(0.f, 6.f, 3.f);
 	enemy->mass = 1.f;
 	enemy->force = glm::vec3(0.f);
-
-	Entity* const& bullet = entityManager->FetchEntity();
-	bullet->type = Entity::EntityType::BULLET;
-	bullet->active = true;
-	bullet->life = 0.f;
-	bullet->maxLife = 0.f;
-	bullet->colour = glm::vec4(0.f, 0.f, 1.f, 1.f);
-	bullet->diffuseTexIndex = -1;
-	bullet->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-	bullet->scale = glm::vec3(20.f);
-	bullet->light = nullptr;
-	bullet->mesh = meshes[(int)MeshType::Sphere];
-	bullet->pos = glm::vec3(-100.f, 200.f, 150.f);
-	bullet->vel = glm::vec3(0.f, 4.f, -12.f);
-	bullet->mass = 1.f;
-	bullet->force = glm::vec3(0.f);
 
 	Entity* const& player = entityManager->FetchEntity();
 	player->type = Entity::EntityType::PLAYER;
@@ -282,7 +266,7 @@ bool Scene::Init(){
 	player->force = glm::vec3(0.f);
 
 	///Create fires
-	for(short i = 0; i < 20; ++i){
+	for(short i = 0; i < 5; ++i){
 		const float scaleFactor = 15.f;
 		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
@@ -315,7 +299,7 @@ bool Scene::Init(){
 	}
 
 	///Create coins
-	for(short i = 0; i < 20; ++i){
+	for(short i = 0; i < 5; ++i){
 		const float scaleFactor = 15.f;
 		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
@@ -918,18 +902,23 @@ void Scene::Update(GLFWwindow* const& win){
 					switch(waves[i]){
 						case (int)WaveNumber::One:
 							for(int i = 0; i < 10; ++i){
-								Entity* const& stillEnemy = entityManager->FetchEntity();
-								stillEnemy->type = Entity::EntityType::STATIC_ENEMY;
-								stillEnemy->active = true;
-								stillEnemy->life = 20.f;
-								stillEnemy->maxLife = 20.f;
-								stillEnemy->colour = glm::vec4(1.f);
-								stillEnemy->pos = glm::vec3(PseudorandMinMax(-50.f, 50.f), 200.f, PseudorandMinMax(-50.f, 50.f));
-								stillEnemy->vel = glm::vec3(0.f);
-								stillEnemy->mass = 5.f;
-								stillEnemy->scale = glm::vec3(10.f);
-								stillEnemy->mesh = meshes[(int)MeshType::Sphere];
-								stillEnemy->model = models[(int)ModelType::Virus];
+								const float scaleFactor = 15.f;
+								const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
+								const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
+								const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
+
+								Entity* const& movingEnemy = entityManager->FetchEntity();
+								movingEnemy->type = Entity::EntityType::MOVING_ENEMY;
+								movingEnemy->active = true;
+								movingEnemy->life = 20.f;
+								movingEnemy->maxLife = 20.f;
+								movingEnemy->colour = glm::vec4(1.f);
+								movingEnemy->pos = pos;
+								movingEnemy->vel = glm::vec3(0.f);
+								movingEnemy->mass = 5.f;
+								movingEnemy->scale = glm::vec3(10.f);
+								movingEnemy->mesh = meshes[(int)MeshType::Sphere];
+								movingEnemy->model = models[(int)ModelType::Virus];
 								++enemyCount;
 							}
 							break;
