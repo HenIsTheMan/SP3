@@ -61,7 +61,7 @@ void EntityManager::Update(int numPerFrame, glm::vec3 storeCamFront, glm::vec3 c
 		{
 			// Do the movement for the enemies here
 			entity->active = true;
-			entity->pos = entity->pos + glm::normalize(glm::vec3(camPos - entity->pos)) * 0.1f;
+			entity->pos = entity->pos + glm::normalize(glm::vec3(camPos - entity->pos)) * 0.3f;
 			entity->health = 3;
 			break;
 		}
