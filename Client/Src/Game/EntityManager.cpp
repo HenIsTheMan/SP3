@@ -146,22 +146,24 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 					if (entity->life <= 0.f) {
 						entity->active = false;
 					}
-					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
-					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
-					SP.Set1i("useCustomColour", 1);
-					SP.Set1i("useCustomDiffuseTexIndex", 1);
-					modelStack.PushModel({
-						modelStack.Translate(entity->pos),
-						modelStack.Rotate(entity->rotate),
-						modelStack.Scale(entity->scale),
-					});
+					else {
+						SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+						SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
+						SP.Set1i("useCustomColour", 1);
+						SP.Set1i("useCustomDiffuseTexIndex", 1);
+						modelStack.PushModel({
+							modelStack.Translate(entity->pos),
+							modelStack.Rotate(entity->rotate),
+							modelStack.Scale(entity->scale),
+							});
 						SP.Set4fv("customColour", entity->colour);
 						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
 						entity->mesh->SetModel(modelStack.GetTopModel());
 						entity->mesh->Render(SP);
-					modelStack.PopModel();
-					SP.Set1i("useCustomDiffuseTexIndex", 0);
-					SP.Set1i("useCustomColour", 0);
+						modelStack.PopModel();
+						SP.Set1i("useCustomDiffuseTexIndex", 0);
+						SP.Set1i("useCustomColour", 0);
+					}
 					break;
 				}
 				case Entity::EntityType::STATIC_ENEMY: {
