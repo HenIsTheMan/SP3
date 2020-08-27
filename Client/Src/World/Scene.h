@@ -73,6 +73,15 @@ private:
 	};
 	Model* models[(int)ModelType::Amt];
 
+	enum struct WaveNumber{
+		One,
+		Two,
+		Three,
+		Total
+	};
+	int waves[(int)WaveNumber::Total];
+	int waveCount;
+
 	EntityManager* entityManager;
 	Weapon* weapon;
 
