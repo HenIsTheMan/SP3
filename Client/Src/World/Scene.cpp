@@ -824,12 +824,20 @@ void Scene::Update(GLFWwindow* const& win){
 			static double lastTime = elapsedTime;
 			weapon->GetCurrentWeapon()->Update(elapsedTime - lastTime);
 
-			// TESTING ONLY FOR SHOOTING
-			if(leftMB){
-				if(!weapon->GetCurrentWeapon()->GetReloading() && 
-					weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0){
+			if(leftMB){ //Shoot
+				if(!weapon->GetCurrentWeapon()->GetReloading() && weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0){
 					Entity* const& bullet = entityManager->FetchEntity();
-					bullet->type = Entity::EntityType::BULLET;
+					switch(weapon->GetCurrentSlot()){
+						case 0:
+							bullet->type = Entity::EntityType::BULLET;
+							break;
+						case 1:
+							bullet->type = Entity::EntityType::BULLET2;
+							break;
+						case 2:
+							bullet->type = Entity::EntityType::BULLET3;
+							break;
+					}
 					bullet->active = true;
 					bullet->pos = glm::vec3(cam.GetPos() + 10.f * cam.CalcFront());
 					bullet->vel = cam.CalcFront() * 200.f;
@@ -849,13 +857,13 @@ void Scene::Update(GLFWwindow* const& win){
 				if(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() < weapon->GetCurrentWeapon()->GetMaxAmmoRound()
 					&& weapon->GetCurrentWeapon()->GetCurrentTotalAmmo() > 0 && !weapon->GetCurrentWeapon()->GetReloading()){
 					weapon->GetCurrentWeapon()->SetReloading(true);
-					pressedReload=true;
-					lastTime=elapsedTime;
+					pressedReload = true;
+					lastTime = elapsedTime;
 				}
 			}
 			if(!weapon->GetCurrentWeapon()->GetReloading() && pressedReload){
 				weapon->GetCurrentWeapon()->Reload();
-				pressedReload=false;
+				pressedReload = false;
 			}
 
 			// Rain particles
@@ -937,47 +945,45 @@ void Scene::Update(GLFWwindow* const& win){
 			///Waves
 			///Waves
 			
-				switch(waves[waveCount]){
-					case (int)WaveNumber::One:
-						if (waveBounceTime <= GetTickCount64() && enemyCount <= 10)
-						{
-							currentEnemyCount = 10;
-							waveBounceTime = GetTickCount64() + 10000.f;
+			switch(waves[waveCount]){
+				case (int)WaveNumber::One:
+					if (waveBounceTime <= GetTickCount64() && enemyCount <= 10)
+					{
+						currentEnemyCount = 10;
+						waveBounceTime = GetTickCount64() + 10000.f;
 
-							for (int i = 0; i < 1; ++i) {
-								const float scaleFactor = 15.f;
-								const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
-								const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
-								const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
+						for (int i = 0; i < 1; ++i) {
+							const float scaleFactor = 15.f;
+							const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
+							const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
+							const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
 
-								Entity* const& movingEnemy = entityManager->FetchEntity();
-								movingEnemy->type = Entity::EntityType::MOVING_ENEMY;
-								movingEnemy->active = true;
-								movingEnemy->life = 20.f;
-								movingEnemy->maxLife = 20.f;
-								movingEnemy->colour = glm::vec4(1.f);
-								movingEnemy->pos = pos;
-								movingEnemy->vel = glm::vec3(0.f);
-								movingEnemy->mass = 5.f;
-								movingEnemy->scale = glm::vec3(10.f);
-								movingEnemy->mesh = meshes[(int)MeshType::Sphere];
-								movingEnemy->model = models[(int)ModelType::Virus];
-								++enemyCount;
-								--currentEnemyCount;
-							}
-
+							Entity* const& movingEnemy = entityManager->FetchEntity();
+							movingEnemy->type = Entity::EntityType::MOVING_ENEMY;
+							movingEnemy->active = true;
+							movingEnemy->life = 20.f;
+							movingEnemy->maxLife = 20.f;
+							movingEnemy->colour = glm::vec4(1.f);
+							movingEnemy->pos = pos;
+							movingEnemy->vel = glm::vec3(0.f);
+							movingEnemy->mass = 5.f;
+							movingEnemy->scale = glm::vec3(10.f);
+							movingEnemy->mesh = meshes[(int)MeshType::Sphere];
+							movingEnemy->model = models[(int)ModelType::Virus];
+							++enemyCount;
+							--currentEnemyCount;
 						}
-						break;
-					case (int)WaveNumber::Total:
-						return;
-				}
 
-				if(currentEnemyCount <= 0)
-				{
-					++waveCount;
-					enemyCount = 0;
-				}
-
+					}
+					break;
+				case (int)WaveNumber::Total:
+					return;
+			}
+			if(currentEnemyCount <= 0)
+			{
+				++waveCount;
+				enemyCount = 0;
+			}
 
 			///Start music
 			const size_t& musicSize = music.size();
@@ -1823,7 +1829,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 
 			str temp;
 			if(weapon->GetCurrentWeapon()->GetReloading())
-				temp="Reloading...";
+				temp = "Reloading...";
 			else{
 				switch(weapon->GetCurrentSlot()){
 					case 0:

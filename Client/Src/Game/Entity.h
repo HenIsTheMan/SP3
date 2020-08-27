@@ -11,6 +11,8 @@ private:
 	enum class EntityType{
 		PLAYER,
 		BULLET,
+		BULLET2,
+		BULLET3,
 		STATIC_ENEMY,
 		MOVING_ENEMY,
 		PARTICLE,

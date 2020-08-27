@@ -67,9 +67,12 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 				case Entity::EntityType::PLAYER:
 					break;
 				case Entity::EntityType::BULLET:
-					entity->life-=dt;
-					if(entity->life <= 0)
-						entity->active=false;
+				case Entity::EntityType::BULLET2:
+				case Entity::EntityType::BULLET3:
+					entity->life -= dt;
+					if(entity->life <= 0){
+						entity->active = false;
+					}
 					break;
 				case Entity::EntityType::STATIC_ENEMY: {
 					glm::vec3 displacementVec = params.camPos - entity->pos;
@@ -220,7 +223,9 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 		Entity* const& entity = iter->second;
 		if(entity && entity->active){
 			switch(entity->type){
-				case Entity::EntityType::BULLET: {
+				case Entity::EntityType::BULLET:
+				case Entity::EntityType::BULLET2:
+				case Entity::EntityType::BULLET3: {
 					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
 					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
 					SP.Set1i("useCustomColour", 1);

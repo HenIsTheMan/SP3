@@ -134,21 +134,69 @@ bool Collision::IsSeparatedCubeCube(Entity* const& entity, Entity* const& instan
 
 void Collision::CollisionSphereSphere(Entity* const& entity, Entity* const& instance){
 	if(!IsSeparatedSphereSphere(entity, instance)){
-		switch(entity->type){
-			case Entity::EntityType::BULLET:
-				entity->active = false;
-				break;
-			case Entity::EntityType::MOVING_ENEMY:
-				entity->life -= 2.f;
-				break;
-		}
-		switch(instance->type){
-			case Entity::EntityType::BULLET:
-				instance->active = false;
-				break;
-			case Entity::EntityType::MOVING_ENEMY:
-				instance->life -= 2.f;
-				break;
+		int temp = 0;
+		if (entity->type == Entity::EntityType::BULLET ||
+			entity->type == Entity::EntityType::BULLET2 ||
+			entity->type == Entity::EntityType::BULLET3) {
+			switch (entity->type) {
+				case Entity::EntityType::BULLET:
+					entity->active = false;
+					temp = 1;
+					break;
+				case Entity::EntityType::BULLET2:
+					entity->active = false;
+					temp = 2;
+					break;
+				case Entity::EntityType::BULLET3:
+					entity->active = false;
+					temp = 3;
+					break;
+			}
+			if (instance->type == Entity::EntityType::MOVING_ENEMY) {
+				switch (temp)
+				{
+					case 1:
+						instance->life -= 2.f;
+						break;
+					case 2:
+						instance->life -= 5.f;
+						break;
+					case 3:
+						instance->life -= 20.f;
+						break;
+				}
+			}
+		} else if (instance->type == Entity::EntityType::BULLET ||
+			instance->type == Entity::EntityType::BULLET2 ||
+			instance->type == Entity::EntityType::BULLET3) {
+			switch (instance->type) {
+				case Entity::EntityType::BULLET:
+					instance->active = false;
+					temp = 1;
+					break;
+				case Entity::EntityType::BULLET2:
+					instance->active = false;
+					temp = 2;
+					break;
+				case Entity::EntityType::BULLET3:
+					instance->active = false;
+					temp = 3;
+					break;
+			}
+			if (entity->type == Entity::EntityType::MOVING_ENEMY) {
+				switch (temp)
+				{
+					case 1:
+						entity->life -= 2.f;
+						break;
+					case 2:
+						entity->life -= 5.f;
+						break;
+					case 3:
+						entity->life -= 20.f;
+						break;
+				}
+			}
 		}
 	}
 }
