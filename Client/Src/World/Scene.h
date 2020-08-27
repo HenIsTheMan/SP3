@@ -107,7 +107,6 @@ private:
 	float playerMaxHealth;
 	float playerCurrLives;
 	float playerMaxLives;
-	float waveBounceTime;
 
 	int polyModes[2];
 	int enemyCount;

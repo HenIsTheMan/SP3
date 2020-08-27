@@ -88,7 +88,6 @@ Scene::Scene():
 	view(glm::mat4(1.f)),
 	projection(glm::mat4(1.f)),
 	elapsedTime(0.f),
-	waveBounceTime(0.f),
 	polyModes{},
 	playerCurrHealth(100.f),
 	playerMaxHealth(100.f),
@@ -251,22 +250,6 @@ bool Scene::Init(){
 	//enemy->vel = glm::vec3(0.f, 6.f, 3.f);
 	//enemy->mass = 1.f;
 	//enemy->force = glm::vec3(0.f);
-
-	Entity* const& player = entityManager->FetchEntity();
-	player->type = Entity::EntityType::PLAYER;
-	player->active = true;
-	player->life = 0.f;
-	player->maxLife = 0.f;
-	player->colour = glm::vec4(0.f, 1.f, 1.f, 1.f);
-	player->diffuseTexIndex = -1;
-	player->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-	player->scale = glm::vec3(5.f);
-	player->light = nullptr;
-	player->mesh = meshes[(int)MeshType::Sphere];
-	player->pos = cam.GetPos();
-	player->vel = glm::vec3(0.f);
-	player->mass = 10.f;
-	player->force = glm::vec3(0.f);
 
 	///Create fires
 	for(short i = 0; i < 5; ++i){
@@ -740,6 +723,7 @@ void Scene::Update(GLFWwindow* const& win){
 			static float echoBT = 0.f;
 			static float wavesReverbBT = 0.f;
 			static float resetSoundFXBT = 0.f;
+			static float enemyWavesBT = 0.f;
 
 			if(Key(VK_F2) && polyModeBT <= elapsedTime){
 				polyModes[0] += polyModes[0] == GL_FILL ? -2 : 1;
@@ -947,12 +931,8 @@ void Scene::Update(GLFWwindow* const& win){
 			
 			switch(waves[waveCount]){
 				case (int)WaveNumber::One:
-					if (waveBounceTime <= GetTickCount64() && enemyCount <= 10)
-					{
-						currentEnemyCount = 10;
-						waveBounceTime = GetTickCount64() + 10000.f;
-
-						for (int i = 0; i < 1; ++i) {
+					if(enemyWavesBT <= elapsedTime && enemyCount <= 10){
+						for(int i = 0; i < 10; ++i){
 							const float scaleFactor = 15.f;
 							const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 							const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
@@ -971,16 +951,14 @@ void Scene::Update(GLFWwindow* const& win){
 							movingEnemy->mesh = meshes[(int)MeshType::Sphere];
 							movingEnemy->model = models[(int)ModelType::Virus];
 							++enemyCount;
-							--currentEnemyCount;
 						}
-
+						enemyWavesBT = elapsedTime + 1.f;
 					}
 					break;
 				case (int)WaveNumber::Total:
 					return;
 			}
-			if(currentEnemyCount <= 0)
-			{
+			if(enemyCount <= 0){
 				++waveCount;
 				enemyCount = 0;
 			}

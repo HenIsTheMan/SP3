@@ -9,7 +9,6 @@ class Entity{
 	friend class Scene;
 private:
 	enum class EntityType{
-		PLAYER,
 		BULLET,
 		BULLET2,
 		BULLET3,
