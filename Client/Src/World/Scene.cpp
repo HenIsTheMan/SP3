@@ -101,8 +101,6 @@ Scene::Scene():
 	currentEnemyCount(0),
 	score(0),
 	scores({}),
-	waves{},
-	waveCount(0),
 	playerStates((int)PlayerState::NoMovement | (int)PlayerState::Standing),
 	sprintOn(false),
 	reticleColour(glm::vec4(1.f)),
@@ -236,21 +234,6 @@ bool Scene::Init(){
 		modelStack.PopModel();
 	}
 
-	// Create weapons to be put in the inventory
-	weapon = new Weapon();
-
-	Pistol* pistol = new Pistol();
-	pistol->Init();
-	weapon->SetInventory(0, pistol);
-
-	AssaultRifle* assaultRifle = new AssaultRifle();
-	assaultRifle->Init();
-	weapon->SetInventory(1, assaultRifle);
-
-	SniperRifle* sniperRifle = new SniperRifle();
-	sniperRifle->Init();
-	weapon->SetInventory(2, sniperRifle);
-
 	entityManager = EntityManager::GetObjPtr();
 	entityManager->CreateEntities(100);
 
@@ -287,59 +270,20 @@ bool Scene::Init(){
 		}
 	}
 
-	///Create coins
-	for(short i = 0; i < 5; ++i){
-		const float scaleFactor = 15.f;
-		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f, terrainXScale / 2.f - 5.f);
-		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f, terrainZScale / 2.f - 5.f);
-		const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
+	// Create weapons to be put in the inventory
+	weapon = new Weapon();
 
-		Entity* const& coin = entityManager->FetchEntity();
-		coin->active = true;
-		coin->life = 0.f;
-		coin->maxLife = 0.f;
-		coin->colour = glm::vec4(1.f);
-		coin->diffuseTexIndex = -1;
-		coin->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-		coin->scale = glm::vec3(scaleFactor);
-		coin->light = nullptr;
-		coin->pos = pos;
-		coin->vel = glm::vec3(0.f);
-		coin->mass = .0001f;
-		coin->force = glm::vec3(0.f);
+	Pistol* pistol = new Pistol();
+	pistol->Init();
+	weapon->SetInventory(0, pistol);
 
-		switch(PseudorandMinMax(1, 5)){
-			case 1:
-				coin->type = Entity::EntityType::COIN_GOLD;
-				coin->mesh = meshes[(int)MeshType::CoinGold];
-				break;
-			case 2:
-				coin->type = Entity::EntityType::COIN_SILVER;
-				coin->mesh = meshes[(int)MeshType::CoinSilver];
-				break;
-			case 3:
-				coin->type = Entity::EntityType::COIN_PINK;
-				coin->mesh = meshes[(int)MeshType::CoinPink];
-				break;
-			case 4:
-				coin->type = Entity::EntityType::COIN_GREEN;
-				coin->mesh = meshes[(int)MeshType::CoinGreen];
-				break;
-			case 5:
-				coin->type = Entity::EntityType::COIN_BLUE;
-				coin->mesh = meshes[(int)MeshType::CoinBlue];
-				break;
-		}
+	AssaultRifle* assaultRifle = new AssaultRifle();
+	assaultRifle->Init();
+	weapon->SetInventory(1, assaultRifle);
 
-		ISound* myMusic = soundEngine->play3D("Audio/Music/Spin.mp3", vec3df(pos.x, pos.y, pos.z), true, true, true, ESM_AUTO_DETECT, true);
-		if(myMusic){
-			myMusic->setMinDistance(2.f);
-			myMusic->setVolume(3);
-			music.emplace_back(myMusic);
-		} else{
-			(void)puts("Failed to init music!\n");
-		}
-	}
+	SniperRifle* sniperRifle = new SniperRifle();
+	sniperRifle->Init();
+	weapon->SetInventory(2, sniperRifle);
 
 	glGetIntegerv(GL_POLYGON_MODE, polyModes);
 	directionalLights.emplace_back(CreateLight(LightType::Directional));
@@ -634,7 +578,7 @@ void Scene::Update(GLFWwindow* const& win){
 
 			float yMin = terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(cam.GetPos().x / terrainXScale, cam.GetPos().z / terrainZScale, true);
 			float yMax = yMin;
-			float yGround=yMin;
+			float yGround = yMin;
 
 			///Update player according to its states
 			int playerStatesTemp = playerStates;
@@ -701,41 +645,6 @@ void Scene::Update(GLFWwindow* const& win){
 
 			playerCurrHealth = std::min(100.f, std::max(0.f, playerCurrHealth));
 			playerCurrLives = std::min(5.f, std::max(0.f, playerCurrLives));
-
-			///Waves system
-			static float enemyWavesBT = 0.f;
-			switch(waves[waveCount]){
-				case (int)WaveNumber::One:
-					if(enemyWavesBT <= elapsedTime && enemyCount <= 10){
-						for(int i = 0; i < 1; ++i){
-							const float scaleFactor = 15.f;
-							const float xPos = PseudorandMinMax(-terrainXScale / 2.f + scaleFactor, terrainXScale / 2.f - scaleFactor);
-							const float zPos = PseudorandMinMax(-terrainZScale / 2.f + scaleFactor, terrainZScale / 2.f - scaleFactor);
-
-							Entity* const& movingEnemy = entityManager->FetchEntity();
-							movingEnemy->type = Entity::EntityType::MOVING_ENEMY;
-							movingEnemy->active = true;
-							movingEnemy->life = 20.f;
-							movingEnemy->maxLife = 20.f;
-							movingEnemy->colour = glm::vec4(1.f);
-							movingEnemy->pos = glm::vec3(xPos, 0.f, zPos);
-							movingEnemy->vel = glm::vec3(0.f);
-							movingEnemy->mass = 5.f;
-							movingEnemy->scale = glm::vec3(10.f);
-							movingEnemy->mesh = meshes[(int)MeshType::Sphere];
-							movingEnemy->model = models[(int)ModelType::Virus];
-							++enemyCount;
-						}
-						enemyWavesBT = elapsedTime + 1.f;
-					}
-					break;
-				case (int)WaveNumber::Total:
-					return;
-			}
-			if(enemyCount <= 0){
-				++waveCount;
-				enemyCount = 0;
-			}
 
 			if(playerStates & (int)PlayerState::Jumping){
 				if(cam.GetPos().y >= yMax){

@@ -2,7 +2,7 @@
 #include <Core.h>
 #include <Engine.h>
 
-class Entity{
+class Entity final{
 	friend struct Collision;
 	friend class CubeSection;
 	friend class EntityManager;

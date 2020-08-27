@@ -2,6 +2,7 @@
 #include <Engine.h>
 #include "Cam.h"
 #include "../Game/EntityManager.h"
+#include "../Game/EntitySpawner.h"
 #include "../Game/Weapon.h"
 #include "ModelStack.h"
 
@@ -73,12 +74,16 @@ private:
 	};
 	Model* models[(int)ModelType::Amt];
 
-	enum struct WaveNumber{
-		One,
-		Total
+	enum struct EntitySpawnerType{
+		Enemy = 0,
+		CoinGold,
+		CoinSilver,
+		CoinPink,
+		CoinGreen,
+		CoinBlue,
+		Amt
 	};
-	int waves[(int)WaveNumber::Total];
-	int waveCount;
+	EntitySpawner spawners[(int)EntitySpawnerType::Amt];
 
 	EntityManager* entityManager;
 	Weapon* weapon;

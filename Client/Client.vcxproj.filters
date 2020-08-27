@@ -55,6 +55,9 @@
     <ClCompile Include="Src\Game\Collision.cpp">
       <Filter>Src\Game</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Game\EntitySpawner.cpp">
+      <Filter>Src\Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\World\Cam.h">
@@ -91,6 +94,9 @@
       <Filter>Src\World</Filter>
     </ClInclude>
     <ClInclude Include="Src\Game\Collision.h">
+      <Filter>Src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\EntitySpawner.h">
       <Filter>Src\Game</Filter>
     </ClInclude>
   </ItemGroup>
