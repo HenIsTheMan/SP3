@@ -39,6 +39,7 @@ Entity* const& EntityManager::FetchEntity(){
 		}
 	}
 	entityList.emplace_back(new Entity());
+	root->AddEntity(entityList.back());
 	(void)puts("1 entity was added to entityList!\n");
 	return entityList.back();
 }
