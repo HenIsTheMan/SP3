@@ -1473,6 +1473,10 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			break;
 		}
 		case Screen::Game: {
+			if(scope){ //If scoped in...
+				forwardSP.Set1i("nightVision", 1);
+			}
+
 			///Sky
 			forwardSP.SetMat4fv("PV", &(projection * glm::mat4(glm::mat3(view)))[0][0]);
 			glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
@@ -1489,10 +1493,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			glDepthFunc(GL_LESS);
 
 			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
-
-			if(scope){ //If scoped in...
-				forwardSP.Set1i("nightVision", 1);
-			}
 
 			//Test wall
 			modelStack.PushModel({
@@ -1840,54 +1840,56 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			forwardSP.Set1i("noNormals", 0);
 			forwardSP.Set1i("nightVision", 0);
 
-			str temp;
-			if(weapon->GetCurrentWeapon()->GetReloading())
-				temp = "Reloading...";
-			else{
-				switch(weapon->GetCurrentSlot()){
-					case 0:
-						temp = "Pistol";
+			if(!scope){
+				str temp;
+				if(weapon->GetCurrentWeapon()->GetReloading())
+					temp = "Reloading...";
+				else{
+					switch(weapon->GetCurrentSlot()){
+						case 0:
+							temp = "Pistol";
 							break;
-					case 1:
-						temp = "Assault Rifle";
+						case 1:
+							temp = "Assault Rifle";
 							break;
-					case 2:
-						temp = "Sniper Rifle";
-						break;
+						case 2:
+							temp = "Sniper Rifle";
+							break;
+					}
 				}
+				textChief.RenderText(textSP, { //Weapon type
+					temp,
+					float(winWidth) / 1.3f,
+					75.f,
+					1.f,
+					glm::vec4(1.f),
+					0
+					});
+				textChief.RenderText(textSP, { //Weapon ammo
+					std::to_string(weapon->GetCurrentWeapon()->GetCurrentAmmoRound()) + "/" + std::to_string(weapon->GetCurrentWeapon()->GetCurrentTotalAmmo()),
+					float(winWidth) / 1.1f,
+					25.f,
+					1.f,
+					glm::vec4(1.f),
+					0
+					});
+				textChief.RenderText(textSP, {
+					"Score: " + std::to_string(score),
+					25.f,
+					75.f,
+					1.f,
+					glm::vec4(1.f, 1.f, 0.f, 1.f),
+					0
+					});
+				textChief.RenderText(textSP, {
+					"FPS: " + std::to_string(1.f / dt).substr(0, 4),
+					25.f,
+					25.f,
+					1.f,
+					glm::vec4(1.f, 1.f, 0.f, 1.f),
+					0
+					});
 			}
-			textChief.RenderText(textSP, { //Weapon type
-				temp,
-				float(winWidth) / 1.3f,
-				75.f,
-				1.f,
-				glm::vec4(1.f),
-				0
-			});
-			textChief.RenderText(textSP, { //Weapon ammo
-				std::to_string(weapon->GetCurrentWeapon()->GetCurrentAmmoRound()) + "/" + std::to_string(weapon->GetCurrentWeapon()->GetCurrentTotalAmmo()),
-				float(winWidth) / 1.1f,
-				25.f,
-				1.f,
-				glm::vec4(1.f),
-				0
-			});
-			textChief.RenderText(textSP, {
-				"Score: " + std::to_string(score),
-				25.f,
-				75.f,
-				1.f,
-				glm::vec4(1.f, 1.f, 0.f, 1.f),
-				0
-			});
-			textChief.RenderText(textSP, {
-				"FPS: " + std::to_string(1.f / dt).substr(0, 4),
-				25.f,
-				25.f,
-				1.f,
-				glm::vec4(1.f, 1.f, 0.f, 1.f),
-				0
-			});
 			break;
 		}
 		case Screen::Instructions: {

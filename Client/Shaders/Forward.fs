@@ -76,6 +76,11 @@ vec3 Normal = fsIn.normal;
 vec3 Spec = useSpecMap ? texture(specMap, fsIn.texCoords).rgb : vec3(0.f); //Use full white tex for full spec
 vec3 Reflection = useReflectionMap ? texture(reflectionMap, fsIn.texCoords).rgb : vec3(0.f); //Use full white tex for full reflection
 
+const vec3 visionColour = vec3(.2f, 1.f, .4f);
+const float luminanceThreshold = .6f;
+const float colourAmplification = 2.f;
+uniform bool nightVision;
+
 in vec4 posFromDirectionalLight;
 in vec4 posFromSpotlight;
 uniform sampler2D dDepthTexSampler;
@@ -176,11 +181,6 @@ vec3 CalcSpotlight(Spotlight light){
     return CalcAmbient(light.ambient) + NotInShadow(lightDir, sDepthTexSampler, posFromSpotlight) * lightIntensity * (CalcDiffuse(lightDir, light.diffuse) + CalcSpec(lightDir, light.spec));
 }
 
-const vec3 visionColour = vec3(.2f, 1.f, .4f);
-const float luminanceThreshold = .6f;
-const float colourAmplification = 2.f;
-uniform bool nightVision;
-
 void main(){
 	if(!useCustomColour && (!useDiffuseMap || (useDiffuseMap && useCustomDiffuseTexIndex && customDiffuseTexIndex == -1))){
 		Colour = fsIn.colour;
@@ -225,6 +225,6 @@ void main(){
         if(lum < luminanceThreshold){
             fragColour.rgb *= colourAmplification; 
         }
-        fragColour.rgb = fragColour.rgb * visionColour;
+        fragColour.rgb *= visionColour;
     }
 }
