@@ -407,24 +407,33 @@ void Scene::Update(GLFWwindow* const& win){
 					textColours[0] = glm::vec4(1.f, 1.f, 0.f, 1.f);
 				}
 				if(leftMB - rightMB > 0.f && buttonBT <= elapsedTime){
-					soundEngine->play2D("Audio/Sounds/Select.wav", false);
 					glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+					soundEngine->play2D("Audio/Sounds/Select.wav", false);
 
 					score = 0;
 					playerCurrHealth = playerMaxHealth;
 					playerCurrLives = playerMaxLives;
+
+					cam.SetPos(glm::vec3(0.f, 0.f, 50.f));
+					cam.SetTarget(glm::vec3(0.f));
+					cam.SetUp(glm::vec3(0.f, 1.f, 0.f));
+
+					///Play music
+					const size_t& musicSize = music.size();
+					for(size_t i = 0; i < musicSize; ++i){
+						ISound* const& myMusic = music[i];
+						if(myMusic && myMusic->getIsPaused()){
+							myMusic->setIsPaused(false);
+						}
+					}
 
 					for(int i = 0; i < 3; ++i){
 						weapon->SetCurrentSlot(i);
 						weapon->GetCurrentWeapon()->ResetWeapon(); // Restock all the ammo for all weapons
 					}
 					weapon->SetCurrentSlot(0); // Start with pistol again
+
 					screen = Screen::Game;
-
-					cam.SetPos(glm::vec3(0.f, 0.f, 50.f));
-					cam.SetTarget(glm::vec3(0.f));
-					cam.SetUp(glm::vec3(0.f, 1.f, 0.f));
-
 					buttonBT = elapsedTime + .3f;
 					break;
 				}
@@ -497,8 +506,18 @@ void Scene::Update(GLFWwindow* const& win){
 		}
 		case Screen::Game: {
 			if(Key(GLFW_KEY_P) && buttonBT <= elapsedTime){
-				screen = Screen::Pause;
 				glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+				///Pause music
+				const size_t& musicSize = music.size();
+				for(size_t i = 0; i < musicSize; ++i){
+					ISound* const& myMusic = music[i];
+					if(myMusic && !myMusic->getIsPaused()){
+						myMusic->setIsPaused(true);
+					}
+				}
+
+				screen = Screen::Pause;
 				buttonBT = elapsedTime + .4f;
 				break;
 			}
@@ -510,8 +529,16 @@ void Scene::Update(GLFWwindow* const& win){
 			}
 
 			if(playerCurrLives <= 0.f){
-				screen = Screen::End;
 				glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+				///Pause music
+				const size_t& musicSize = music.size();
+				for(size_t i = 0; i < musicSize; ++i){
+					ISound* const& myMusic = music[i];
+					if(myMusic && !myMusic->getIsPaused()){
+						myMusic->setIsPaused(true);
+					}
+				}
 
 				const size_t& mySize = scores.size();
 				if(mySize == 5){ //Max no. of scores saved
@@ -525,6 +552,8 @@ void Scene::Update(GLFWwindow* const& win){
 					scores.emplace_back(score);
 					std::sort(scores.begin(), scores.end(), std::greater<int>());
 				}
+
+				screen = Screen::End;
 			}
 
 			static_cast<SpriteAni*>(meshes[(int)MeshType::Fire])->Update();
@@ -928,9 +957,7 @@ void Scene::Update(GLFWwindow* const& win){
 				}
 			}
 
-			///Waves
-			///Waves
-			
+			///Waves system
 			switch(waves[waveCount]){
 				case (int)WaveNumber::One:
 					if(enemyWavesBT <= elapsedTime && enemyCount <= 10){
@@ -965,26 +992,26 @@ void Scene::Update(GLFWwindow* const& win){
 				enemyCount = 0;
 			}
 
-			///Start music
-			const size_t& musicSize = music.size();
-			for(size_t i = 0; i < musicSize; ++i){
-				ISound* const& myMusic = music[i];
-				if(myMusic && myMusic->getIsPaused()){
-					myMusic->setIsPaused(false);
-				}
-			}
-
 			break;
 		}
 		case Screen::Pause: {
 			if(Key(GLFW_KEY_P) && buttonBT <= elapsedTime){
-				screen = Screen::Game;
 				glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+				///Play music
+				const size_t& musicSize = music.size();
+				for(size_t i = 0; i < musicSize; ++i){
+					ISound* const& myMusic = music[i];
+					if(myMusic && myMusic->getIsPaused()){
+						myMusic->setIsPaused(false);
+					}
+				}
 
 				cam.SetPos(glm::vec3(0.f, 0.f, 50.f));
 				cam.SetTarget(glm::vec3(0.f));
 				cam.SetUp(glm::vec3(0.f, 1.f, 0.f));
 
+				screen = Screen::Game;
 				buttonBT = elapsedTime + .4f;
 				break;
 			}
