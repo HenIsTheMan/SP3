@@ -87,6 +87,15 @@ bool Collision::IsSeparatedCubeCube(Entity* const& entity, Entity* const& instan
 		glm::cross(up1, front2),
 		glm::cross(up1, right2),
 		glm::cross(up1, up2),
+		-glm::cross(front1, front2),
+		-glm::cross(front1, right2),
+		-glm::cross(front1, up2),
+		-glm::cross(right1, front2),
+		-glm::cross(right1, right2),
+		-glm::cross(right1, up2),
+		-glm::cross(up1, front2),
+		-glm::cross(up1, right2),
+		-glm::cross(up1, up2),
 	};
 
 	bool separated = false;
@@ -146,8 +155,9 @@ void Collision::CollisionSphereSphere(Entity* const& entity, Entity* const& inst
 
 void Collision::CollisionCubeCube(Entity* const& entity, Entity* const& instance){
 	responseVec = glm::vec3(0.f);
-	if(!IsSeparatedCubeCube(entity, instance)){
+	if(!IsSeparatedCubeCube(entity, instance) && glm::dot(entity->vel, responseVec) < 0.f){
 		entity->pos += responseVec;
+		entity->vel = glm::vec3(0.f);
 	}
 }
 
