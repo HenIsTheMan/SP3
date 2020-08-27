@@ -108,11 +108,12 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVecXY = glm::vec3(displacementVec.x, displacementVec.y, 0.f);
 					const glm::vec3& displacementVecXZ = glm::vec3(displacementVec.x, 0.f, displacementVec.z);
 					const glm::vec3& displacementVecYZ = glm::vec3(0.f, displacementVec.y, displacementVec.z);
-					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)
-						&& (glm::dot(relativeVelXY, -displacementVecXY) > 0.f
-						|| glm::dot(relativeVelXZ, -displacementVecXZ) > 0.f
-						|| glm::dot(relativeVelYZ, -displacementVecYZ) > 0.f)){
-						params.camCanMove = false;
+					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						if((glm::dot(relativeVelXY, -displacementVecXY) > 0.f
+							|| glm::dot(relativeVelXZ, -displacementVecXZ) > 0.f
+							|| glm::dot(relativeVelYZ, -displacementVecYZ) > 0.f)){
+							params.camCanMove = false;
+						}
 						params.playerCurrHealth -= 2.f;
 					}
 
