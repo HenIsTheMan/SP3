@@ -224,7 +224,7 @@ bool Scene::Init(){
 		const float scaleFactor = 2.f;
 		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
-		const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
+		const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale, true), zPos);
 		modelStack.PushModel({
 			modelStack.Translate(pos),
 			modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, PseudorandMinMax(0.f, 360.f))),

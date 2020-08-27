@@ -43,31 +43,23 @@ float Terrain::GetHeightAtPt(const float& x, const float& z, const bool& barycen
 	const long long zCoord = (long long)((z + 0.5) * terrainSize);
 	const long long xCoord = (long long)((x + 0.5) * terrainSize);
 	if(!barycentric){
-		return (float)data[zCoord * terrainSize + xCoord] / 255.f; //[0.f, 1.f]
+		return (float)data[zCoord * terrainSize + xCoord] / 256.f; //[0.f, 1.f]
 	}
 
-	std::vector<std::vector<glm::vec3>> pos = std::vector<std::vector<glm::vec3>>(terrainSize, std::vector<glm::vec3>(terrainSize));
-	for(long long z = 0; z < terrainSize; ++z){
-		for(long long x = 0; x < terrainSize; ++x){
-			float scaledHeight = (float)data[z * terrainSize + x] / 255.f; //[0.f, 1.f]
-			pos[z][x] = glm::vec3(float(x) / terrainSize - .5f, scaledHeight, float(z) / terrainSize - .5f);
-		}
-	}
-
-	std::vector<glm::vec3> possiblePts;
-	possiblePts.emplace_back(pos[zCoord][xCoord]);
-	possiblePts.emplace_back(pos[zCoord][xCoord + 1]);
-	possiblePts.emplace_back(pos[zCoord + 1][xCoord + 1]);
-	possiblePts.emplace_back(pos[zCoord + 1][xCoord]);
-	possiblePts.emplace_back(pos[zCoord][xCoord - 1]);
-	possiblePts.emplace_back(pos[zCoord - 1][xCoord - 1]);
-	possiblePts.emplace_back(pos[zCoord - 1][xCoord]);
+	const float scaledHeight = (float)data[zCoord * terrainSize + xCoord] / 256.f;
+	const glm::vec3 pt1(float(xCoord) / terrainSize - .5f, scaledHeight, float(zCoord) / terrainSize - .5f);
+	const glm::vec3 pt2(glm::vec3(float(xCoord + 1) / terrainSize - .5f, scaledHeight, float(zCoord) / terrainSize - .5f));
+	const glm::vec3 pt3(glm::vec3(float(xCoord + 1) / terrainSize - .5f, scaledHeight, float(zCoord + 1) / terrainSize - .5f));
+	const glm::vec3 pt4(glm::vec3(float(xCoord) / terrainSize - .5f, scaledHeight, float(zCoord + 1) / terrainSize - .5f));
+	//const glm::vec3 pt5(glm::vec3(float(xCoord - 1) / terrainSize - .5f, scaledHeight, float(zCoord) / terrainSize - .5f));
+	//const glm::vec3 pt6(glm::vec3(float(xCoord - 1) / terrainSize - .5f, scaledHeight, float(zCoord - 1) / terrainSize - .5f));
+	//const glm::vec3 pt7(glm::vec3(float(xCoord) / terrainSize - .5f, scaledHeight, float(zCoord - 1) / terrainSize - .5f));
 
 	float result = 0.f;
-	result += BarycentricInterpolation(pos[zCoord][xCoord + 1], pos[zCoord + 1][xCoord + 1], pos[zCoord + 1][xCoord], glm::vec3(x, 0.f, z));
-	result += BarycentricInterpolation(pos[zCoord][xCoord + 1], pos[zCoord][xCoord], pos[zCoord + 1][xCoord], glm::vec3(x, 0.f, z));
-	result += BarycentricInterpolation(pos[zCoord][xCoord - 1], pos[zCoord - 1][xCoord - 1], pos[zCoord - 1][xCoord], glm::vec3(x, 0.f, z));
-	result += BarycentricInterpolation(pos[zCoord][xCoord - 1], pos[zCoord][xCoord], pos[zCoord - 1][xCoord], glm::vec3(x, 0.f, z));
+	result += BarycentricInterpolation(pt2, pt3, pt4, glm::vec3(x, 0.f, z));
+	result += BarycentricInterpolation(pt2, pt1, pt4, glm::vec3(x, 0.f, z));
+	//result += BarycentricInterpolation(pt5, pt6, pt7, glm::vec3(x, 0.f, z));
+	//result += BarycentricInterpolation(pt5, pt1, pt7, glm::vec3(x, 0.f, z));
 
 	return result;
 }
