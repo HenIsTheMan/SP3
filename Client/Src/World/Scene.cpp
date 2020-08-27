@@ -220,10 +220,11 @@ bool Scene::Init(){
 		(void)puts("Failed to init soundEngine!\n");
 	}
 
+	///Gen model matrices for grass instances
 	for(int i = 0; i < 9999; ++i){
 		const float scaleFactor = 2.f;
-		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
-		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
+		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + scaleFactor, terrainXScale / 2.f - scaleFactor);
+		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + scaleFactor, terrainZScale / 2.f - scaleFactor);
 		const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale, true), zPos);
 		modelStack.PushModel({
 			modelStack.Translate(pos),
@@ -255,8 +256,8 @@ bool Scene::Init(){
 	///Create fires
 	for(short i = 0; i < 5; ++i){
 		const float scaleFactor = 15.f;
-		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
-		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
+		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f, terrainXScale / 2.f - 5.f);
+		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f, terrainZScale / 2.f - 5.f);
 		const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
 
 		Entity* const& fire = entityManager->FetchEntity();
@@ -288,8 +289,8 @@ bool Scene::Init(){
 	///Create coins
 	for(short i = 0; i < 5; ++i){
 		const float scaleFactor = 15.f;
-		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
-		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
+		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f, terrainXScale / 2.f - 5.f);
+		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f, terrainZScale / 2.f - 5.f);
 		const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
 
 		Entity* const& coin = entityManager->FetchEntity();
@@ -1853,7 +1854,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				0
 			});
 			textChief.RenderText(textSP, {
-				"FPS: " + std::to_string(1.f / dt).substr(0, 2),
+				"FPS: " + std::to_string(1.f / dt).substr(0, 4),
 				25.f,
 				25.f,
 				1.f,

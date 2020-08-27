@@ -43,10 +43,10 @@ float Terrain::GetHeightAtPt(const float& x, const float& z, const bool& barycen
 	const long long zCoord = (long long)((z + 0.5) * terrainSize);
 	const long long xCoord = (long long)((x + 0.5) * terrainSize);
 	if(!barycentric){
-		return (float)data[zCoord * terrainSize + xCoord] / 256.f; //[0.f, 1.f]
+		return (float)data[zCoord * terrainSize + xCoord] / 255.f; //[0.f, 1.f]
 	}
 
-	const float scaledHeight = (float)data[zCoord * terrainSize + xCoord] / 256.f;
+	const float scaledHeight = (float)data[zCoord * terrainSize + xCoord] / 255.f;
 	const glm::vec3 pt1(float(xCoord) / terrainSize - .5f, scaledHeight, float(zCoord) / terrainSize - .5f);
 	const glm::vec3 pt2(glm::vec3(float(xCoord + 1) / terrainSize - .5f, scaledHeight, float(zCoord) / terrainSize - .5f));
 	const glm::vec3 pt3(glm::vec3(float(xCoord + 1) / terrainSize - .5f, scaledHeight, float(zCoord + 1) / terrainSize - .5f));
