@@ -47,6 +47,7 @@ Scene::Scene():
 		}),
 		new Mesh(Mesh::MeshType::Sphere, GL_TRIANGLE_STRIP, {
 			{"Imgs/Skydome.hdr", Mesh::TexType::Diffuse, 0},
+			{"Imgs/Grey.png", Mesh::TexType::Reflection, 0},
 		}),
 		new Mesh(Mesh::MeshType::Cylinder, GL_TRIANGLE_STRIP, {
 			{"Imgs/BoxAlbedo.png", Mesh::TexType::Diffuse, 0},
@@ -1547,8 +1548,8 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 						forwardSP.Set1i("customDiffuseTexIndex", -1);
 						forwardSP.Set1i("useCustomColour", 1);
 						forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f), 1.f));
-						meshes[(int)MeshType::Cube]->SetModel(modelStack.GetTopModel());
-						meshes[(int)MeshType::Cube]->Render(forwardSP);
+						meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
+						meshes[(int)MeshType::Sphere]->Render(forwardSP);
 						forwardSP.Set1i("useCustomColour", 0);
 						forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
 					modelStack.PopModel();
