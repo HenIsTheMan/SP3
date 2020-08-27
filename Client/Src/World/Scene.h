@@ -68,6 +68,7 @@ private:
 		AR,
 		Sniper,
 		Virus,
+		Grass,
 		Amt
 	};
 	Model* models[(int)ModelType::Amt];

@@ -73,6 +73,9 @@ Scene::Scene():
 		new Model("ObjsAndMtls/Virus.obj", {
 			aiTextureType_DIFFUSE,
 		}),
+		new Model("ObjsAndMtls/Grass.obj", {
+			aiTextureType_DIFFUSE,
+		}),
 	},
 	blurSP{"Shaders/Quad.vs", "Shaders/Blur.fs"},
 	depthSP{"Shaders/Depth.vs", "Shaders/Depth.fs"},
@@ -217,6 +220,20 @@ bool Scene::Init(){
 		(void)puts("Failed to init soundEngine!\n");
 	}
 
+	for(int i = 0; i < 9999; ++i){
+		const float scaleFactor = 2.f;
+		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
+		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
+		const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
+		modelStack.PushModel({
+			modelStack.Translate(pos),
+			modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, PseudorandMinMax(0.f, 360.f))),
+			modelStack.Scale(glm::vec3(scaleFactor)),
+		});
+			models[(int)ModelType::Grass]->AddModelMatForAll(modelStack.GetTopModel());
+		modelStack.PopModel();
+	}
+
 	// Create weapons to be put in the inventory
 	weapon = new Weapon();
 
@@ -234,22 +251,6 @@ bool Scene::Init(){
 
 	entityManager = EntityManager::GetObjPtr();
 	entityManager->CreateEntities(100);
-
-	//Entity* const& enemy = entityManager->FetchEntity();
-	//enemy->type = Entity::EntityType::STATIC_ENEMY;
-	//enemy->active = true;
-	//enemy->life = 0.f;
-	//enemy->maxLife = 0.f;
-	//enemy->colour = glm::vec4(1.f, 0.f, 0.f, 1.f);
-	//enemy->diffuseTexIndex = -1;
-	//enemy->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-	//enemy->scale = glm::vec3(20.f);
-	//enemy->light = nullptr;
-	//enemy->mesh = meshes[(int)MeshType::Sphere];
-	//enemy->pos = glm::vec3(-100.f, 200.f, 0.f);
-	//enemy->vel = glm::vec3(0.f, 6.f, 3.f);
-	//enemy->mass = 1.f;
-	//enemy->force = glm::vec3(0.f);
 
 	///Create fires
 	for(short i = 0; i < 5; ++i){
@@ -593,7 +594,7 @@ void Scene::Update(GLFWwindow* const& win){
 				}
 			}
 
-			float yMin = terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(cam.GetPos().x / terrainXScale, cam.GetPos().z / terrainZScale);
+			float yMin = terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(cam.GetPos().x / terrainXScale, cam.GetPos().z / terrainZScale, true);
 			float yMax = yMin;
 			float yGround=yMin;
 
@@ -932,7 +933,7 @@ void Scene::Update(GLFWwindow* const& win){
 			switch(waves[waveCount]){
 				case (int)WaveNumber::One:
 					if(enemyWavesBT <= elapsedTime && enemyCount <= 10){
-						for(int i = 0; i < 10; ++i){
+						for(int i = 0; i < 1; ++i){
 							const float scaleFactor = 15.f;
 							const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 							const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
@@ -1565,6 +1566,12 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 					forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
 				modelStack.PopModel();
 			modelStack.PopModel();
+
+			///Grass
+			forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+			forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
+			models[(int)ModelType::Grass]->SetModelForAll(modelStack.GetTopModel());
+			models[(int)ModelType::Grass]->InstancedRender(forwardSP);
 
 			///Water
 			modelStack.PushModel({
