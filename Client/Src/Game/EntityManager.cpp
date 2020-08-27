@@ -53,8 +53,11 @@ void EntityManager::CreateEntities(const int& amt){ //Shld only be called once i
 }
 
 void EntityManager::UpdateEntities(UpdateParams& params){
+	//assert(root->entityList->size() != 0);
 	root->Deactivate();
-	//root->Partition();
+	//assert(root->entityList->size() != 0);
+	root->Partition();
+	//assert(root->entityList->size() != 0);
 
 	const size_t& size = entityList.size();
 	for(size_t i = 0; i < size; ++i){

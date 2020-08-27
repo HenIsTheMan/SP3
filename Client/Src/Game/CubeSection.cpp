@@ -34,23 +34,23 @@ void CubeSection::AddEntity(Entity* const& entity){
 
 void CubeSection::Deactivate(){
 	if(UL){
-		active = false;
-		entityList->clear();
+		UL->active = false;
+		UL->entityList->clear();
 		UL->Deactivate();
 	}
 	if(UR){
-		active = false;
-		entityList->clear();
+		UR->active = false;
+		UR->entityList->clear();
 		UR->Deactivate();
 	}
 	if(DL){
-		active = false;
-		entityList->clear();
+		DL->active = false;
+		DL->entityList->clear();
 		DL->Deactivate();
 	}
 	if(DR){
-		active = false;
-		entityList->clear();
+		DR->active = false;
+		DR->entityList->clear();
 		DR->Deactivate();
 	}
 }
@@ -85,48 +85,27 @@ void CubeSection::Partition(){
 		DR->SetOrigin(glm::vec3(origin.x + size.x / 4.f, origin.y, origin.z + size.z / 4.f));
 		DR->SetSize(glm::vec3(size.x / 2.f, size.y, size.z / 2.f));
 
-		glm::vec3* prevPos = nullptr;
-		if(entityList){
-			for(Entity*& entity : *entityList){
-				if(entity && entity->active){
-					if(prevPos && entity->pos == *prevPos){
-						switch(PseudorandMinMax(0, 3)){
-							case 0:
-								UR->AddEntity(entity);
-								break;
-							case 1:
-								UL->AddEntity(entity);
-								break;
-							case 2:
-								DR->AddEntity(entity);
-								break;
-							case 3:
-								DL->AddEntity(entity);
-								break;
-						}
-					} else{
-						switch(entity->mesh->GetMeshType()){
-							case Mesh::MeshType::Sphere:
-								if(entity->pos.z - entity->scale.z <= origin.z){
-									if(entity->pos.x - entity->scale.x <= origin.x){
-										UR->AddEntity(entity);
-									}
-									if(entity->pos.x + entity->scale.x >= origin.x){
-										UL->AddEntity(entity);
-									}
-								}
-								if(entity->pos.z + entity->scale.z >= origin.z){
-									if(entity->pos.x - entity->scale.x <= origin.x){
-										DR->AddEntity(entity);
-									}
-									if(entity->pos.x + entity->scale.x >= origin.x){
-										DL->AddEntity(entity);
-									}
-								}
-								break;
-						}
+		for(Entity*& entity: *entityList){
+			if(entity && entity->active
+				&& entity->pos.x + entity->scale.x <= origin.x + size.x / 2.f && entity->pos.x - entity->scale.x >= origin.x - size.x / 2.f
+				&& entity->pos.y + entity->scale.y <= origin.y + size.y / 2.f && entity->pos.y - entity->scale.y >= origin.y - size.y / 2.f
+				&& entity->pos.z + entity->scale.z <= origin.z + size.z / 2.f && entity->pos.z - entity->scale.z >= origin.z - size.z / 2.f
+				){
+				if(entity->pos.z - entity->scale.z <= origin.z){
+					if(entity->pos.x - entity->scale.x <= origin.x){
+						UR->AddEntity(entity);
 					}
-					prevPos = &entity->pos;
+					if(entity->pos.x + entity->scale.x >= origin.x){
+						UL->AddEntity(entity);
+					}
+				}
+				if(entity->pos.z + entity->scale.z >= origin.z){
+					if(entity->pos.x - entity->scale.x <= origin.x){
+						DR->AddEntity(entity);
+					}
+					if(entity->pos.x + entity->scale.x >= origin.x){
+						DL->AddEntity(entity);
+					}
 				}
 			}
 		}
