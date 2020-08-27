@@ -351,7 +351,7 @@ void Scene::Update(GLFWwindow* const& win){
 						}
 					}
 
-					for(int i = 0; i < 3; ++i){
+					for(int i = 1; i < 3; ++i){
 						weapon->SetCurrentSlot(i);
 						weapon->GetCurrentWeapon()->ResetWeapon(); // Restock all the ammo for all weapons
 					}
@@ -818,7 +818,8 @@ void Scene::Update(GLFWwindow* const& win){
 					bullet->scale = glm::vec3(1.f);
 					bullet->mesh = meshes[(int)MeshType::Sphere];
 					weapon->GetCurrentWeapon()->SetCanShoot(false); // For the shooting cooldown time
-					weapon->GetCurrentWeapon()->SetCurrentAmmoRound(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() - 1); // Decrease the ammo
+					if(!weapon->GetCurrentSlot() == 0) // Not using the pisol, since pistol has unlimited ammo
+						weapon->GetCurrentWeapon()->SetCurrentAmmoRound(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() - 1); // Decrease the ammo
 					lastTime = elapsedTime;
 				}
 			}
@@ -1761,6 +1762,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			forwardSP.Set1i("noNormals", 0);
 			forwardSP.Set1i("nightVision", 0);
 
+			///Render gun info
 			if(!scope){
 				str temp;
 				if(weapon->GetCurrentWeapon()->GetReloading())
@@ -1787,13 +1789,13 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 					0
 					});
 				textChief.RenderText(textSP, { //Weapon ammo
-					std::to_string(weapon->GetCurrentWeapon()->GetCurrentAmmoRound()) + "/" + std::to_string(weapon->GetCurrentWeapon()->GetCurrentTotalAmmo()),
+					!(weapon->GetCurrentSlot()) ? "Infinite" : std::to_string(weapon->GetCurrentWeapon()->GetCurrentAmmoRound()) + "/" + std::to_string(weapon->GetCurrentWeapon()->GetCurrentTotalAmmo()),
 					float(winWidth) / 1.1f,
 					25.f,
 					1.f,
 					glm::vec4(1.f),
 					0
-					});
+				});
 				textChief.RenderText(textSP, {
 					"Score: " + std::to_string(score),
 					25.f,
