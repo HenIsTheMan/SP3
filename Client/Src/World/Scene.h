@@ -2,7 +2,6 @@
 #include <Engine.h>
 #include "Cam.h"
 #include "../Game/EntityManager.h"
-#include "../Game/EntitySpawner.h"
 #include "../Game/Weapon.h"
 #include "ModelStack.h"
 
@@ -74,17 +73,6 @@ private:
 	};
 	Model* models[(int)ModelType::Amt];
 
-	enum struct EntitySpawnerType{
-		Enemy = 0,
-		CoinGold,
-		CoinSilver,
-		CoinPink,
-		CoinGreen,
-		CoinBlue,
-		Amt
-	};
-	EntitySpawner spawners[(int)EntitySpawnerType::Amt];
-
 	EntityManager* entityManager;
 	Weapon* weapon;
 
@@ -138,6 +126,12 @@ private:
 	Screen screen;
 	float textScaleFactors[5];
 	glm::vec4 textColours[5];
+	
+	int goldCoinAmt;
+	int silverCoinAmt;
+	int pinkCoinAmt;
+	int greenCoinAmt;
+	int blueCoinAmt;
 };
 
 enum struct Axis{

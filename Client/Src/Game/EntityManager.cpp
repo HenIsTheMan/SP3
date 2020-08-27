@@ -52,6 +52,14 @@ void EntityManager::CreateEntities(const int& amt){ //Shld only be called once i
 	}
 }
 
+void EntityManager::DeactivateAll(){
+	for(Entity* const& entity: entityList){
+		if(entity && entity->active){
+			entity->active = false;
+		}
+	}
+}
+
 void EntityManager::UpdateEntities(UpdateParams& params){
 	//assert(root->entityList->size() != 0);
 	root->Deactivate();

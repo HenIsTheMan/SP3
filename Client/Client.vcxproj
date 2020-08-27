@@ -198,7 +198,6 @@
     <ClCompile Include="Src\Game\Collision.cpp" />
     <ClCompile Include="Src\Game\Entity.cpp" />
     <ClCompile Include="Src\Game\EntityManager.cpp" />
-    <ClCompile Include="Src\Game\EntitySpawner.cpp" />
     <ClCompile Include="Src\Game\Pistol.cpp" />
     <ClCompile Include="Src\Game\CubeSection.cpp" />
     <ClCompile Include="Src\Game\SniperRifle.cpp" />
@@ -213,7 +212,6 @@
     <ClInclude Include="Src\Game\Collision.h" />
     <ClInclude Include="Src\Game\Entity.h" />
     <ClInclude Include="Src\Game\EntityManager.h" />
-    <ClInclude Include="Src\Game\EntitySpawner.h" />
     <ClInclude Include="Src\Game\Pistol.h" />
     <ClInclude Include="Src\Game\CubeSection.h" />
     <ClInclude Include="Src\Game\SniperRifle.h" />

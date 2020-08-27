@@ -36,6 +36,7 @@ public:
 	Entity* const& FetchEntity();
 
 	void CreateEntities(const int& amt);
+	void DeactivateAll();
 	void UpdateEntities(UpdateParams& params);
 	void RenderEntities(ShaderProg& SP, RenderParams& params);
 protected:

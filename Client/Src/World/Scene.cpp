@@ -119,7 +119,12 @@ Scene::Scene():
 		glm::vec4(1.f),
 		glm::vec4(1.f),
 		glm::vec4(1.f),
-	}
+	},
+	goldCoinAmt(0),
+	silverCoinAmt(0),
+	pinkCoinAmt(0),
+	greenCoinAmt(0),
+	blueCoinAmt(0)
 {
 }
 
@@ -237,39 +242,6 @@ bool Scene::Init(){
 	entityManager = EntityManager::GetObjPtr();
 	entityManager->CreateEntities(100);
 
-	///Create fires
-	for(short i = 0; i < 5; ++i){
-		const float scaleFactor = 15.f;
-		const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f, terrainXScale / 2.f - 5.f);
-		const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f, terrainZScale / 2.f - 5.f);
-		const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
-
-		Entity* const& fire = entityManager->FetchEntity();
-		fire->type = Entity::EntityType::FIRE;
-		fire->active = true;
-		fire->life = 0.f;
-		fire->maxLife = 0.f;
-		fire->colour = glm::vec4(1.f);
-		fire->diffuseTexIndex = -1;
-		fire->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-		fire->scale = glm::vec3(scaleFactor);
-		fire->light = nullptr;
-		fire->mesh = meshes[(int)MeshType::Fire];
-		fire->pos = pos;
-		fire->vel = glm::vec3(0.f);
-		fire->mass = .0001f;
-		fire->force = glm::vec3(0.f);
-
-		ISound* myMusic = soundEngine->play3D("Audio/Music/Burn.wav", vec3df(pos.x, pos.y, pos.z), true, true, true, ESM_AUTO_DETECT, true);
-		if(myMusic){
-			myMusic->setMinDistance(2.f);
-			myMusic->setVolume(3);
-			music.emplace_back(myMusic);
-		} else{
-			(void)puts("Failed to init music!\n");
-		}
-	}
-
 	// Create weapons to be put in the inventory
 	weapon = new Weapon();
 
@@ -384,6 +356,42 @@ void Scene::Update(GLFWwindow* const& win){
 						weapon->GetCurrentWeapon()->ResetWeapon(); // Restock all the ammo for all weapons
 					}
 					weapon->SetCurrentSlot(0); // Start with pistol again
+
+					////Create entities
+					entityManager->DeactivateAll();
+
+					///Create fires
+					for(short i = 0; i < 5; ++i){
+						const float scaleFactor = 15.f;
+						const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f, terrainXScale / 2.f - 5.f);
+						const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f, terrainZScale / 2.f - 5.f);
+						const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
+
+						Entity* const& fire = entityManager->FetchEntity();
+						fire->type = Entity::EntityType::FIRE;
+						fire->active = true;
+						fire->life = 0.f;
+						fire->maxLife = 0.f;
+						fire->colour = glm::vec4(1.f);
+						fire->diffuseTexIndex = -1;
+						fire->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+						fire->scale = glm::vec3(scaleFactor);
+						fire->light = nullptr;
+						fire->mesh = meshes[(int)MeshType::Fire];
+						fire->pos = pos;
+						fire->vel = glm::vec3(0.f);
+						fire->mass = .0001f;
+						fire->force = glm::vec3(0.f);
+
+						ISound* myMusic = soundEngine->play3D("Audio/Music/Burn.wav", vec3df(pos.x, pos.y, pos.z), true, true, true, ESM_AUTO_DETECT, true);
+						if(myMusic){
+							myMusic->setMinDistance(2.f);
+							myMusic->setVolume(3);
+							music.emplace_back(myMusic);
+						} else{
+							(void)puts("Failed to init music!\n");
+						}
+					}
 
 					screen = Screen::Game;
 					buttonBT = elapsedTime + .3f;
