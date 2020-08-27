@@ -18,6 +18,10 @@ public:
 		glm::vec3 camTrueVel = glm::vec3(0.f);
 		glm::vec4 reticleColour = glm::vec4(0.f);
 		float yGround = 0.f;
+		Mesh* terrainMesh = nullptr;
+		float terrainXScale = 1.f;
+		float terrainYScale = 1.f;
+		float terrainZScale = 1.f;
 	};
 	struct RenderParams final{ //Add on here if needed
 		glm::vec3 camPos = glm::vec3(0.f);

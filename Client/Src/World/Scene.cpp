@@ -382,6 +382,13 @@ void Scene::Update(GLFWwindow* const& win){
 		cam.ResetAspectRatio();
 	}
 
+	static float polyModeBT = 0.f;
+	if(Key(VK_F2) && polyModeBT <= elapsedTime){
+		polyModes[0] += polyModes[0] == GL_FILL ? -2 : 1;
+		glPolygonMode(GL_FRONT_AND_BACK, polyModes[0]);
+		polyModeBT = elapsedTime + .5f;
+	}
+
 	POINT mousePos;
 	if(GetCursorPos(&mousePos)){
 		HWND hwnd = ::GetActiveWindow();
@@ -678,7 +685,11 @@ void Scene::Update(GLFWwindow* const& win){
 			params.reticleColour = reticleColour;
 			params.enemyCount = enemyCount;
 			params.score = score;
-			params.yGround=yGround;
+			params.yGround = yGround;
+			params.terrainMesh = meshes[(int)MeshType::Terrain];
+			params.terrainXScale = terrainXScale;
+			params.terrainYScale = terrainYScale;
+			params.terrainZScale = terrainZScale;
 			entityManager->UpdateEntities(params);
 			reticleColour = params.reticleColour;
 			cam.canMove = params.camCanMove;
@@ -689,6 +700,41 @@ void Scene::Update(GLFWwindow* const& win){
 
 			playerCurrHealth = std::min(100.f, std::max(0.f, playerCurrHealth));
 			playerCurrLives = std::min(5.f, std::max(0.f, playerCurrLives));
+
+			///Waves system
+			static float enemyWavesBT = 0.f;
+			switch(waves[waveCount]){
+				case (int)WaveNumber::One:
+					if(enemyWavesBT <= elapsedTime && enemyCount <= 10){
+						for(int i = 0; i < 1; ++i){
+							const float scaleFactor = 15.f;
+							const float xPos = PseudorandMinMax(-terrainXScale / 2.f + scaleFactor, terrainXScale / 2.f - scaleFactor);
+							const float zPos = PseudorandMinMax(-terrainZScale / 2.f + scaleFactor, terrainZScale / 2.f - scaleFactor);
+
+							Entity* const& movingEnemy = entityManager->FetchEntity();
+							movingEnemy->type = Entity::EntityType::MOVING_ENEMY;
+							movingEnemy->active = true;
+							movingEnemy->life = 20.f;
+							movingEnemy->maxLife = 20.f;
+							movingEnemy->colour = glm::vec4(1.f);
+							movingEnemy->pos = glm::vec3(xPos, 0.f, zPos);
+							movingEnemy->vel = glm::vec3(0.f);
+							movingEnemy->mass = 5.f;
+							movingEnemy->scale = glm::vec3(10.f);
+							movingEnemy->mesh = meshes[(int)MeshType::Sphere];
+							movingEnemy->model = models[(int)ModelType::Virus];
+							++enemyCount;
+						}
+						enemyWavesBT = elapsedTime + 1.f;
+					}
+					break;
+				case (int)WaveNumber::Total:
+					return;
+			}
+			if(enemyCount <= 0){
+				++waveCount;
+				enemyCount = 0;
+			}
 
 			if(playerStates & (int)PlayerState::Jumping){
 				if(cam.GetPos().y >= yMax){
@@ -749,18 +795,10 @@ void Scene::Update(GLFWwindow* const& win){
 			static_cast<Spotlight*>(spotlights[0])->cosInnerCutoff = cosf(glm::radians(12.5f));
 			static_cast<Spotlight*>(spotlights[0])->cosOuterCutoff = cosf(glm::radians(17.5f));
 
-			static float polyModeBT = 0.f;
 			static float distortionBT = 0.f;
 			static float echoBT = 0.f;
 			static float wavesReverbBT = 0.f;
 			static float resetSoundFXBT = 0.f;
-			static float enemyWavesBT = 0.f;
-
-			if(Key(VK_F2) && polyModeBT <= elapsedTime){
-				polyModes[0] += polyModes[0] == GL_FILL ? -2 : 1;
-				glPolygonMode(GL_FRONT_AND_BACK, polyModes[0]);
-				polyModeBT = elapsedTime + .5f;
-			}
 
 			////Control soundFX
 			if(Key(GLFW_KEY_I) && distortionBT <= elapsedTime){
@@ -955,41 +993,6 @@ void Scene::Update(GLFWwindow* const& win){
 					particle->mass = 10.f;
 					particle->force = glm::vec3(0.f, -100.f, 0.f);
 				}
-			}
-
-			///Waves system
-			switch(waves[waveCount]){
-				case (int)WaveNumber::One:
-					if(enemyWavesBT <= elapsedTime && enemyCount <= 10){
-						for(int i = 0; i < 1; ++i){
-							const float scaleFactor = 15.f;
-							const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
-							const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
-							const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
-
-							Entity* const& movingEnemy = entityManager->FetchEntity();
-							movingEnemy->type = Entity::EntityType::MOVING_ENEMY;
-							movingEnemy->active = true;
-							movingEnemy->life = 20.f;
-							movingEnemy->maxLife = 20.f;
-							movingEnemy->colour = glm::vec4(1.f);
-							movingEnemy->pos = pos;
-							movingEnemy->vel = glm::vec3(0.f);
-							movingEnemy->mass = 5.f;
-							movingEnemy->scale = glm::vec3(10.f);
-							movingEnemy->mesh = meshes[(int)MeshType::Sphere];
-							movingEnemy->model = models[(int)ModelType::Virus];
-							++enemyCount;
-						}
-						enemyWavesBT = elapsedTime + 1.f;
-					}
-					break;
-				case (int)WaveNumber::Total:
-					return;
-			}
-			if(enemyCount <= 0){
-				++waveCount;
-				enemyCount = 0;
 			}
 
 			break;

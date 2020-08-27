@@ -89,7 +89,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					}
 
 					///Enemy movement
-					entity->pos.y += float(sin(glfwGetTime())) / 5.f;
+					entity->pos.y += float(sin(glfwGetTime())) / 10.f;
+					entity->pos.y = std::max(entity->pos.y, params.terrainYScale
+						* static_cast<Terrain*>(params.terrainMesh)->GetHeightAtPt(entity->pos.x / params.terrainXScale, entity->pos.z / params.terrainZScale) + entity->scale.x);
 					if(glm::length(params.camPos - entity->pos) >= 50.f){
 						entity->vel = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(PseudorandMinMax(-10.f, 10.f)), {0.f, 1.f, 0.f}) *
 							glm::vec4(glm::normalize((params.camPos - entity->pos)), 0.f)) * 20.f;
