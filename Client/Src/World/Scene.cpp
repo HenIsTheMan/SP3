@@ -1101,7 +1101,9 @@ void Scene::GeoRenderPass(){
 		geoPassSP.SetMat4fv("PV", &(projection * view)[0][0]);
 
 		//EntityManager::RenderParams params;
+		//params.minimap = false;
 		//params.camPos = cam.GetPos();
+		//params.camFront = cam.CalcFront();
 		//params.depthDTexRefID = depthDTexRefID;
 		//params.depthSTexRefID = depthSTexRefID;
 		//params.quadMesh = meshes[(int)MeshType::Quad];
@@ -1526,6 +1528,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			EntityManager::RenderParams params;
 			params.minimap = false;
 			params.camPos = cam.GetPos();
+			params.camFront = cam.CalcFront();
 			params.depthDTexRefID = depthDTexRefID;
 			params.depthSTexRefID = depthSTexRefID;
 			params.quadMesh = meshes[(int)MeshType::Quad];
@@ -2187,6 +2190,7 @@ void Scene::MinimapRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	EntityManager::RenderParams params;
 	params.minimap = true;
 	params.camPos = cam.GetPos();
+	params.camFront = cam.CalcFront();
 	params.depthDTexRefID = depthDTexRefID;
 	params.depthSTexRefID = depthSTexRefID;
 	params.quadMesh = meshes[(int)MeshType::Quad];

@@ -37,6 +37,7 @@ public:
 	struct RenderParams final{ //Add on here if needed
 		bool minimap = false;
 		glm::vec3 camPos = glm::vec3(0.f);
+		glm::vec3 camFront = glm::vec3(0.f);
 		uint depthDTexRefID = 0;
 		uint depthSTexRefID = 0;
 		Mesh* quadMesh = nullptr;

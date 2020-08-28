@@ -331,14 +331,16 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 	for(size_t i = 0; i < size; ++i){
 		Entity* const& entity = entityList[i];
 		if(entity && entity->active){
-			glm::vec3 displacementVec = params.camPos - entity->pos;
-			entityListForSorting[(const int)glm::dot(displacementVec, displacementVec)] = entity;
+			glm::vec3 displacementVec = entity->pos - params.camPos;
+			if(glm::dot(displacementVec, params.camFront) > 0.f){
+				entityListForSorting[(const int)glm::dot(displacementVec, displacementVec)] = entity;
+			}
 		}
 	}
 
 	for(std::map<int, Entity*>::reverse_iterator iter = entityListForSorting.rbegin(); iter != entityListForSorting.rend(); ++iter){
 		Entity* const& entity = iter->second;
-		if(entity && entity->active){
+		//if(entity && entity->active){
 			switch(entity->type){
 				case Entity::EntityType::BULLET:
 				case Entity::EntityType::BULLET2:
@@ -499,7 +501,7 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 				default:
 					break;
 			}
-		}
+		//}
 	}
 
 	//if(particle1){
