@@ -24,7 +24,7 @@ Scene::Scene():
 	sCam(glm::vec3(0.f, 200.f, 0.f), glm::vec3(0.f, 0.f, 300.f), glm::normalize(glm::vec3(0.f, 1.f, -1.f)), 1.f, 0.f),
 	waterCam(glm::vec3(-15.f, -20.f, -20.f), glm::vec3(-15.f, 0.f, -20.f), glm::vec3(0.f, 0.f, 1.f), 1.f, 0.f),
 	enCam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 1.f, 0.f),
-	minimapcam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 0.f, 0.f),
+	minimapCam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 0.f, 0.f),
 	soundEngine(nullptr),
 	music({}),
 	entityManager(nullptr),
@@ -2107,18 +2107,34 @@ void Scene::MinimapRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	forwardSP.Set1i("dAmt", 0);
 	forwardSP.Set1i("sAmt", 0);
 
-	minimapcam.SetPos(glm::vec3(cam.GetPos().x, 1000.f, cam.GetPos().z));
-	minimapcam.SetTarget(glm::vec3(cam.GetPos().x, 0.f, cam.GetPos().z));
-	minimapcam.SetUp(glm::vec3(0.f, 0.f, -1.f));
-	minimapView = minimapcam.LookAt();
+	minimapCam.SetPos(glm::vec3(cam.GetPos().x, 500.f, cam.GetPos().z));
+	minimapCam.SetTarget(glm::vec3(cam.GetPos().x, 0.f, cam.GetPos().z));
+	minimapCam.SetUp(glm::vec3(0.f, 0.f, -1.f));
+	minimapView = minimapCam.LookAt();
 	minimapProjection = glm::ortho(-float(winWidth) / 5.f, float(winWidth) / 5.f, -float(winHeight) / 5.f, float(winHeight) / 5.f, .1f, 99999.f);
 	forwardSP.SetMat4fv("PV", &(minimapProjection * minimapView)[0][0]);
+	forwardSP.Set1i("noNormals", 1);
 
 	modelStack.PushModel({
 		modelStack.Scale(glm::vec3(terrainXScale, terrainYScale, terrainZScale)),
 	});
 		meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
 		meshes[(int)MeshType::Terrain]->Render(forwardSP);
+	modelStack.PopModel();
+
+	///Render self
+	modelStack.PushModel({
+		modelStack.Translate(minimapCam.GetTarget()),
+		modelStack.Scale(glm::vec3(15.f)),
+	});
+		forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+		forwardSP.Set1i("customDiffuseTexIndex", -1);
+		forwardSP.Set1i("useCustomColour", 1);
+		forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f), .6f));
+		meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
+		meshes[(int)MeshType::Sphere]->Render(forwardSP);
+		forwardSP.Set1i("useCustomColour", 0);
+		forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
 	modelStack.PopModel();
 
 	///Render entities
@@ -2129,6 +2145,8 @@ void Scene::MinimapRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	params.depthSTexRefID = depthSTexRefID;
 	params.quadMesh = meshes[(int)MeshType::Quad];
 	entityManager->RenderEntities(forwardSP, params);
+
+	forwardSP.Set1i("noNormals", 0);
 }
 
 const Scene::Screen& Scene::GetScreen() const{

@@ -119,15 +119,6 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					}
 					break;
 				}
-				case Entity::EntityType::STATIC_ENEMY: {
-					glm::vec3 displacementVec = params.camPos - entity->pos;
-					const float b = glm::dot(params.camFront, displacementVec);
-					const float c = glm::dot(displacementVec, displacementVec) - entity->scale.x * entity->scale.x;
-					if(b * b - c >= 0.f){
-						params.reticleColour = glm::vec4(1.f, 1.f, 0.f, 1.f);
-					}
-					break;
-				}
 				case Entity::EntityType::MOVING_ENEMY: {
 					if(entity->life <= 0.f){
 						entity->active = false;
@@ -356,25 +347,6 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 						continue;
 					}
 
-					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
-					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
-					SP.Set1i("useCustomColour", 1);
-					SP.Set1i("useCustomDiffuseTexIndex", 1);
-					modelStack.PushModel({
-						modelStack.Translate(entity->pos),
-						modelStack.Rotate(entity->rotate),
-						modelStack.Scale(entity->scale),
-					});
-						SP.Set4fv("customColour", entity->colour);
-						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
-						entity->mesh->SetModel(modelStack.GetTopModel());
-						entity->mesh->Render(SP);
-					modelStack.PopModel();
-					SP.Set1i("useCustomDiffuseTexIndex", 0);
-					SP.Set1i("useCustomColour", 0);
-					break;
-				}
-				case Entity::EntityType::STATIC_ENEMY: {
 					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
 					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
 					SP.Set1i("useCustomColour", 1);

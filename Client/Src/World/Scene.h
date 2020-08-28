@@ -40,7 +40,7 @@ private:
 	Cam sCam;
 	Cam waterCam;
 	Cam enCam;
-	Cam minimapcam;
+	Cam minimapCam;
 
 	ISoundEngine* soundEngine;
 	std::vector<ISound*> music;
