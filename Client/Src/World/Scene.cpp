@@ -1080,6 +1080,8 @@ void Scene::Update(GLFWwindow* const& win){
 }
 
 void Scene::GeoRenderPass(){
+	if(screen == Screen::Game){
+	}
 }
 
 void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID){
@@ -1168,41 +1170,7 @@ void Scene::DepthRender(const short& projectionType){
 		depthSP.SetMat4fv("PV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
 	}
 
-	modelStack.PushModel({
-		modelStack.Translate(glm::vec3(0.f, 100.f, -50.f)),
-		modelStack.Scale(glm::vec3(50.f)),
-	});
-		meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Quad]->Render(depthSP, false);
-	modelStack.PopModel();
-
 	glCullFace(GL_FRONT);
-	modelStack.PushModel({
-		modelStack.Scale(glm::vec3(500.f, 100.f, 500.f)),
-	});
-		meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Terrain]->Render(depthSP, false);
-	modelStack.PopModel();
-
-	modelStack.PushModel({
-		modelStack.Translate(glm::vec3(0.f, 100.f, 0.f)),
-		modelStack.Scale(glm::vec3(10.f)),
-	});
-			meshes[(int)MeshType::Cylinder]->SetModel(modelStack.GetTopModel());
-			meshes[(int)MeshType::Cylinder]->Render(depthSP, false);
-		modelStack.PushModel({
-			modelStack.Translate(glm::vec3(-3.f, 0.f, 0.f)),
-		});
-			meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
-			meshes[(int)MeshType::Sphere]->Render(depthSP, false);
-		modelStack.PopModel();
-		modelStack.PushModel({
-			modelStack.Translate(glm::vec3(3.f, 0.f, 0.f)),
-		});
-			meshes[(int)MeshType::Cube]->SetModel(modelStack.GetTopModel());
-			meshes[(int)MeshType::Cube]->Render(depthSP, false);
-		modelStack.PopModel();
-	modelStack.PopModel();
 	glCullFace(GL_BACK);
 }
 
@@ -1469,17 +1437,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 
 			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
 
-			//Test wall
-			modelStack.PushModel({
-				modelStack.Translate(glm::vec3(0.f, 100.f, -50.f)),
-				modelStack.Scale(glm::vec3(50.f)),
-			});
-				forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
-				forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
-				meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-				meshes[(int)MeshType::Quad]->Render(forwardSP);
-			modelStack.PopModel();
-
 			///Terrain
 			modelStack.PushModel({
 				modelStack.Scale(glm::vec3(terrainXScale, terrainYScale, terrainZScale)),
@@ -1490,84 +1447,22 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				meshes[(int)MeshType::Terrain]->Render(forwardSP);
 			modelStack.PopModel();
 
-			///Shapes
+			///Crystal ball
 			modelStack.PushModel({
-				modelStack.Translate(glm::vec3(0.f, 100.f, 0.f)),
-				modelStack.Scale(glm::vec3(10.f)),
-			});
-				modelStack.PushModel({
-					modelStack.Translate(glm::vec3(6.f, 0.f, 0.f)),
-				});
-					forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
-					forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
-					forwardSP.Set1i("noNormals", 1);
-					forwardSP.Set1i("useCustomColour", 1);
-					forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(5.f), 1.f));
-					meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-					meshes[(int)MeshType::Quad]->Render(forwardSP);
-					forwardSP.Set1i("useCustomColour", 0);
-					forwardSP.Set1i("noNormals", 0);
-
-					modelStack.PushModel({
-						modelStack.Translate(glm::vec3(0.f, 0.f, 5.f)),
-						modelStack.Scale(glm::vec3(3.f)),
-					});
-						forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
-						forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
-						forwardSP.UseTex(cubemapReflectionTexID, "cubemapSampler", GL_TEXTURE_CUBE_MAP);
-						forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
-						forwardSP.Set1i("customDiffuseTexIndex", -1);
-						forwardSP.Set1i("useCustomColour", 1);
-						forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f), 1.f));
-						meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
-						meshes[(int)MeshType::Sphere]->Render(forwardSP);
-						forwardSP.Set1i("useCustomColour", 0);
-						forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
-					modelStack.PopModel();
-
-					modelStack.PushModel({
-						modelStack.Translate(glm::vec3(5.f, 0.f, 5.f)),
-					});
-						forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
-						forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
-						meshes[(int)MeshType::Cylinder]->SetModel(modelStack.GetTopModel());
-						meshes[(int)MeshType::Cylinder]->Render(forwardSP);
-					modelStack.PopModel();
-				modelStack.PopModel();
-			modelStack.PopModel();
-
-			modelStack.PushModel({
-				modelStack.Translate(glm::vec3(0.f, 100.f, 0.f)),
-				modelStack.Scale(glm::vec3(10.f)),
+				modelStack.Translate(glm::vec3(0.f, 0.f, 5.f)),
+				modelStack.Scale(glm::vec3(3.f)),
 			});
 				forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
 				forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
-				meshes[(int)MeshType::Cylinder]->SetModel(modelStack.GetTopModel());
-				meshes[(int)MeshType::Cylinder]->Render(forwardSP);
-
-				modelStack.PushModel({
-					modelStack.Translate(glm::vec3(-3.f, 0.f, 0.f)),
-				});
-					forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
-					forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
-					forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
-					forwardSP.Set1i("customDiffuseTexIndex", -1);
-					meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
-					meshes[(int)MeshType::Sphere]->Render(forwardSP);
-					forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
-				modelStack.PopModel();
-
-				modelStack.PushModel({
-					modelStack.Translate(glm::vec3(3.f, 0.f, 0.f)),
-				});
-					forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
-					forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
-					forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
-					forwardSP.Set1i("customDiffuseTexIndex", -1);
-					meshes[(int)MeshType::Cube]->SetModel(modelStack.GetTopModel());
-					meshes[(int)MeshType::Cube]->Render(forwardSP);
-					forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
-				modelStack.PopModel();
+				forwardSP.UseTex(cubemapReflectionTexID, "cubemapSampler", GL_TEXTURE_CUBE_MAP);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+				forwardSP.Set1i("customDiffuseTexIndex", -1);
+				forwardSP.Set1i("useCustomColour", 1);
+				forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f), 1.f));
+				meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
+				meshes[(int)MeshType::Sphere]->Render(forwardSP);
+				forwardSP.Set1i("useCustomColour", 0);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
 			modelStack.PopModel();
 
 			///Grass

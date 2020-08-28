@@ -301,7 +301,10 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					break;
 				}
 			}
-			if(entity->vel != glm::vec3(0.f)){
+			if(entity->type == Entity::EntityType::BULLET
+				|| entity->type == Entity::EntityType::BULLET2
+				|| entity->type == Entity::EntityType::BULLET3
+			){
 				root->DetectAndResolveCollision(entity);
 			}
 			entity->vel += (entity->force / entity->mass) * dt;
