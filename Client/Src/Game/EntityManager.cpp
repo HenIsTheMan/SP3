@@ -216,7 +216,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 				case Entity::EntityType::AMMO_PICKUP: {
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
-					if(glm::dot(displacementVec, displacementVec) <= entity->scale.x * entity->scale.x){
+					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						params.addAmmo = true;
 						params.weaponType = 1;
 						--params.ammoPickupAmt;
@@ -227,7 +227,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 				case Entity::EntityType::AMMO_PICKUP2: {
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
-					if(glm::dot(displacementVec, displacementVec) <= entity->scale.x * entity->scale.x){
+					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						params.addAmmo = true;
 						params.weaponType = 2;
 						--params.ammoPickup2Amt;

@@ -579,12 +579,12 @@ void Scene::Update(GLFWwindow* const& win){
 				blueCoinBT = elapsedTime + 60.f;
 			}
 			if(ammoPickupBT <= elapsedTime && ammoPickupAmt < 3){
-				SpawnEntity(Entity::EntityType::AMMO_PICKUP, meshes[(int)MeshType::Sphere], 10.f);
+				SpawnEntity(Entity::EntityType::AMMO_PICKUP, meshes[(int)MeshType::Sphere], 15.f);
 				++ammoPickupAmt;
 				ammoPickupBT = elapsedTime + 30.f;
 			}
 			if(ammoPickup2BT <= elapsedTime && ammoPickup2Amt < 3){
-				SpawnEntity(Entity::EntityType::AMMO_PICKUP2, meshes[(int)MeshType::Sphere], 10.f);
+				SpawnEntity(Entity::EntityType::AMMO_PICKUP2, meshes[(int)MeshType::Sphere], 15.f);
 				++ammoPickup2Amt;
 				ammoPickup2BT = elapsedTime + 30.f;
 			}
@@ -896,7 +896,7 @@ void Scene::Update(GLFWwindow* const& win){
 			static double lastTime = elapsedTime;
 			weapon->GetCurrentWeapon()->Update(elapsedTime - lastTime);
 
-			if (addAmmo) // Player picked up the ammo collectible
+			if(addAmmo) // Player picked up the ammo collectible
 			{
 				int temp = weapon->GetCurrentSlot();
 				weapon->SetCurrentSlot(weaponType); // Depends which weapon ammo it is
