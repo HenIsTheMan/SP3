@@ -44,55 +44,55 @@ bool App::Init(){
 	glGenRenderbuffers(sizeof(RBORefIDs) / sizeof(RBORefIDs[0]), RBORefIDs);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::GeoPass]);
-		for(Tex i = Tex::Pos; i <= Tex::Reflection; ++i){
-			glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
-			glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)i]);
-				glTexImage2D(GL_TEXTURE_2D, 0, i == Tex::Reflection ? GL_RGBA : GL_RGBA16F, 2048, 2048, 0, GL_RGBA, i == Tex::Reflection ? GL_UNSIGNED_BYTE : GL_FLOAT, NULL); //??
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (int)i, GL_TEXTURE_2D, texRefIDs[(int)i], 0);
-			glBindTexture(GL_TEXTURE_2D, currTexRefID);
-		}
+	for(Tex i = Tex::Pos; i <= Tex::Reflection; ++i){
+		glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
+		glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, i == Tex::Reflection ? GL_RGBA : GL_RGBA16F, 1536, 1536, 0, GL_RGBA, i == Tex::Reflection ? GL_UNSIGNED_BYTE : GL_FLOAT, NULL); //??
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (int)i, GL_TEXTURE_2D, texRefIDs[(int)i], 0);
+		glBindTexture(GL_TEXTURE_2D, currTexRefID);
+	}
 
-		glBindRenderbuffer(GL_RENDERBUFFER, RBORefIDs[(int)RBO::GeoPass]);
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 2048, 2048);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBORefIDs[(int)RBO::GeoPass]);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glBindRenderbuffer(GL_RENDERBUFFER, RBORefIDs[(int)RBO::GeoPass]);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1536, 1536);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBORefIDs[(int)RBO::GeoPass]);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
-			(void)printf(STR(FBO::GeoPass));
-			(void)puts(" is incomplete!\n");
-			return false;
-		}
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+		(void)printf(STR(FBO::GeoPass));
+		(void)puts(" is incomplete!\n");
+		return false;
+	}
 	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::LightingPass]);
-		for(Tex i = Tex::Lit; i <= Tex::Bright; ++i){
-			glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
-			glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)i]);
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 2048, 2048, 0, GL_RGBA, GL_FLOAT, NULL);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + int(i) - int(Tex::Lit), GL_TEXTURE_2D, texRefIDs[(int)i], 0);
-			glBindTexture(GL_TEXTURE_2D, currTexRefID);
-		}
+	for(Tex i = Tex::Lit; i <= Tex::Bright; ++i){
+		glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
+		glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 1536, 1536, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + int(i) - int(Tex::Lit), GL_TEXTURE_2D, texRefIDs[(int)i], 0);
+		glBindTexture(GL_TEXTURE_2D, currTexRefID);
+	}
 
-		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
-			(void)printf(STR(FBO::LightingPass));
-			(void)puts(" is incomplete!\n");
-			return false;
-		}
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+		(void)printf(STR(FBO::LightingPass));
+		(void)puts(" is incomplete!\n");
+		return false;
+	}
 	for(FBO i = FBO::PingPong0; i <= FBO::PingPong1; ++i){
 		glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)i]);
-			glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
-			glBindTexture(GL_TEXTURE_2D, texRefIDs[int(Tex::PingPong0) + int(FBO::PingPong1) - int(i)]);
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 2048, 2048, 0, GL_RGBA, GL_FLOAT, NULL);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texRefIDs[int(Tex::PingPong0) + int(FBO::PingPong1) - int(i)], 0);
-			glBindTexture(GL_TEXTURE_2D, currTexRefID);
+		glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
+		glBindTexture(GL_TEXTURE_2D, texRefIDs[int(Tex::PingPong0) + int(FBO::PingPong1) - int(i)]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 1024, 1024, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texRefIDs[int(Tex::PingPong0) + int(FBO::PingPong1) - int(i)], 0);
+		glBindTexture(GL_TEXTURE_2D, currTexRefID);
 		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
 			(void)printf(STR(i));
 			(void)puts(" is incomplete!\n");
@@ -102,36 +102,36 @@ bool App::Init(){
 
 	float borderColour[]{1.f, 1.f, 1.f, 1.f};
 	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::DepthD]);
-		glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
-		glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)Tex::DepthD]);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColour);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texRefIDs[(int)Tex::DepthD], 0);
-		glBindTexture(GL_TEXTURE_2D, currTexRefID);
-		glDrawBuffer(GL_NONE);
-		glReadBuffer(GL_NONE);
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
+	glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)Tex::DepthD]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColour);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texRefIDs[(int)Tex::DepthD], 0);
+	glBindTexture(GL_TEXTURE_2D, currTexRefID);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
 		(void)printf(STR(FBO::DepthD));
 		(void)puts(" is incomplete!\n");
 		return false;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::DepthS]);
-		glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
-		glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)Tex::DepthS]);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColour);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texRefIDs[(int)Tex::DepthS], 0);
-		glBindTexture(GL_TEXTURE_2D, currTexRefID);
-		glDrawBuffer(GL_NONE);
-		glReadBuffer(GL_NONE);
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
+	glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)Tex::DepthS]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColour);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texRefIDs[(int)Tex::DepthS], 0);
+	glBindTexture(GL_TEXTURE_2D, currTexRefID);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
 		(void)printf(STR(FBO::DepthS));
 		(void)puts(" is incomplete!\n");
@@ -139,36 +139,36 @@ bool App::Init(){
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::PlanarReflection]);
-		glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
-		glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)Tex::PlanarReflection]);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texRefIDs[(int)Tex::PlanarReflection], 0);
-		glBindTexture(GL_TEXTURE_2D, currTexRefID);
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
+	glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)Tex::PlanarReflection]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texRefIDs[(int)Tex::PlanarReflection], 0);
+	glBindTexture(GL_TEXTURE_2D, currTexRefID);
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
 		(void)printf(STR(FBO::PlanarReflection));
 		(void)puts(" is incomplete!\n");
 		return false;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::CubemapReflection]);
-		glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &currTexRefID);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, texRefIDs[(int)Tex::CubemapReflection]);
-			for(uint i = 0; i < 6; ++i){
-				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-			}
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, currTexRefID);
+	glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &currTexRefID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texRefIDs[(int)Tex::CubemapReflection]);
+	for(uint i = 0; i < 6; ++i){
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, currTexRefID);
 
-		glBindRenderbuffer(GL_RENDERBUFFER, RBORefIDs[(int)RBO::CubemapReflection]);
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, 2048, 2048);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, RBORefIDs[(int)RBO::CubemapReflection]);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glBindRenderbuffer(GL_RENDERBUFFER, RBORefIDs[(int)RBO::CubemapReflection]);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, 1024, 1024);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, RBORefIDs[(int)RBO::CubemapReflection]);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
 		(void)printf(STR(FBO::CubemapReflection));
 		(void)puts(" is incomplete!\n");
@@ -176,15 +176,15 @@ bool App::Init(){
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::Minimap]);
-		glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
-		glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)Tex::Minimap]);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_FLOAT, NULL);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texRefIDs[(int)Tex::Minimap], 0);
-		glBindTexture(GL_TEXTURE_2D, currTexRefID);
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &currTexRefID);
+	glBindTexture(GL_TEXTURE_2D, texRefIDs[(int)Tex::Minimap]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texRefIDs[(int)Tex::Minimap], 0);
+	glBindTexture(GL_TEXTURE_2D, currTexRefID);
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
 		(void)printf(STR(FBO::Minimap));
 		(void)puts(" is incomplete!\n");
@@ -275,15 +275,16 @@ void App::Render(){
 			scene.MinimapRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthS]);
 		}
 
-		bool horizontal = true;
-		glViewport(0, 0, 2048, 2048); {
-			for(short i = 1; i <= 6; ++i){
-				glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::CubemapReflection]);
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i - 1, texRefIDs[(int)Tex::CubemapReflection], 0);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				scene.CubemapReflectionRender(i);
-			}
+		glViewport(0, 0, 1024, 1024);
+		for(short i = 1; i <= 6; ++i){
+			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::CubemapReflection]);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i - 1, texRefIDs[(int)Tex::CubemapReflection], 0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			scene.CubemapReflectionRender(i);
+		}
 
+		bool horizontal = true;
+		glViewport(0, 0, 1536, 1536); {
 			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::GeoPass]);
 			for(uint i = 0; i < 5; ++i){
 				glDrawBuffer(GL_COLOR_ATTACHMENT0 + i);
@@ -299,13 +300,14 @@ void App::Render(){
 			glDrawBuffers(sizeof(arr2) / sizeof(arr2[0]), arr2);
 			scene.LightingRenderPass(texRefIDs[(int)Tex::Pos], texRefIDs[(int)Tex::Colours], texRefIDs[(int)Tex::Normals], texRefIDs[(int)Tex::Spec], texRefIDs[(int)Tex::Reflection],
 				texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthS]);
+		}
 
-			const short amt = 8;
-			for(short i = 0; i < amt; ++i){ //Blur... amt / 2 times horizontally and amt / 2 times vertically
-				glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[int(FBO::PingPong0) + int(horizontal)]);
-				scene.BlurRender(!i ? texRefIDs[(int)Tex::Bright] : texRefIDs[int(Tex::PingPong0) + int(horizontal)], horizontal);
-				horizontal = !horizontal;
-			}
+		glViewport(0, 0, 1024, 1024);
+		const short amt = 8;
+		for(short i = 0; i < amt; ++i){ //Blur... amt / 2 times horizontally and amt / 2 times vertically
+			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[int(FBO::PingPong0) + int(horizontal)]);
+			scene.BlurRender(!i ? texRefIDs[(int)Tex::Bright] : texRefIDs[int(Tex::PingPong0) + int(horizontal)], horizontal);
+			horizontal = !horizontal;
 		}
 
 		glViewport(0, 0, winWidth, winHeight);
@@ -314,11 +316,11 @@ void App::Render(){
 		glClearColor(1.f, .5f, .3f, 1.f);
 		scene.DefaultRender(texRefIDs[(int)Tex::Lit], texRefIDs[int(Tex::PingPong0) + int(!horizontal)], glm::vec3(0.f), glm::vec3(1.f));
 
-		glViewport(0, 0, 2048, 2048);
+		glViewport(0, 0, 1536, 1536);
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, FBORefIDs[(int)FBO::GeoPass]);
 		glViewport(0, 0, winWidth, winHeight);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		glBlitFramebuffer(0, 0, 2048, 2048, 0, 0, winWidth, winHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBlitFramebuffer(0, 0, 1536, 1536, 0, 0, winWidth, winHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		scene.ForwardRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthS], texRefIDs[(int)Tex::PlanarReflection], texRefIDs[(int)Tex::CubemapReflection]);
 

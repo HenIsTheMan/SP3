@@ -255,7 +255,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 						particle->colour = glm::vec4(glm::vec3(.4f), 1.f);
 						particle->diffuseTexIndex = -1;
 						particle->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-						particle->scale = glm::vec3(3.f);
+						particle->scale = glm::vec3(10.f);
 						particle->light = nullptr;
 						particle->mesh = params.quadMesh;
 						particle->pos = entity->pos + glm::vec3(0.f, 50.f, 0.f);
@@ -265,7 +265,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 						particle->originalPos = particle->pos;
 						particle->originalScale = particle->scale;
 						particle->originalVel = particle->vel;
-						entity->spawnSmokeBT = (float)glfwGetTime() + .5f;
+						entity->spawnSmokeBT = (float)glfwGetTime() + 2.f;
 					}
 
 					break;

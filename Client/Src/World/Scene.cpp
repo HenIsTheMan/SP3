@@ -963,10 +963,10 @@ void Scene::Update(GLFWwindow* const& win){
 			static float enemyWavesBT = 0.f;
 			switch(waves[waveCount]){
 				case (int)WaveNumber::One: {
-					if(enemyWavesBT <= elapsedTime && enemyCount <= 10){
-						enemyWavesBT = elapsedTime + 3.f;
+					if(enemyWavesBT <= elapsedTime && enemyCount <= 5){
+						enemyWavesBT = elapsedTime + 5.f;
 
-						for(int i = 0; i < 1; ++i) {
+						for(int i = 0; i < 2; ++i) {
 							const float scaleFactor = 15.f;
 							const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 							const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
@@ -998,14 +998,13 @@ void Scene::Update(GLFWwindow* const& win){
 					}
 				}
 				case (int)WaveNumber::Two: {
-					if(enemyCount == 0)
-					{
+					if(enemyCount == 0){
 						currentEnemyCount = 20;
 					}
-					if(enemyWavesBT <= elapsedTime && enemyCount <= 19){
-						enemyWavesBT = elapsedTime + 2.f;
+					if(enemyWavesBT <= elapsedTime && enemyCount <= 7){
+						enemyWavesBT = elapsedTime + 4.f;
 
-						for(int i = 0; i < 1; ++i) {
+						for(int i = 0; i < 2; ++i) {
 							const float scaleFactor = 15.f;
 							const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 							const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
@@ -1036,13 +1035,12 @@ void Scene::Update(GLFWwindow* const& win){
 					}
 				}
 				case (int)WaveNumber::Three: {
-					if(enemyCount == 0)
-					{
+					if(enemyCount == 0){
 						currentEnemyCount = 20;
 					}
-					if(enemyWavesBT <= elapsedTime && enemyCount <= 20)
+					if(enemyWavesBT <= elapsedTime && enemyCount <= 11)
 					{
-						enemyWavesBT = elapsedTime + 1.f;
+						enemyWavesBT = elapsedTime + 3.f;
 
 						for(int i = 0; i < 2; ++i) {
 							const float scaleFactor = 15.f;
