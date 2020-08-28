@@ -315,9 +315,8 @@ void Mesh::InstancedRender(ShaderProg& SP, const bool& autoConfig){
 
 	SP.Use();
 	SP.SetMat4fv("model", &(model)[0][0]);
+	SP.Set1i("instancing", 1);
 	if(autoConfig){
-		SP.Set1i("instancing", 1);
-
 		SP.Set1i("useDiffuseMap", 0);
 		SP.Set1i("useSpecMap", 0);
 		SP.Set1i("useEmissionMap", 0);
@@ -444,9 +443,8 @@ void Mesh::Render(ShaderProg& SP, const bool& autoConfig){
 
 	SP.Use();
 	SP.SetMat4fv("model", &(model)[0][0]);
+	SP.Set1i("instancing", 0);
 	if(autoConfig){
-		SP.Set1i("instancing", 0);
-
 		SP.Set1i("useDiffuseMap", 0);
 		SP.Set1i("useSpecMap", 0);
 		SP.Set1i("useEmissionMap", 0);

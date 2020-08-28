@@ -12,15 +12,15 @@ extern float dt;
 extern int winWidth;
 extern int winHeight;
 
-constexpr float terrainXScale = 500.f;
+constexpr float terrainXScale = 1000.f;
 constexpr float terrainYScale = 100.f;
-constexpr float terrainZScale = 500.f;
+constexpr float terrainZScale = 1000.f;
 
 glm::vec3 Light::globalAmbient = glm::vec3(.2f);
 
 Scene::Scene():
 	cam(glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 150.f),
-	dCam(glm::vec3(0.f, 150.f, 0.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
+	dCam(glm::vec3(0.f, 110.f, 0.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
 	sCam(glm::vec3(0.f, 100.f, 200.f), glm::vec3(0.f, 100.f, 0.f), glm::vec3(0.f, 1.f, 0.f), 1.f, 0.f),
 	waterCam(glm::vec3(-15.f, -20.f, -20.f), glm::vec3(-15.f, 0.f, -20.f), glm::vec3(0.f, 0.f, 1.f), 1.f, 0.f),
 	enCam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 1.f, 0.f),
@@ -1217,13 +1217,26 @@ void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, 
 ///
 void Scene::DepthRender(const short& projectionType){
 	depthSP.Use();
-	//if(projectionType){
-	//	depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), sCam.GetAspectRatio(), 120.f, 5000.f) * sCam.LookAt())[0][0]);
-	//} else{
-	//	depthSP.SetMat4fv("PV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
-	//}
+	if(projectionType){
+		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), sCam.GetAspectRatio(), 120.f, 5000.f) * sCam.LookAt())[0][0]);
+	} else{
+		depthSP.SetMat4fv("PV", &(glm::ortho(-600.f, 600.f, -600.f, 600.f, 20.f, 300.f) * dCam.LookAt())[0][0]);
+	}
+
+	///Terrain
+	modelStack.PushModel({
+		modelStack.Scale(glm::vec3(terrainXScale, terrainYScale, terrainZScale)),
+	});
+		meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
+		meshes[(int)MeshType::Terrain]->Render(depthSP, false);
+	modelStack.PopModel();
 
 	glCullFace(GL_FRONT);
+
+	///Grass
+	models[(int)ModelType::Grass]->SetModelForAll(modelStack.GetTopModel());
+	models[(int)ModelType::Grass]->InstancedRender(depthSP, false);
+
 	glCullFace(GL_BACK);
 }
 
@@ -1282,7 +1295,7 @@ void Scene::CubemapReflectionRender(const short& cubemapFace){
 
 void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID, const uint& cubemapReflectionTexID){
 	forwardSP.Use();
-	forwardSP.SetMat4fv("directionalLightPV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
+	forwardSP.SetMat4fv("directionalLightPV", &(glm::ortho(-600.f, 600.f, -600.f, 600.f, 20.f, 300.f) * dCam.LookAt())[0][0]);
 	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), 1.f, 120.f, 5000.f) * sCam.LookAt())[0][0]);
 
 	const int& pAmt = (int)ptLights.size();
@@ -1449,7 +1462,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			modelStack.PushModel({
 				modelStack.Translate(glm::vec3(-15.f, 40.f, -20.f)),
 				modelStack.Rotate(glm::vec4(1.f, 0.f, 0.f, -90.f)),
-				modelStack.Scale(glm::vec3(180.f)),
+				modelStack.Scale(glm::vec3(360.f)),
 			});
 				forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
 				forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
