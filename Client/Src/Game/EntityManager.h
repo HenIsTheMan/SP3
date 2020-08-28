@@ -36,6 +36,7 @@ public:
 		float healthUp = false;
 		float lifeUp = false;
 		bool immune = false;
+		ISoundEngine* soundEngine = nullptr;
 	};
 	struct RenderParams final{ //Add on here if needed
 		bool minimap = false;

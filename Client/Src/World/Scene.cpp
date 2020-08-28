@@ -237,6 +237,7 @@ bool Scene::Init(){
 	if(!soundEngine){
 		(void)puts("Failed to init soundEngine!\n");
 	}
+	soundEngine->play2D("Audio/Music/BGM.mp3", true);
 
 	///Gen model matrices for grass instances
 	for(int i = 0; i < 9999; ++i){
@@ -422,7 +423,7 @@ void Scene::Update(GLFWwindow* const& win){
 						ISound* myMusic = soundEngine->play3D("Audio/Music/Burn.wav", vec3df(pos.x, pos.y, pos.z), true, true, true, ESM_AUTO_DETECT, true);
 						if(myMusic){
 							myMusic->setMinDistance(2.f);
-							myMusic->setVolume(3);
+							myMusic->setVolume(5);
 							music.emplace_back(myMusic);
 						} else{
 							(void)puts("Failed to init music!\n");
@@ -738,6 +739,7 @@ void Scene::Update(GLFWwindow* const& win){
 			params.healthUp = healthUp;
 			params.lifeUp = lifeUp;
 			params.immune = immune;
+			params.soundEngine = soundEngine;
 			entityManager->UpdateEntities(params);
 			addAmmo = params.addAmmo;
 			weaponType = params.weaponType;
@@ -797,6 +799,9 @@ void Scene::Update(GLFWwindow* const& win){
 						angularFOV = 30.f;
 						break;
 					case 2:
+						if(angularFOV != 15.f){
+							soundEngine->play2D("Audio/Sounds/Scope.wav", false);
+						}
 						angularFOV = 15.f;
 						scope = true;
 						break;
@@ -879,12 +884,6 @@ void Scene::Update(GLFWwindow* const& win){
 				}
 			}
 
-			// TESTING ONLY FOR HEALTHBAR
-			//if (Key(GLFW_KEY_SPACE))
-			//{
-			//	playerCurrHealth -= 1.f;
-			//}
-
 			// Player gets max health again, but loses 1 life
 			if(playerCurrHealth <= 0.f){
 				playerCurrHealth = 100.f;
@@ -919,12 +918,15 @@ void Scene::Update(GLFWwindow* const& win){
 					switch(weapon->GetCurrentSlot()){
 						case 0:
 							bullet->type = Entity::EntityType::BULLET;
+							soundEngine->play2D("Audio/Sounds/Pistol.wav", false);
 							break;
 						case 1:
 							bullet->type = Entity::EntityType::BULLET2;
+							soundEngine->play2D("Audio/Sounds/AR.wav", false);
 							break;
 						case 2:
 							bullet->type = Entity::EntityType::BULLET3;
+							soundEngine->play2D("Audio/Sounds/Sniper.wav", false);
 							break;
 					}
 					bullet->active = true;
@@ -946,6 +948,7 @@ void Scene::Update(GLFWwindow* const& win){
 				// Begin to reload
 				if(weapon->GetCurrentWeapon()->GetCurrentAmmoRound() < weapon->GetCurrentWeapon()->GetMaxAmmoRound()
 					&& weapon->GetCurrentWeapon()->GetCurrentTotalAmmo() > 0 && !weapon->GetCurrentWeapon()->GetReloading()){
+					soundEngine->play2D("Audio/Sounds/Reload.wav", false);
 					weapon->GetCurrentWeapon()->SetReloading(true);
 					pressedReload = true;
 					lastTime = elapsedTime;
@@ -2259,7 +2262,7 @@ void Scene::SpawnEntity(const Entity::EntityType& type, Mesh* const& mesh, const
 		ISound* myMusic = soundEngine->play3D("Audio/Music/Spin.mp3", vec3df(pos.x, pos.y, pos.z), true, true, true, ESM_AUTO_DETECT, true);
 		if(myMusic){
 			myMusic->setMinDistance(2.f);
-			myMusic->setVolume(3);
+			myMusic->setVolume(5);
 			music.emplace_back(myMusic);
 		} else{
 			(void)puts("Failed to init music!\n");

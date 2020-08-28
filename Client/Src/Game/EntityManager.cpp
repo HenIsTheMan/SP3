@@ -274,6 +274,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						if(params.soundEngine){
+							params.soundEngine->play2D("Audio/Sounds/Collect.wav", false);
+						}
 						params.score += 100;
 						--params.goldCoinAmt;
 						entity->active = false;
@@ -285,6 +288,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						if(params.soundEngine){
+							params.soundEngine->play2D("Audio/Sounds/Collect.wav", false);
+						}
 						params.score += 10;
 						--params.silverCoinAmt;
 						entity->active = false;
@@ -296,6 +302,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						if(params.soundEngine){
+							params.soundEngine->play2D("Audio/Sounds/Collect.wav", false);
+						}
 						++params.playerCurrLives;
 						--params.pinkCoinAmt;
 						params.lifeUp = 1.f;
@@ -308,6 +317,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						if(params.soundEngine){
+							params.soundEngine->play2D("Audio/Sounds/Collect.wav", false);
+						}
 						params.playerCurrHealth += 50.f;
 						--params.greenCoinAmt;
 						params.healthUp = 1.f;
@@ -320,6 +332,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
+						if(params.soundEngine){
+							params.soundEngine->play2D("Audio/Sounds/Collect.wav", false);
+						}
 						if(iFrames < 10.f){
 							iFrames = 10.f;
 						}
