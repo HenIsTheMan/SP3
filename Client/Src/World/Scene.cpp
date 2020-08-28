@@ -1081,6 +1081,42 @@ void Scene::Update(GLFWwindow* const& win){
 
 void Scene::GeoRenderPass(){
 	if(screen == Screen::Game){
+		geoPassSP.Use();
+		geoPassSP.SetMat4fv("PV", &(projection * view)[0][0]);
+
+		//EntityManager::RenderParams params;
+		//params.camPos = cam.GetPos();
+		//params.depthDTexRefID = depthDTexRefID;
+		//params.depthSTexRefID = depthSTexRefID;
+		//params.quadMesh = meshes[(int)MeshType::Quad];
+		//entityManager->RenderEntities(forwardSP, params); //Render entities
+
+		///Render curr weapon
+		const glm::vec3 front = cam.CalcFront();
+		const float sign = front.y < 0.f ? -1.f : 1.f;
+		auto rotationMat = glm::rotate(glm::mat4(1.f), sign * acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z)))), glm::normalize(glm::vec3(-front.z, 0.f, front.x)));
+		modelStack.PushModel({
+			modelStack.Translate(cam.GetPos()
+				+ glm::vec3(rotationMat * glm::vec4(RotateVecIn2D(glm::vec3(5.5f, -7.f, -13.f), atan2(front.x, front.z) + glm::radians(180.f), Axis::y), 1.f))),
+			modelStack.Rotate(glm::vec4(glm::vec3(-front.z, 0.f, front.x), sign * glm::degrees(acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z))))))),
+			modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(front.x, front.z)))),
+			modelStack.Scale(glm::vec3(5.f)),
+		});
+		switch(weapon->GetCurrentSlot()){
+			case 0:
+				models[(int)ModelType::Pistol]->SetModelForAll(modelStack.GetTopModel());
+				models[(int)ModelType::Pistol]->Render(geoPassSP);
+				break;
+			case 1:
+				models[(int)ModelType::AR]->SetModelForAll(modelStack.GetTopModel());
+				models[(int)ModelType::AR]->Render(geoPassSP);
+				break;
+			case 2:
+				models[(int)ModelType::Sniper]->SetModelForAll(modelStack.GetTopModel());
+				models[(int)ModelType::Sniper]->Render(geoPassSP);
+				break;
+		}
+		modelStack.PopModel();
 	}
 }
 
@@ -1162,13 +1198,14 @@ void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, 
 	}
 }
 
+///
 void Scene::DepthRender(const short& projectionType){
 	depthSP.Use();
-	if(projectionType){
-		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), sCam.GetAspectRatio(), 120.f, 5000.f) * sCam.LookAt())[0][0]);
-	} else{
-		depthSP.SetMat4fv("PV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
-	}
+	//if(projectionType){
+	//	depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), sCam.GetAspectRatio(), 120.f, 5000.f) * sCam.LookAt())[0][0]);
+	//} else{
+	//	depthSP.SetMat4fv("PV", &(glm::ortho(-300.f, 300.f, -300.f, 300.f, .1f, 500.f) * dCam.LookAt())[0][0]);
+	//}
 
 	glCullFace(GL_FRONT);
 	glCullFace(GL_BACK);
@@ -1183,56 +1220,7 @@ void Scene::PlanarReflectionRender(){
 	forwardSP.Set1i("dAmt", 0);
 	forwardSP.Set1i("sAmt", 0);
 
-	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), waterCam.GetAspectRatio(), .1f, 9999.f) * glm::mat4(glm::mat3(waterCam.LookAt())))[0][0]);
-
-	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
-	glCullFace(GL_FRONT);
-	forwardSP.Set1i("sky", 1);
-	modelStack.PushModel({
-		modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
-	});
-		meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Sphere]->Render(forwardSP);
-	modelStack.PopModel();
-	forwardSP.Set1i("sky", 0);
-	glCullFace(GL_BACK);
-	glDepthFunc(GL_LESS);
-
-	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), 1.f, .1f, 9999.f) * waterCam.LookAt())[0][0]);
-
-	modelStack.PushModel({
-		modelStack.Translate(glm::vec3(0.f, 100.f, -50.f)),
-		modelStack.Scale(glm::vec3(50.f)),
-	});
-		meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Quad]->Render(forwardSP);
-	modelStack.PopModel();
-
-	modelStack.PushModel({
-		modelStack.Translate(glm::vec3(0.f, 100.f, 0.f)),
-		modelStack.Scale(glm::vec3(10.f)),
-	});
-		meshes[(int)MeshType::Cylinder]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Cylinder]->Render(forwardSP);
-		modelStack.PushModel({
-			modelStack.Translate(glm::vec3(-3.f, 0.f, 0.f)),
-		});
-			forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
-			forwardSP.Set1i("customDiffuseTexIndex", -1);
-			meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
-			meshes[(int)MeshType::Sphere]->Render(forwardSP);
-			forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
-		modelStack.PopModel();
-		modelStack.PushModel({
-			modelStack.Translate(glm::vec3(3.f, 0.f, 0.f)),
-		});
-			forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
-			forwardSP.Set1i("customDiffuseTexIndex", -1);
-			meshes[(int)MeshType::Cube]->SetModel(modelStack.GetTopModel());
-			meshes[(int)MeshType::Cube]->Render(forwardSP);
-			forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
-		modelStack.PopModel();
-	modelStack.PopModel();
+	//forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), waterCam.GetAspectRatio(), .1f, 9999.f) * glm::mat4(glm::mat3(waterCam.LookAt())))[0][0]);
 }
 
 void Scene::CubemapReflectionRender(const short& cubemapFace){
@@ -1272,39 +1260,9 @@ void Scene::CubemapReflectionRender(const short& cubemapFace){
 			break;
 	}
 
-	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), enCam.GetAspectRatio(), .1f, 9999.f) * glm::mat4(glm::mat3(enCam.LookAt())))[0][0]);
-
-	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
-	glCullFace(GL_FRONT);
-	forwardSP.Set1i("sky", 1);
-	modelStack.PushModel({
-		modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
-	});
-		meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Sphere]->Render(forwardSP);
-	modelStack.PopModel();
-	forwardSP.Set1i("sky", 0);
-	glCullFace(GL_BACK);
-	glDepthFunc(GL_LESS);
-
-	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), 1.f, .1f, 9999.f) * enCam.LookAt())[0][0]);
-
-	modelStack.PushModel({
-		modelStack.Translate(glm::vec3(0.f, 100.f, 0.f)),
-		modelStack.Scale(glm::vec3(10.f)),
-	});
-		modelStack.PushModel({
-			modelStack.Translate(glm::vec3(6.f, 0.f, 0.f)),
-		});
-			modelStack.PushModel({
-				modelStack.Translate(glm::vec3(5.f, 0.f, 5.f)),
-			});
-				meshes[(int)MeshType::Cylinder]->SetModel(modelStack.GetTopModel());
-				meshes[(int)MeshType::Cylinder]->Render(forwardSP);
-			modelStack.PopModel();
-		modelStack.PopModel();
-	modelStack.PopModel();
+	//forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), enCam.GetAspectRatio(), .1f, 9999.f) * glm::mat4(glm::mat3(enCam.LookAt())))[0][0]);
 }
+///
 
 void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID, const uint& cubemapReflectionTexID){
 	forwardSP.Use();
@@ -1449,8 +1407,8 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 
 			///Crystal ball
 			modelStack.PushModel({
-				modelStack.Translate(glm::vec3(0.f, 0.f, 5.f)),
-				modelStack.Scale(glm::vec3(3.f)),
+				modelStack.Translate(glm::vec3(0.f, 200.f, 0.f)),
+				modelStack.Scale(glm::vec3(25.f)),
 			});
 				forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
 				forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
@@ -1527,33 +1485,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				glBlendFunc(GL_ONE, GL_ZERO);
 				return;
 			}
-
-			///Render curr weapon
-			const glm::vec3 front = cam.CalcFront();
-			const float sign = front.y < 0.f ? -1.f : 1.f;
-			auto rotationMat = glm::rotate(glm::mat4(1.f), sign * acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z)))), glm::normalize(glm::vec3(-front.z, 0.f, front.x)));
-			modelStack.PushModel({
-				modelStack.Translate(cam.GetPos() +
-					glm::vec3(rotationMat * glm::vec4(RotateVecIn2D(glm::vec3(5.5f, -7.f, -13.f), atan2(front.x, front.z) + glm::radians(180.f), Axis::y), 1.f))),
-				modelStack.Rotate(glm::vec4(glm::vec3(-front.z, 0.f, front.x), sign * glm::degrees(acosf(glm::dot(front, glm::normalize(glm::vec3(front.x, 0.f, front.z))))))),
-				modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(front.x, front.z)))),
-				modelStack.Scale(glm::vec3(5.f)),
-			});
-				switch(weapon->GetCurrentSlot()){
-					case 0:
-						models[(int)ModelType::Pistol]->SetModelForAll(modelStack.GetTopModel());
-						models[(int)ModelType::Pistol]->Render(forwardSP);
-						break;
-					case 1:
-						models[(int)ModelType::AR]->SetModelForAll(modelStack.GetTopModel());
-						models[(int)ModelType::AR]->Render(forwardSP);
-						break;
-					case 2:
-						models[(int)ModelType::Sniper]->SetModelForAll(modelStack.GetTopModel());
-						models[(int)ModelType::Sniper]->Render(forwardSP);
-						break;
-				}
-			modelStack.PopModel();
 
 			////Render GUI
 			forwardSP.SetMat4fv("PV", &(glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f))[0][0]);
@@ -2061,6 +1992,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	glBlendFunc(GL_ONE, GL_ZERO);
 }
 
+///
 void Scene::MinimapRender(){
 	forwardSP.Use();
 	forwardSP.Set1f("shininess", 32.f); //More light scattering if lower
@@ -2084,6 +2016,7 @@ void Scene::MinimapRender(){
 		meshes[(int)MeshType::Terrain]->Render(forwardSP);
 	modelStack.PopModel();
 }
+///
 
 const Scene::Screen& Scene::GetScreen() const{
 	return screen;

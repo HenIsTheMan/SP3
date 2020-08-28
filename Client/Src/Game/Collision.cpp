@@ -209,5 +209,3 @@ void Collision::CollisionCubeCube(Entity* const& entity, Entity* const& instance
 		entity->vel = glm::vec3(0.f);
 	}
 }
-
-///Prevent double collision??
