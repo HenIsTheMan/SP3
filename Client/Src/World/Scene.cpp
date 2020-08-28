@@ -1842,13 +1842,21 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 					0
 				});
 				textChief.RenderText(textSP, {
+					"Wave: " + std::to_string(waves[waveCount] + 1),
+					25.f,
+					125.f,
+					1.f,
+					glm::vec4(1.f, 1.f, 0.f, 1.f),
+					0
+				});
+				textChief.RenderText(textSP, {
 					"Score: " + std::to_string(score),
 					25.f,
 					75.f,
 					1.f,
 					glm::vec4(1.f, 1.f, 0.f, 1.f),
 					0
-					});
+				});
 				textChief.RenderText(textSP, {
 					"FPS: " + std::to_string(1.f / dt).substr(0, 4),
 					25.f,
@@ -1856,7 +1864,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 					1.f,
 					glm::vec4(1.f, 1.f, 0.f, 1.f),
 					0
-					});
+				});
 			}
 			break;
 		}
