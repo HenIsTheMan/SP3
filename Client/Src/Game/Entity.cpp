@@ -17,6 +17,9 @@ Entity::Entity():
 	vel(glm::vec3(0.f)),
 	mass(0.f),
 	force(glm::vec3(0.f)),
+	originalPos(glm::vec3(0.f)),
+	originalScale(glm::vec3(0.f)),
+	originalVel(glm::vec3(0.f)),
 	spawnSmokeBT(0.f),
 	isShot(false)
 {

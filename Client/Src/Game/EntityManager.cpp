@@ -187,6 +187,10 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					if(entity->pos.y > 200.f){
 						entity->active = false;
 					}
+					if (entity->vel.x > 0 && entity->pos.x - 10.f > entity->originalPos.x) // Particle going to the right
+						entity->vel.x = -entity->vel.x;
+					else if (entity->vel.x < 0 && entity->pos.x + 10.f < entity->originalPos.x) // Particle going to the left
+						entity->vel.x = -entity->vel.x;
 					entity->scale *= glm::vec3(0.992f); // As the particles travel upwards, they get smaller
 					break;
 				}
@@ -221,6 +225,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 						particle->vel = glm::vec3(7.f, 15.f, 0.f);
 						particle->mass = .0001f;
 						particle->force = glm::vec3(0.f);
+						particle->originalPos = particle->pos;
+						particle->originalScale = particle->scale;
+						particle->originalVel = particle->vel;
 						entity->spawnSmokeBT = (float)glfwGetTime() + .5f;
 					}
 
