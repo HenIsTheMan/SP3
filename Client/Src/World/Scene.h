@@ -136,6 +136,7 @@ private:
 	float textScaleFactors[5];
 	glm::vec4 textColours[5];
 	bool addAmmo;
+	int weaponType;
 	
 	int goldCoinAmt;
 	int silverCoinAmt;

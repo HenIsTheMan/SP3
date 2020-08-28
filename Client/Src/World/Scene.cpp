@@ -127,6 +127,7 @@ Scene::Scene():
 		glm::vec4(1.f),
 	},
 	addAmmo(false),
+	weaponType(0),
 	goldCoinAmt(0),
 	silverCoinAmt(0),
 	pinkCoinAmt(0),
@@ -725,12 +726,14 @@ void Scene::Update(GLFWwindow* const& win){
 			params.ammoPickupAmt = ammoPickupAmt;
 			params.ammoPickup2Amt = ammoPickup2Amt;
 			params.addAmmo = addAmmo;
+			params.weaponType = weapon->GetCurrentSlot();
 			params.takingDmg = takingDmg;
 			params.healthUp = healthUp;
 			params.lifeUp = lifeUp;
 			params.immune = immune;
 			entityManager->UpdateEntities(params);
 			addAmmo = params.addAmmo;
+			weaponType = params.weaponType;
 			reticleColour = params.reticleColour;
 			cam.canMove = params.camCanMove;
 			playerCurrHealth = params.playerCurrHealth;
@@ -893,10 +896,14 @@ void Scene::Update(GLFWwindow* const& win){
 			static double lastTime = elapsedTime;
 			weapon->GetCurrentWeapon()->Update(elapsedTime - lastTime);
 
-			if (addAmmo && !weapon->GetCurrentSlot() == 0) // Player picked up the ammo collectible, and is not pistol
+			if (addAmmo) // Player picked up the ammo collectible
 			{
+				int temp = weapon->GetCurrentSlot();
+				weapon->SetCurrentSlot(weaponType); // Depends which weapon ammo it is
 				weapon->GetCurrentWeapon()->AddAmmo();
 				addAmmo = false;
+				weapon->SetCurrentSlot(temp); // Get back the weapon player was holding
+				weaponType = 0;
 			}
 
 			if(leftMB){ //Shoot

@@ -217,7 +217,8 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= entity->scale.x * entity->scale.x){
-
+						params.addAmmo = true;
+						params.weaponType = 1;
 						--params.ammoPickupAmt;
 						entity->active = false;
 					}
@@ -227,7 +228,8 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= entity->scale.x * entity->scale.x){
-
+						params.addAmmo = true;
+						params.weaponType = 2;
 						--params.ammoPickup2Amt;
 						entity->active = false;
 					}

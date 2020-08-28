@@ -24,6 +24,7 @@ public:
 		float yGround = 0.f;
 		Mesh* quadMesh = nullptr;
 		bool addAmmo = false;
+		int weaponType = 0;
 		int goldCoinAmt = 0;
 		int silverCoinAmt = 0;
 		int pinkCoinAmt = 0;
