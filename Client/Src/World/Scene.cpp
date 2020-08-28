@@ -272,6 +272,9 @@ bool Scene::Init(){
 	weapon->SetInventory(2, sniperRifle);
 
 	glGetIntegerv(GL_POLYGON_MODE, polyModes);
+	for(short i = 0; i < 20; ++i){
+		ptLights.emplace_back(CreateLight(LightType::Pt));
+	}
 	directionalLights.emplace_back(CreateLight(LightType::Directional));
 	spotlights.emplace_back(CreateLight(LightType::Spot));
 
@@ -390,7 +393,7 @@ void Scene::Update(GLFWwindow* const& win){
 					entityManager->DeactivateAll();
 
 					///Create fires
-					for(short i = 0; i < 5; ++i){
+					for(short i = 0; i < 20; ++i){
 						const float scaleFactor = 15.f;
 						const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f, terrainXScale / 2.f - 5.f);
 						const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f, terrainZScale / 2.f - 5.f);
@@ -405,12 +408,16 @@ void Scene::Update(GLFWwindow* const& win){
 						fire->diffuseTexIndex = -1;
 						fire->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
 						fire->scale = glm::vec3(scaleFactor);
-						fire->light = nullptr;
 						fire->mesh = meshes[(int)MeshType::Fire];
 						fire->pos = pos;
 						fire->vel = glm::vec3(0.f);
 						fire->mass = .0001f;
 						fire->force = glm::vec3(0.f);
+
+						fire->light = ptLights[i];
+						static_cast<PtLight*>(fire->light)->pos = fire->pos;
+						static_cast<PtLight*>(fire->light)->pos.y -= 10.f;
+						fire->light->diffuse *= 30.f;
 
 						ISound* myMusic = soundEngine->play3D("Audio/Music/Burn.wav", vec3df(pos.x, pos.y, pos.z), true, true, true, ESM_AUTO_DETECT, true);
 						if(myMusic){
@@ -1390,28 +1397,17 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	forwardSP.SetMat4fv("directionalLightPV", &(glm::ortho(-600.f, 600.f, -600.f, 600.f, 20.f, 300.f) * dCam.LookAt())[0][0]);
 	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), sCam.GetAspectRatio(), 170.f, 14000.f) * sCam.LookAt())[0][0]);
 
-	const int& pAmt = (int)ptLights.size();
 	const int& dAmt = (int)directionalLights.size();
 	const int& sAmt = (int)spotlights.size();
 
 	forwardSP.Set1f("shininess", 32.f); //More light scattering if lower
 	forwardSP.Set3fv("globalAmbient", Light::globalAmbient);
 	forwardSP.Set3fv("camPos", cam.GetPos());
-	forwardSP.Set1i("pAmt", screen == Screen::Game ? pAmt : 0);
+	forwardSP.Set1i("pAmt", 0);
 	forwardSP.Set1i("dAmt", screen == Screen::Game ? dAmt : 0);
 	forwardSP.Set1i("sAmt", screen == Screen::Game ? sAmt : 0);
 
 	int i;
-	for(i = 0; i < pAmt; ++i){
-		const PtLight* const& ptLight = static_cast<PtLight*>(ptLights[i]);
-		forwardSP.Set3fv(("ptLights[" + std::to_string(i) + "].ambient").c_str(), ptLight->ambient);
-		forwardSP.Set3fv(("ptLights[" + std::to_string(i) + "].diffuse").c_str(), ptLight->diffuse);
-		forwardSP.Set3fv(("ptLights[" + std::to_string(i) + "].spec").c_str(), ptLight->spec);
-		forwardSP.Set3fv(("ptLights[" + std::to_string(i) + "].pos").c_str(), ptLight->pos);
-		forwardSP.Set1f(("ptLights[" + std::to_string(i) + "].constant").c_str(), ptLight->constant);
-		forwardSP.Set1f(("ptLights[" + std::to_string(i) + "].linear").c_str(), ptLight->linear);
-		forwardSP.Set1f(("ptLights[" + std::to_string(i) + "].quadratic").c_str(), ptLight->quadratic);
-	}
 	for(i = 0; i < dAmt; ++i){
 		const DirectionalLight* const& directionalLight = static_cast<DirectionalLight*>(directionalLights[i]);
 		forwardSP.Set3fv(("directionalLights[" + std::to_string(i) + "].ambient").c_str(), directionalLight->ambient);
