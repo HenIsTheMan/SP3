@@ -142,7 +142,9 @@ private:
 	int pinkCoinAmt;
 	int greenCoinAmt;
 	int blueCoinAmt;
-	void SpawnCoin(const Entity::EntityType& type, Mesh* const& mesh, const float& scaleFactor);
+	int ammoPickupAmt;
+	int ammoPickup2Amt;
+	void SpawnEntity(const Entity::EntityType& type, Mesh* const& mesh, const float& scaleFactor);
 
 	bool takingDmg;
 	float healthUp;

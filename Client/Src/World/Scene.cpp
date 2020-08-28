@@ -132,6 +132,8 @@ Scene::Scene():
 	pinkCoinAmt(0),
 	greenCoinAmt(0),
 	blueCoinAmt(0),
+	ammoPickupAmt(0),
+	ammoPickup2Amt(0),
 	takingDmg(false),
 	healthUp(0.f),
 	lifeUp(0.f),
@@ -331,6 +333,8 @@ void Scene::Update(GLFWwindow* const& win){
 	static float pinkCoinBT = 0.f;
 	static float greenCoinBT = 0.f;
 	static float blueCoinBT = 0.f;
+	static float ammoPickupBT = 0.f;
+	static float ammoPickup2BT = 0.f;
 
 	switch(screen){
 		case Screen::End:
@@ -370,12 +374,16 @@ void Scene::Update(GLFWwindow* const& win){
 					pinkCoinBT = 0.f;
 					greenCoinBT = 0.f;
 					blueCoinBT = 0.f;
+					ammoPickupBT = 0.f;
+					ammoPickup2BT = 0.f;
 
 					goldCoinAmt = 0;
 					silverCoinAmt = 0;
 					pinkCoinAmt = 0;
 					greenCoinAmt = 0;
 					blueCoinAmt = 0;
+					ammoPickupAmt = 0;
+					ammoPickup2Amt = 0;
 
 					////Create entities
 					entityManager->DeactivateAll();
@@ -545,29 +553,39 @@ void Scene::Update(GLFWwindow* const& win){
 
 			///Spawn coins
 			if(goldCoinBT <= elapsedTime && goldCoinAmt < 1){
-				SpawnCoin(Entity::EntityType::COIN_GOLD, meshes[(int)MeshType::CoinGold], 15.f);
+				SpawnEntity(Entity::EntityType::COIN_GOLD, meshes[(int)MeshType::CoinGold], 15.f);
 				++goldCoinAmt;
 				goldCoinBT = elapsedTime + 60.f;
 			}
 			if(silverCoinBT <= elapsedTime && silverCoinAmt < 5){
-				SpawnCoin(Entity::EntityType::COIN_SILVER, meshes[(int)MeshType::CoinSilver], 15.f);
+				SpawnEntity(Entity::EntityType::COIN_SILVER, meshes[(int)MeshType::CoinSilver], 15.f);
 				++silverCoinAmt;
 				silverCoinBT = elapsedTime + 15.f;
 			}
 			if(pinkCoinBT <= elapsedTime && pinkCoinAmt < 5){
-				SpawnCoin(Entity::EntityType::COIN_PINK, meshes[(int)MeshType::CoinPink], 15.f);
+				SpawnEntity(Entity::EntityType::COIN_PINK, meshes[(int)MeshType::CoinPink], 15.f);
 				++pinkCoinAmt;
 				pinkCoinBT = elapsedTime + 20.f;
 			}
 			if(greenCoinBT <= elapsedTime && greenCoinAmt < 5){
-				SpawnCoin(Entity::EntityType::COIN_GREEN, meshes[(int)MeshType::CoinGreen], 15.f);
+				SpawnEntity(Entity::EntityType::COIN_GREEN, meshes[(int)MeshType::CoinGreen], 15.f);
 				++greenCoinAmt;
 				greenCoinBT = elapsedTime + 10.f;
 			}
 			if(blueCoinBT <= elapsedTime && blueCoinAmt < 5){
-				SpawnCoin(Entity::EntityType::COIN_BLUE, meshes[(int)MeshType::CoinBlue], 15.f);
+				SpawnEntity(Entity::EntityType::COIN_BLUE, meshes[(int)MeshType::CoinBlue], 15.f);
 				++blueCoinAmt;
 				blueCoinBT = elapsedTime + 60.f;
+			}
+			if(ammoPickupBT <= elapsedTime && ammoPickupAmt < 3){
+				SpawnEntity(Entity::EntityType::AMMO_PICKUP, meshes[(int)MeshType::Sphere], 10.f);
+				++ammoPickupAmt;
+				ammoPickupBT = elapsedTime + 30.f;
+			}
+			if(ammoPickup2BT <= elapsedTime && ammoPickup2Amt < 3){
+				SpawnEntity(Entity::EntityType::AMMO_PICKUP2, meshes[(int)MeshType::Sphere], 10.f);
+				++ammoPickup2Amt;
+				ammoPickup2BT = elapsedTime + 30.f;
 			}
 
 			///Play music
@@ -704,6 +722,8 @@ void Scene::Update(GLFWwindow* const& win){
 			params.pinkCoinAmt = pinkCoinAmt;
 			params.greenCoinAmt = greenCoinAmt;
 			params.blueCoinAmt = blueCoinAmt;
+			params.ammoPickupAmt = ammoPickupAmt;
+			params.ammoPickup2Amt = ammoPickup2Amt;
 			params.addAmmo = addAmmo;
 			params.takingDmg = takingDmg;
 			params.healthUp = healthUp;
@@ -722,6 +742,8 @@ void Scene::Update(GLFWwindow* const& win){
 			pinkCoinAmt = params.pinkCoinAmt;
 			greenCoinAmt = params.greenCoinAmt;
 			blueCoinAmt = params.blueCoinAmt;
+			ammoPickupAmt = params.ammoPickupAmt;
+			ammoPickup2Amt = params.ammoPickup2Amt;
 			takingDmg = params.takingDmg;
 			healthUp = params.healthUp;
 			lifeUp = params.lifeUp;
@@ -2203,33 +2225,35 @@ const Scene::Screen& Scene::GetScreen() const{
 	return screen;
 }
 
-void Scene::SpawnCoin(const Entity::EntityType& type, Mesh* const& mesh, const float& scaleFactor){
+void Scene::SpawnEntity(const Entity::EntityType& type, Mesh* const& mesh, const float& scaleFactor){
 	const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f, terrainXScale / 2.f - 5.f);
 	const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f, terrainZScale / 2.f - 5.f);
 	const glm::vec3 pos = glm::vec3(xPos, terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(xPos / terrainXScale, zPos / terrainZScale) + scaleFactor, zPos);
 
-	Entity* const& coin = entityManager->FetchEntity();
-	coin->type = type;
-	coin->active = true;
-	coin->life = 0.f;
-	coin->maxLife = 0.f;
-	coin->colour = glm::vec4(1.f);
-	coin->diffuseTexIndex = -1;
-	coin->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-	coin->scale = glm::vec3(scaleFactor);
-	coin->light = nullptr;
-	coin->mesh = mesh;
-	coin->pos = pos;
-	coin->vel = glm::vec3(0.f);
-	coin->mass = .0001f;
-	coin->force = glm::vec3(0.f);
+	Entity* const& entity = entityManager->FetchEntity();
+	entity->type = type;
+	entity->active = true;
+	entity->life = 0.f;
+	entity->maxLife = 0.f;
+	entity->colour = glm::vec4(1.f);
+	entity->diffuseTexIndex = -1;
+	entity->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+	entity->scale = glm::vec3(scaleFactor);
+	entity->light = nullptr;
+	entity->mesh = mesh;
+	entity->pos = pos;
+	entity->vel = glm::vec3(0.f);
+	entity->mass = .0001f;
+	entity->force = glm::vec3(0.f);
 
-	ISound* myMusic = soundEngine->play3D("Audio/Music/Spin.mp3", vec3df(pos.x, pos.y, pos.z), true, true, true, ESM_AUTO_DETECT, true);
-	if(myMusic){
-		myMusic->setMinDistance(2.f);
-		myMusic->setVolume(3);
-		music.emplace_back(myMusic);
-	} else{
-		(void)puts("Failed to init music!\n");
+	if(type != Entity::EntityType::AMMO_PICKUP && type != Entity::EntityType::AMMO_PICKUP2){
+		ISound* myMusic = soundEngine->play3D("Audio/Music/Spin.mp3", vec3df(pos.x, pos.y, pos.z), true, true, true, ESM_AUTO_DETECT, true);
+		if(myMusic){
+			myMusic->setMinDistance(2.f);
+			myMusic->setVolume(3);
+			music.emplace_back(myMusic);
+		} else{
+			(void)puts("Failed to init music!\n");
+		}
 	}
 }

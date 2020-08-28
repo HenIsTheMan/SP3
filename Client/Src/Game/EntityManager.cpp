@@ -108,7 +108,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 
 	for(size_t i = 0; i < entityList.size(); ++i){
 		Entity* const& entity = entityList[i];
-		if(entity && entity->active && entity->type != Entity::EntityType::NUM_TYPES){
+		if(entity && entity->active){
 			switch(entity->type){
 				case Entity::EntityType::BULLET:
 				case Entity::EntityType::BULLET2:
@@ -209,6 +209,26 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 				case Entity::EntityType::PARTICLE3: {
 					entity->life -= dt;
 					if(entity->life <= 0.f){
+						entity->active = false;
+					}
+					break;
+				}
+				case Entity::EntityType::AMMO_PICKUP: {
+					///Check for collision with cam
+					const glm::vec3& displacementVec = params.camPos - entity->pos;
+					if(glm::dot(displacementVec, displacementVec) <= entity->scale.x * entity->scale.x){
+
+						--params.ammoPickupAmt;
+						entity->active = false;
+					}
+					break;
+				}
+				case Entity::EntityType::AMMO_PICKUP2: {
+					///Check for collision with cam
+					const glm::vec3& displacementVec = params.camPos - entity->pos;
+					if(glm::dot(displacementVec, displacementVec) <= entity->scale.x * entity->scale.x){
+
+						--params.ammoPickup2Amt;
 						entity->active = false;
 					}
 					break;
@@ -452,10 +472,53 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 				//	});
 				//		entity->mesh->AddModelMat(modelStack.GetTopModel());
 				//	modelStack.PopModel();
-
 				//	rainColour = entity->colour;
 				//	particle1 = true;
 				//	break;
+				case Entity::EntityType::AMMO_PICKUP: {
+					if(params.minimap){
+						continue;
+					}
+
+					modelStack.PushModel({
+						modelStack.Translate(entity->pos),
+						modelStack.Scale(entity->scale),
+					});
+						SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+						SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
+						SP.Set1i("useCustomColour", 1);
+						SP.Set1i("useCustomDiffuseTexIndex", 1);
+						SP.Set4fv("customColour", glm::vec4(.8f, .4f, .1f, 1.f));
+						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
+						entity->mesh->SetModel(modelStack.GetTopModel());
+						entity->mesh->Render(SP);
+						SP.Set1i("useCustomColour", 0);
+						SP.Set1i("useCustomDiffuseTexIndex", 0);
+					modelStack.PopModel();
+					break;
+				}
+				case Entity::EntityType::AMMO_PICKUP2: {
+					if(params.minimap){
+						continue;
+					}
+
+					modelStack.PushModel({
+						modelStack.Translate(entity->pos),
+						modelStack.Scale(entity->scale),
+					});
+						SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
+						SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
+						SP.Set1i("useCustomColour", 1);
+						SP.Set1i("useCustomDiffuseTexIndex", 1);
+						SP.Set4fv("customColour", glm::vec4(0.f, 0.f, .7f, 1.f));
+						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
+						entity->mesh->SetModel(modelStack.GetTopModel());
+						entity->mesh->Render(SP);
+						SP.Set1i("useCustomColour", 0);
+						SP.Set1i("useCustomDiffuseTexIndex", 0);
+					modelStack.PopModel();
+					break;
+				}
 				case Entity::EntityType::FIRE: {
 					if(params.minimap){
 						continue;

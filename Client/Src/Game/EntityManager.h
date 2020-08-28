@@ -29,6 +29,8 @@ public:
 		int pinkCoinAmt = 0;
 		int greenCoinAmt = 0;
 		int blueCoinAmt = 0;
+		int ammoPickupAmt = 0;
+		int ammoPickup2Amt = 0;
 		bool takingDmg = false;
 		float healthUp = false;
 		float lifeUp = false;
