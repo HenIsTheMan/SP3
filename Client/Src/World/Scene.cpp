@@ -1215,7 +1215,7 @@ void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRe
 	}
 
 	meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-	meshes[(int)MeshType::Quad]->Render(lightingPassSP, false);
+	meshes[(int)MeshType::Quad]->Render(lightingPassSP, false, false);
 	lightingPassSP.ResetTexUnits();
 }
 
@@ -1224,7 +1224,7 @@ void Scene::BlurRender(const uint& brightTexRefID, const bool& horizontal) {
 	blurSP.Set1i("horizontal", horizontal);
 	blurSP.UseTex(brightTexRefID, "texSampler");
 	meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-	meshes[(int)MeshType::Quad]->Render(blurSP, false);
+	meshes[(int)MeshType::Quad]->Render(blurSP, false, false);
 	blurSP.ResetTexUnits();
 }
 
@@ -1239,7 +1239,7 @@ void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, 
 			modelStack.Scale(scale),
 		});
 			meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-			meshes[(int)MeshType::Quad]->Render(screenSP, false);
+			meshes[(int)MeshType::Quad]->Render(screenSP, false, false);
 		modelStack.PopModel();
 		screenSP.ResetTexUnits();
 	}
@@ -1538,7 +1538,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			modelStack.PushModel({
 				modelStack.Translate(glm::vec3(-15.f, 40.f, -20.f)),
 				modelStack.Rotate(glm::vec4(1.f, 0.f, 0.f, -90.f)),
-				modelStack.Scale(glm::vec3(360.f)),
+				modelStack.Scale(glm::vec3(400.f)),
 			});
 				forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
 				forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");

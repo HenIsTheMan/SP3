@@ -7,7 +7,7 @@ public:
 	Water(const float& quadSize, const float& hTile, const float& vTile, const float& opacity);
 	~Water() = default;
 
-	void Render(ShaderProg& SP, const bool& autoConfig = true) override;
+	void Render(ShaderProg& SP, const bool& autoConfig = true, const bool& setInstancing = true) override;
 private:
 	float quadSize;
 	float hTile;

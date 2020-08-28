@@ -44,8 +44,8 @@ public:
 	void RemoveModelMat(const size_t& index);
 	void RemoveTexMap(str const& texPath);
 	//void BatchRender(const std::vector<BatchRenderParams>& params); //Old and not working??
-	void InstancedRender(ShaderProg& SP, const bool& autoConfig = true);
-	virtual void Render(ShaderProg& SP, const bool& autoConfig = true);
+	void InstancedRender(ShaderProg& SP, const bool& autoConfig = true, const bool& setInstancing = true);
+	virtual void Render(ShaderProg& SP, const bool& autoConfig = true, const bool& setInstancing = true);
 	void SetModel(const glm::mat4& model);
 protected:
 	MeshType type;

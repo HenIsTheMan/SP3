@@ -39,7 +39,7 @@ public:
 	void AddSequenceAni(const str& name, const ::std::initializer_list<int>& frames);
 	void Create();
 	void Update();
-	void Render(ShaderProg& SP, const bool& autoConfig = true) override;
+	void Render(ShaderProg& SP, const bool& autoConfig = true, const bool& setInstancing = true) override;
 private:
 	float currTime;
 	int currFrame;

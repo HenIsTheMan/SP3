@@ -9,7 +9,7 @@ public:
 
 	float BarycentricInterpolation(const glm::vec3& pt1, const glm::vec3& pt2, const glm::vec3& pt3, const glm::vec3& pos) const;
 	float GetHeightAtPt(const float& x, const float& z, const bool& barycentric = false) const;
-	void Render(ShaderProg& SP, const bool& autoConfig = true) override;
+	void Render(ShaderProg& SP, const bool& autoConfig = true, const bool& setInstancing = true) override;
 private:
 	cstr terrainPath;
 	float tileH;

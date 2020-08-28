@@ -14,11 +14,11 @@ Water::Water(const float& quadSize, const float& hTile, const float& vTile, cons
 {
 }
 
-void Water::Render(ShaderProg& SP, const bool& autoConfig){
+void Water::Render(ShaderProg& SP, const bool& autoConfig, const bool& setInstancing){
 	if(!vertices){
 		Create();
 	}
-	Mesh::Render(SP, autoConfig);
+	Mesh::Render(SP, autoConfig, setInstancing);
 }
 
 void Water::Create(){

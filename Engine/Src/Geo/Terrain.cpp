@@ -64,11 +64,11 @@ float Terrain::GetHeightAtPt(const float& x, const float& z, const bool& barycen
 	return result;
 }
 
-void Terrain::Render(ShaderProg& SP, const bool& autoConfig){
+void Terrain::Render(ShaderProg& SP, const bool& autoConfig, const bool& setInstancing){
 	if(!vertices){
 		Create();
 	}
-	Mesh::Render(SP, autoConfig);
+	Mesh::Render(SP, autoConfig, setInstancing);
 }
 
 bool Terrain::Load(){

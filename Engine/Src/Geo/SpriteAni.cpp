@@ -138,16 +138,17 @@ void SpriteAni::Update(){
 	}
 }
 
-void SpriteAni::Render(ShaderProg& SP, const bool& autoConfig){
+void SpriteAni::Render(ShaderProg& SP, const bool& autoConfig, const bool& setInstancing){
 	if(primitive < 0){
 		return (void)puts("Invalid primitive!\n");
 	}
 
 	SP.Use();
 	SP.SetMat4fv("model", &(model)[0][0]);
-	if(autoConfig){
+	if(setInstancing){
 		SP.Set1i("instancing", 0);
-
+	}
+	if(autoConfig){
 		SP.Set1i("useDiffuseMap", 0);
 		SP.Set1i("useSpecMap", 0);
 		SP.Set1i("useEmissionMap", 0);
