@@ -60,6 +60,11 @@ vec3 Normal = texture(normalsTex, TexCoords).rgb;
 vec3 Spec = texture(specTex, TexCoords).rgb;
 vec3 Reflection = texture(reflectionTex, TexCoords).rgb;
 
+const vec3 visionColour = vec3(.2f, 1.f, .4f);
+const float luminanceThreshold = .6f;
+const float colourAmplification = 2.f;
+uniform bool nightVision;
+
 uniform mat4 directionalLightPV;
 uniform mat4 spotlightPV;
 uniform sampler2D dDepthTexSampler;
@@ -186,6 +191,14 @@ void main(){
             vec3 refractedRay = refract(incidentRay, Normal, ratio);
             fragColour.rgb += texture(cubemapSampler, reflectedRay).rgb * Reflection;
         }
+    }
+
+    if(nightVision){
+        float lum = dot(vec3(.42f, .62f, .14f), fragColour.rgb);
+        if(lum < luminanceThreshold){
+            fragColour.rgb *= colourAmplification; 
+        }
+        fragColour.rgb *= visionColour;
     }
 
     float brightness = dot(fragColour.rgb, vec3(1.f)); //Transform fragColour to grayscale with dot product
