@@ -153,8 +153,8 @@ void Collision::CollisionSphereSphere(Entity* const& entity, Entity* const& inst
 					break;
 			}
 			if (instance->type == Entity::EntityType::MOVING_ENEMY) {
-				switch (temp)
-				{
+				instance->isShot = true;
+				switch (temp){
 					case 1:
 						instance->life -= 2.f;
 						break;
@@ -184,6 +184,7 @@ void Collision::CollisionSphereSphere(Entity* const& entity, Entity* const& inst
 					break;
 			}
 			if (entity->type == Entity::EntityType::MOVING_ENEMY) {
+				entity->isShot = true;
 				switch (temp)
 				{
 					case 1:

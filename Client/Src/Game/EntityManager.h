@@ -11,17 +11,18 @@ public:
 		bool camCanMove = true;
 		float playerCurrHealth = 0.f;
 		float playerCurrLives = 0.f;
-		int enemyCount;
-		int score;
+		int enemyCount = 0;
+		int score = 0;
 		glm::vec3 camPos = glm::vec3(0.f);
 		glm::vec3 camFront = glm::vec3(0.f);
 		glm::vec3 camTrueVel = glm::vec3(0.f);
 		glm::vec4 reticleColour = glm::vec4(0.f);
-		float yGround = 0.f;
 		Mesh* terrainMesh = nullptr;
 		float terrainXScale = 1.f;
 		float terrainYScale = 1.f;
 		float terrainZScale = 1.f;
+		float yGround = 0.f;
+		Mesh* quadMesh = nullptr;
 	};
 	struct RenderParams final{ //Add on here if needed
 		glm::vec3 camPos = glm::vec3(0.f);

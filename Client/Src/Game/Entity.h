@@ -47,4 +47,7 @@ private:
 	glm::vec3 vel;
 	float mass;
 	glm::vec3 force;
+
+	float spawnSmokeBT;
+	bool isShot; // To be used for particle 3
 };

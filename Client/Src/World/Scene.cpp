@@ -242,7 +242,7 @@ bool Scene::Init(){
 	}
 
 	entityManager = EntityManager::GetObjPtr();
-	entityManager->CreateEntities(100);
+	entityManager->CreateEntities(1000);
 
 	// Create weapons to be put in the inventory
 	weapon = new Weapon();
@@ -588,7 +588,6 @@ void Scene::Update(GLFWwindow* const& win){
 
 			float yMin = terrainYScale * static_cast<Terrain*>(meshes[(int)MeshType::Terrain])->GetHeightAtPt(cam.GetPos().x / terrainXScale, cam.GetPos().z / terrainZScale, true);
 			float yMax = yMin;
-			float yGround = yMin;
 
 			///Update player according to its states
 			int playerStatesTemp = playerStates;
@@ -640,11 +639,12 @@ void Scene::Update(GLFWwindow* const& win){
 			params.reticleColour = reticleColour;
 			params.enemyCount = enemyCount;
 			params.score = score;
-			params.yGround = yGround;
 			params.terrainMesh = meshes[(int)MeshType::Terrain];
 			params.terrainXScale = terrainXScale;
 			params.terrainYScale = terrainYScale;
 			params.terrainZScale = terrainZScale;
+			params.yGround = yMin;
+			params.quadMesh = meshes[(int)MeshType::Quad];
 			entityManager->UpdateEntities(params);
 			reticleColour = params.reticleColour;
 			cam.canMove = params.camCanMove;
@@ -840,91 +840,14 @@ void Scene::Update(GLFWwindow* const& win){
 				pressedReload = false;
 			}
 
-			// Rain particles
-			static float tmp = elapsedTime;
-			static int count = 0; // To limit the number of rain particles
-			if (elapsedTime - tmp >= 3.f && count < 100)
-			{
-				Entity* const& particle = entityManager->FetchEntity();
-				particle->type = Entity::EntityType::PARTICLE;
-				particle->active = true;
-				particle->life = 0.f;
-				particle->maxLife = 0.f;
-				particle->colour = glm::vec4(0.f, 1.f, 1.f, 1.f);
-				particle->diffuseTexIndex = -1;
-				particle->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-				particle->scale = glm::vec3(3.f);
-				particle->light = nullptr;
-				particle->mesh = meshes[(int)MeshType::Quad];
-				//particle->pos = glm::vec3(150.f, 100.f, 50.f);
-				particle->pos = glm::vec3(PseudorandMinMax(-150.f, 150.f), 350.f, PseudorandMinMax(-150.f, 0.f));
-				particle->vel = glm::vec3(0.f, -20.f, 0.f);
-				particle->mass = 10.f;
-				particle->force = glm::vec3(0.f);
-				tmp = elapsedTime;
-				count++;
-			}
-			static float tmp2 = elapsedTime;
-			static int count2 = 0; // To limit the number of fire particles
-			if (elapsedTime - tmp2 >= 0.5f && count2 < 10)
-			{
-				// Fire particles
-				Entity* const& particle2 = entityManager->FetchEntity();
-				particle2->type = Entity::EntityType::PARTICLE2;
-				particle2->active = true;
-				particle2->life = 0.f;
-				particle2->maxLife = 0.f;
-				particle2->colour = glm::vec4(glm::vec3(.4f), 1.f);
-				particle2->diffuseTexIndex = -1;
-				particle2->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-				particle2->scale = glm::vec3(3.f);
-				particle2->light = nullptr;
-				particle2->mesh = meshes[(int)MeshType::Quad];
-				// Position depends on where the fire is
-				particle2->pos = glm::vec3(0.f, 300.f, 0.f);
-				// Will change accordingly to make it look better
-				particle2->vel = glm::vec3(0.f, 20.f, 0.f);
-				particle2->mass = .0001f;
-				particle2->force = glm::vec3(0.f);
-				tmp2 = elapsedTime;
-				count2++;
-			}
-			// TESTING ONLY -> PARTICLES SPAWN WHEN ENEMY DIE
-			// Need a check statement here to see which enemy died
-			if (Key(GLFW_KEY_0))
-			{
-				for (int i = 0; i < 4; ++i)
-				{
-					Entity* const& particle = entityManager->FetchEntity();
-					particle->type = Entity::EntityType::PARTICLE3;
-					particle->active = true;
-					particle->life = 0.f;
-					particle->maxLife = 0.f;
-					particle->colour = glm::vec4(0.f, 1.f, 1.f, 1.f);
-					particle->diffuseTexIndex = -1;
-					particle->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
-					particle->scale = glm::vec3(2.f);
-					particle->light = nullptr;
-					particle->mesh = meshes[(int)MeshType::Quad];
-					// Position depends on where the enemy is
-					particle->pos = glm::vec3(150.f, 0.f, 50.f);
-					// Will change accordingly to make it look better
-					particle->vel = glm::vec3(PseudorandMinMax(-100.f, 100.f),
-						PseudorandMinMax(1.f, 100.f), PseudorandMinMax(-100.f, 100.f));
-					particle->mass = 10.f;
-					particle->force = glm::vec3(0.f, -100.f, 0.f);
-				}
-			}
-
-			static float enemyWavesBT = 0.f;
-
 			///Enemy waves system
+			static float enemyWavesBT = 0.f;
 			switch(waves[waveCount]){
-				case (int)WaveNumber::One:
+				case (int)WaveNumber::One: {
 					if(enemyWavesBT <= elapsedTime && enemyCount <= 10){
 						enemyWavesBT = elapsedTime + 3.f;
 
-						for (int i = 0; i < 1; ++i) {
+						for(int i = 0; i < 1; ++i) {
 							const float scaleFactor = 15.f;
 							const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 							const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
@@ -942,10 +865,11 @@ void Scene::Update(GLFWwindow* const& win){
 							movingEnemy->scale = glm::vec3(10.f);
 							movingEnemy->mesh = meshes[(int)MeshType::Sphere];
 							movingEnemy->model = models[(int)ModelType::Virus];
+							movingEnemy->isShot = false;
 							++enemyCount;
 						}
 
-						if (currentEnemyCount <= 0)
+						if(currentEnemyCount <= 0)
 						{
 							++waveCount;
 							enemyCount = 0;
@@ -953,15 +877,16 @@ void Scene::Update(GLFWwindow* const& win){
 						}
 
 					}
-				case(int)WaveNumber::Two:
-					if (enemyCount == 0)
+				}
+				case (int)WaveNumber::Two: {
+					if(enemyCount == 0)
 					{
 						currentEnemyCount = 20;
 					}
-					if (enemyWavesBT <= elapsedTime && enemyCount <= 19){
-						enemyWavesBT = elapsedTime  + 2.f;
+					if(enemyWavesBT <= elapsedTime && enemyCount <= 19){
+						enemyWavesBT = elapsedTime + 2.f;
 
-						for (int i = 0; i < 1; ++i) {
+						for(int i = 0; i < 1; ++i) {
 							const float scaleFactor = 15.f;
 							const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 							const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
@@ -979,26 +904,28 @@ void Scene::Update(GLFWwindow* const& win){
 							movingEnemy->scale = glm::vec3(10.f);
 							movingEnemy->mesh = meshes[(int)MeshType::Sphere];
 							movingEnemy->model = models[(int)ModelType::Virus];
+							movingEnemy->isShot = false;
 							++enemyCount;
 						}
 
-						if (currentEnemyCount <= 0)
+						if(currentEnemyCount <= 0)
 						{
 							++waveCount;
 							enemyCount = 0;
 							break;
 						}
 					}
-				case(int)WaveNumber::Three:
-					if (enemyCount == 0)
+				}
+				case (int)WaveNumber::Three: {
+					if(enemyCount == 0)
 					{
 						currentEnemyCount = 20;
 					}
-					if (enemyWavesBT <= elapsedTime && enemyCount <= 20)
+					if(enemyWavesBT <= elapsedTime && enemyCount <= 20)
 					{
 						enemyWavesBT = elapsedTime + 1.f;
 
-						for (int i = 0; i < 2; ++i) {
+						for(int i = 0; i < 2; ++i) {
 							const float scaleFactor = 15.f;
 							const float xPos = PseudorandMinMax(-terrainXScale / 2.f + 5.f + scaleFactor, terrainXScale / 2.f - 5.f - scaleFactor);
 							const float zPos = PseudorandMinMax(-terrainZScale / 2.f + 5.f + scaleFactor, terrainZScale / 2.f - 5.f - scaleFactor);
@@ -1016,16 +943,18 @@ void Scene::Update(GLFWwindow* const& win){
 							movingEnemy->scale = glm::vec3(10.f);
 							movingEnemy->mesh = meshes[(int)MeshType::Sphere];
 							movingEnemy->model = models[(int)ModelType::Virus];
+							movingEnemy->isShot = false;
 							++enemyCount;
 						}
 
-						if (currentEnemyCount <= 0)
+						if(currentEnemyCount <= 0)
 						{
 							++waveCount;
 							enemyCount = 0;
 							break;
 						}
 					}
+				}
 				case (int)WaveNumber::Total:
 					break;
 			}

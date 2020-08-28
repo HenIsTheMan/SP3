@@ -67,19 +67,40 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 	root->Partition();
 	//assert(root->entityList->size() != 0);
 
-	const size_t& size = entityList.size();
-	for(size_t i = 0; i < size; ++i){
+	///Spawn rain particles
+	static float tmp = (float)glfwGetTime();
+	if((float)glfwGetTime() - tmp >= 0.2f){
+		Entity* const& particle = FetchEntity();
+		particle->type = Entity::EntityType::PARTICLE;
+		particle->active = true;
+		particle->life = 0.f;
+		particle->maxLife = 0.f;
+		particle->colour = glm::vec4(0.f, 1.f, 1.f, 1.f);
+		particle->diffuseTexIndex = -1;
+		particle->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+		particle->scale = glm::vec3(1.f);
+		particle->light = nullptr;
+		particle->mesh = params.quadMesh;
+		particle->pos = glm::vec3(PseudorandMinMax(-200.f, 200.f), 500.f, PseudorandMinMax(-200.f, 200.f));
+		particle->vel = glm::vec3(0.f, -100.f, 0.f);
+		particle->mass = 10.f;
+		particle->force = glm::vec3(0.f);
+		tmp = (float)glfwGetTime();
+	}
+
+	for(size_t i = 0; i < entityList.size(); ++i){
 		Entity* const& entity = entityList[i];
 		if(entity && entity->active && entity->type != Entity::EntityType::NUM_TYPES){
 			switch(entity->type){
 				case Entity::EntityType::BULLET:
 				case Entity::EntityType::BULLET2:
-				case Entity::EntityType::BULLET3:
+				case Entity::EntityType::BULLET3: {
 					entity->life -= dt;
 					if(entity->life <= 0){
 						entity->active = false;
 					}
 					break;
+				}
 				case Entity::EntityType::STATIC_ENEMY: {
 					glm::vec3 displacementVec = params.camPos - entity->pos;
 					const float b = glm::dot(params.camFront, displacementVec);
@@ -131,23 +152,76 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					if(b * b - c >= 0.f){
 						params.reticleColour = glm::vec4(1.f, 1.f, 0.f, 1.f);
 					}
+
+					///Create particle blood splashes from shot enemy
+					if(entity->isShot){
+						for(int i = 0; i < 2; ++i){
+							Entity* const& particle = FetchEntity();
+							particle->type = Entity::EntityType::PARTICLE3;
+							particle->active = true;
+							particle->life = 1.f;
+							particle->maxLife = 0.f;
+							particle->colour = glm::vec4(1.f, 0.f, 0.f, 1.f);
+							particle->diffuseTexIndex = -1;
+							particle->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+							particle->scale = glm::vec3(1.f);
+							particle->light = nullptr;
+							particle->mesh = params.quadMesh;
+							particle->pos = entity->pos;
+							particle->vel = glm::vec3(PseudorandMinMax(-20.f, 20.f), 30.f, PseudorandMinMax(-20.f, 20.f));
+							particle->mass = .001f;
+							particle->force = glm::vec3(0.f, -0.02f, 0.f);
+						}
+						entity->isShot = false;
+					}
+
 					break;
 				}
-				case Entity::EntityType::PARTICLE:
-					// Don't know how to make it check with the terrain
-					// Change the values accordingly to make it nicer
-					if (entity->pos.y < params.yGround)
-						entity->pos.y = 350.f;
+				case Entity::EntityType::PARTICLE: {
+					if(entity->pos.y < params.yGround){
+						entity->active = false;
+					}
 					break;
-				case Entity::EntityType::PARTICLE2:
-					if (entity->pos.y > 350.f) // 50.f more than the pos at first
-						entity->pos.y = 300.f;
+				}
+				case Entity::EntityType::PARTICLE2: {
+					if(entity->pos.y > 200.f){
+						entity->active = false;
+					}
+					entity->scale *= glm::vec3(0.992f); // As the particles travel upwards, they get smaller
 					break;
+				}
+				case Entity::EntityType::PARTICLE3: {
+					entity->life -= dt;
+					if(entity->life <= 0.f){
+						entity->active = false;
+					}
+					break;
+				}
 				case Entity::EntityType::FIRE: {
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						params.playerCurrHealth -= 5.f;
+					}
+
+					///Spawn fire particles
+					if(entity->spawnSmokeBT <= (float)glfwGetTime()){
+						Entity* const& particle = FetchEntity();
+						particle->type = Entity::EntityType::PARTICLE2;
+						particle->active = true;
+						particle->life = 0.f;
+						particle->maxLife = 0.f;
+						particle->colour = glm::vec4(glm::vec3(.4f), 1.f);
+						particle->diffuseTexIndex = -1;
+						particle->rotate = glm::vec4(0.f, 1.f, 0.f, 0.f);
+						particle->scale = glm::vec3(3.f);
+						particle->light = nullptr;
+						particle->mesh = params.quadMesh;
+						particle->pos = entity->pos + glm::vec3(0.f, 50.f, 0.f);
+						particle->vel = glm::vec3(7.f, 15.f, 0.f);
+						particle->mass = .0001f;
+						particle->force = glm::vec3(0.f);
+						entity->spawnSmokeBT = (float)glfwGetTime() + .5f;
 					}
 
 					break;
@@ -324,7 +398,7 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 				}
 				case Entity::EntityType::PARTICLE:
 				case Entity::EntityType::PARTICLE2:
-				case Entity::EntityType::PARTICLE3:
+				case Entity::EntityType::PARTICLE3: {
 					modelStack.PushModel({
 						modelStack.Translate(entity->pos),
 						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),
@@ -337,13 +411,14 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 						SP.Set1i("useCustomDiffuseTexIndex", 1);
 						SP.Set4fv("customColour", entity->colour);
 						SP.Set1i("customDiffuseTexIndex", entity->diffuseTexIndex);
-						entity->mesh->SetModel(modelStack.GetTopModel());
-						entity->mesh->Render(SP);
+						params.quadMesh->SetModel(modelStack.GetTopModel());
+						params.quadMesh->Render(SP);
 						SP.Set1i("useCustomDiffuseTexIndex", 0);
 						SP.Set1i("useCustomColour", 0);
 						SP.Set1i("noNormals", 0);
 					modelStack.PopModel();
 					break;
+				}
 				//case Entity::EntityType::PARTICLE:
 				//	modelStack.PushModel({
 				//		modelStack.Translate(entity->pos),
