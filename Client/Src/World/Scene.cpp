@@ -86,7 +86,7 @@ Scene::Scene():
 	depthSP{"Shaders/Depth.vs", "Shaders/Depth.fs"},
 	forwardSP{"Shaders/Forward.vs", "Shaders/Forward.fs"},
 	geoPassSP{"Shaders/GeoPass.vs", "Shaders/GeoPass.fs"},
-	lightingPassSP{"Shaders/Quad.vs", "Shaders/LightingPass.fs"},
+	lightingPassSP{"Shaders/LightingQuad.vs", "Shaders/LightingPass.fs"},
 	normalsSP{"Shaders/Normals.vs", "Shaders/Normals.fs", "Shaders/Normals.gs"}, //??
 	screenSP{"Shaders/Quad.vs", "Shaders/Screen.fs"},
 	textSP{"Shaders/Text.vs", "Shaders/Text.fs"},
@@ -1129,14 +1129,13 @@ void Scene::GeoRenderPass(){
 		geoPassSP.Use();
 		geoPassSP.SetMat4fv("PV", &(projection * view)[0][0]);
 
-		//EntityManager::RenderParams params;
-		//params.minimap = false;
-		//params.camPos = cam.GetPos();
-		//params.camFront = cam.CalcFront();
-		//params.depthDTexRefID = depthDTexRefID;
-		//params.depthSTexRefID = depthSTexRefID;
-		//params.quadMesh = meshes[(int)MeshType::Quad];
-		//entityManager->RenderEntities(forwardSP, params); //Render entities
+		///Terrain
+		modelStack.PushModel({
+			modelStack.Scale(glm::vec3(terrainXScale, terrainYScale, terrainZScale)),
+		});
+			meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
+			meshes[(int)MeshType::Terrain]->Render(geoPassSP);
+		modelStack.PopModel();
 
 		///Render curr weapon
 		const glm::vec3 front = cam.CalcFront();
@@ -1167,8 +1166,12 @@ void Scene::GeoRenderPass(){
 	}
 }
 
-void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID){
+void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID,
+	const uint& depthDTexRefID, const uint& depthSTexRefID){
 	lightingPassSP.Use();
+	lightingPassSP.SetMat4fv("directionalLightPV", &(glm::ortho(-600.f, 600.f, -600.f, 600.f, 20.f, 300.f) * dCam.LookAt())[0][0]);
+	lightingPassSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), sCam.GetAspectRatio(), 170.f, 14000.f) * sCam.LookAt())[0][0]);
+
 	const int& pAmt = (int)ptLights.size();
 	const int& dAmt = (int)directionalLights.size();
 	const int& sAmt = (int)spotlights.size();
@@ -1184,6 +1187,9 @@ void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRe
 	lightingPassSP.UseTex(normalsTexRefID, "normalsTex");
 	lightingPassSP.UseTex(specTexRefID, "specTex");
 	lightingPassSP.UseTex(reflectionTexRefID, "reflectionTex");
+
+	lightingPassSP.UseTex(depthDTexRefID, "dDepthTexSampler");
+	lightingPassSP.UseTex(depthSTexRefID, "sDepthTexSampler");
 
 	int i;
 	for (i = 0; i < pAmt; ++i) {
@@ -1499,16 +1505,6 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			glDepthFunc(GL_LESS);
 
 			forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
-
-			///Terrain
-			modelStack.PushModel({
-				modelStack.Scale(glm::vec3(terrainXScale, terrainYScale, terrainZScale)),
-			});
-				forwardSP.UseTex(depthDTexRefID, "dDepthTexSampler");
-				forwardSP.UseTex(depthSTexRefID, "sDepthTexSampler");
-				meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
-				meshes[(int)MeshType::Terrain]->Render(forwardSP);
-			modelStack.PopModel();
 
 			///Crystal ball
 			modelStack.PushModel({

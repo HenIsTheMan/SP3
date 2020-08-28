@@ -25,7 +25,8 @@ public:
 	bool Init();
 	void Update(GLFWwindow* const& win);
 	void GeoRenderPass();
-	void LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID);
+	void LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID,
+		const uint& depthDTexRefID, const uint& depthSTexRefID);
 	void BlurRender(const uint& brightTexRefID, const bool& horizontal);
 	void DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, const glm::vec3& translate, const glm::vec3& scale);
 	void DepthRender(const short& projectionType);
