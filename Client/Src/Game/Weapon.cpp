@@ -33,6 +33,12 @@ Weapon::~Weapon(){
 	}
 }
 
+void Weapon::AddAmmo(){
+	SetCurrentTotalAmmo(GetCurrentTotalAmmo() + GetMaxAmmoRound()); //Etc 110+30 = 140
+	if (GetCurrentTotalAmmo() > GetMaxTotalAmmo()) // If it exceeds the max, change the max accordingly
+		SetMaxTotalAmmo(GetCurrentTotalAmmo());
+}
+
 void Weapon::Update(const double dt)
 {
 	if (!reloading && canShoot) // Player is not reloading, and can shoot

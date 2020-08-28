@@ -122,6 +122,7 @@ Scene::Scene():
 		glm::vec4(1.f),
 		glm::vec4(1.f),
 	},
+	addAmmo(false),
 	goldCoinAmt(0),
 	silverCoinAmt(0),
 	pinkCoinAmt(0),
@@ -695,7 +696,9 @@ void Scene::Update(GLFWwindow* const& win){
 			params.pinkCoinAmt = pinkCoinAmt;
 			params.greenCoinAmt = greenCoinAmt;
 			params.blueCoinAmt = blueCoinAmt;
+			params.addAmmo = addAmmo;
 			entityManager->UpdateEntities(params);
+			addAmmo = params.addAmmo;
 			reticleColour = params.reticleColour;
 			cam.canMove = params.camCanMove;
 			playerCurrHealth = params.playerCurrHealth;
@@ -851,6 +854,12 @@ void Scene::Update(GLFWwindow* const& win){
 			// Update current weapon status to see whether can shoot
 			static double lastTime = elapsedTime;
 			weapon->GetCurrentWeapon()->Update(elapsedTime - lastTime);
+
+			if (addAmmo && !weapon->GetCurrentSlot() == 0) // Player picked up the ammo collectible, and is not pistol
+			{
+				weapon->GetCurrentWeapon()->AddAmmo();
+				addAmmo = false;
+			}
 
 			if(leftMB){ //Shoot
 				if(!weapon->GetCurrentWeapon()->GetReloading() && weapon->GetCurrentWeapon()->GetCanShoot() && weapon->GetCurrentWeapon()->GetCurrentAmmoRound() > 0){

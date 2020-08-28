@@ -8,6 +8,7 @@ public:
 	Weapon();
 	~Weapon();
 
+	void AddAmmo();
 	void Update(const double dt);
 	void ResetWeapon();
 	void Reload();

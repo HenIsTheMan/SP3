@@ -23,11 +23,12 @@ public:
 		float terrainZScale = 1.f;
 		float yGround = 0.f;
 		Mesh* quadMesh = nullptr;
-		int goldCoinAmt;
-		int silverCoinAmt;
-		int pinkCoinAmt;
-		int greenCoinAmt;
-		int blueCoinAmt;
+		bool addAmmo = false;
+		int goldCoinAmt = 0;
+		int silverCoinAmt = 0;
+		int pinkCoinAmt = 0;
+		int greenCoinAmt = 0;
+		int blueCoinAmt = 0;
 	};
 	struct RenderParams final{ //Add on here if needed
 		glm::vec3 camPos = glm::vec3(0.f);

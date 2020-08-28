@@ -289,7 +289,6 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					break;
 				}
 			}
-
 			if(entity->vel != glm::vec3(0.f)){
 				root->DetectAndResolveCollision(entity);
 			}
