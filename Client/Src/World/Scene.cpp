@@ -21,7 +21,7 @@ glm::vec3 Light::globalAmbient = glm::vec3(.2f);
 Scene::Scene():
 	cam(glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 150.f),
 	dCam(glm::vec3(0.f, 110.f, 0.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f), 0.f, 0.f),
-	sCam(glm::vec3(0.f, 100.f, 200.f), glm::vec3(0.f, 100.f, 0.f), glm::vec3(0.f, 1.f, 0.f), 1.f, 0.f),
+	sCam(glm::vec3(0.f, 200.f, 0.f), glm::vec3(0.f, 0.f, 300.f), glm::normalize(glm::vec3(0.f, 1.f, -1.f)), 1.f, 0.f),
 	waterCam(glm::vec3(-15.f, -20.f, -20.f), glm::vec3(-15.f, 0.f, -20.f), glm::vec3(0.f, 0.f, 1.f), 1.f, 0.f),
 	enCam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 1.f, 0.f),
 	minimapcam(glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), 0.f, 0.f),
@@ -1214,11 +1214,10 @@ void Scene::DefaultRender(const uint& screenTexRefID, const uint& blurTexRefID, 
 	}
 }
 
-///
 void Scene::DepthRender(const short& projectionType){
 	depthSP.Use();
 	if(projectionType){
-		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), sCam.GetAspectRatio(), 120.f, 5000.f) * sCam.LookAt())[0][0]);
+		depthSP.SetMat4fv("PV", &(glm::perspective(glm::radians(45.f), sCam.GetAspectRatio(), 170.f, 14000.f) * sCam.LookAt())[0][0]);
 	} else{
 		depthSP.SetMat4fv("PV", &(glm::ortho(-600.f, 600.f, -600.f, 600.f, 20.f, 300.f) * dCam.LookAt())[0][0]);
 	}
@@ -1240,6 +1239,7 @@ void Scene::DepthRender(const short& projectionType){
 	glCullFace(GL_BACK);
 }
 
+///
 void Scene::PlanarReflectionRender(){
 	forwardSP.Use();
 	forwardSP.Set1f("shininess", 32.f); //More light scattering if lower
@@ -1296,7 +1296,7 @@ void Scene::CubemapReflectionRender(const short& cubemapFace){
 void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID, const uint& cubemapReflectionTexID){
 	forwardSP.Use();
 	forwardSP.SetMat4fv("directionalLightPV", &(glm::ortho(-600.f, 600.f, -600.f, 600.f, 20.f, 300.f) * dCam.LookAt())[0][0]);
-	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), 1.f, 120.f, 5000.f) * sCam.LookAt())[0][0]);
+	forwardSP.SetMat4fv("spotlightPV", &(glm::perspective(glm::radians(45.f), sCam.GetAspectRatio(), 170.f, 14000.f) * sCam.LookAt())[0][0]);
 
 	const int& pAmt = (int)ptLights.size();
 	const int& dAmt = (int)directionalLights.size();

@@ -307,12 +307,6 @@ void App::Render(){
 			}
 		}
 
-		//glViewport(0, 0, winWidth, winHeight);
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//glClearColor(1.f, .5f, .3f, 1.f);
-		//scene.DefaultRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthD], glm::vec3(0.f), glm::vec3(1.f));
-
 		glViewport(0, 0, winWidth, winHeight);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
