@@ -68,9 +68,21 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 	root->Partition();
 	//assert(root->entityList->size() != 0);
 
+	params.takingDmg = false;
+	if(params.healthUp > 0.f){
+		params.healthUp -= dt;
+		params.healthUp = std::max(0.f, params.healthUp);
+	}
+	if(params.lifeUp > 0.f){
+		params.lifeUp -= dt;
+		params.lifeUp = std::max(0.f, params.lifeUp);
+	}
 	if(iFrames > 0.f){
 		iFrames -= dt;
 		iFrames = std::max(0.f, iFrames);
+		if(!iFrames){
+			params.immune = false;
+		}
 	}
 
 	///Spawn rain particles
@@ -150,6 +162,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 							params.camCanMove = false;
 						}
 						if(iFrames <= 0.f){
+							params.takingDmg = true;
 							params.playerCurrHealth -= 2.f;
 						}
 					}
@@ -214,6 +227,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						if(iFrames <= 0.f){
+							params.takingDmg = true;
 							params.playerCurrHealth -= 5.f;
 						}
 					}
@@ -271,6 +285,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						++params.playerCurrLives;
 						--params.pinkCoinAmt;
+						params.lifeUp = 1.f;
 						entity->active = false;
 					}
 
@@ -282,6 +297,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						params.playerCurrHealth += 50.f;
 						--params.greenCoinAmt;
+						params.healthUp = 1.f;
 						entity->active = false;
 					}
 
@@ -294,6 +310,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 						if(iFrames < 10.f){
 							iFrames = 10.f;
 						}
+						params.immune = true;
 						--params.blueCoinAmt;
 						entity->active = false;
 					}

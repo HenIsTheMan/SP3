@@ -143,6 +143,11 @@ private:
 	int greenCoinAmt;
 	int blueCoinAmt;
 	void SpawnCoin(const Entity::EntityType& type, Mesh* const& mesh, const float& scaleFactor);
+
+	bool takingDmg;
+	float healthUp;
+	float lifeUp;
+	bool immune;
 };
 
 enum struct Axis{

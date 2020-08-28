@@ -40,6 +40,10 @@ Scene::Scene():
 			{"Imgs/ReticleSec.png", Mesh::TexType::Diffuse, 0},
 			{"Imgs/BG.png", Mesh::TexType::Diffuse, 0},
 			{"Imgs/Scope.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/Dmg.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/HealthUp.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/LifeUp.png", Mesh::TexType::Diffuse, 0},
+			{"Imgs/Immunity.png", Mesh::TexType::Diffuse, 0},
 		}),
 		new Mesh(Mesh::MeshType::Cube, GL_TRIANGLES, {
 			{"Imgs/BoxAlbedo.png", Mesh::TexType::Diffuse, 0},
@@ -127,7 +131,11 @@ Scene::Scene():
 	silverCoinAmt(0),
 	pinkCoinAmt(0),
 	greenCoinAmt(0),
-	blueCoinAmt(0)
+	blueCoinAmt(0),
+	takingDmg(false),
+	healthUp(0.f),
+	lifeUp(0.f),
+	immune(false)
 {
 }
 
@@ -697,6 +705,10 @@ void Scene::Update(GLFWwindow* const& win){
 			params.greenCoinAmt = greenCoinAmt;
 			params.blueCoinAmt = blueCoinAmt;
 			params.addAmmo = addAmmo;
+			params.takingDmg = takingDmg;
+			params.healthUp = healthUp;
+			params.lifeUp = lifeUp;
+			params.immune = immune;
 			entityManager->UpdateEntities(params);
 			addAmmo = params.addAmmo;
 			reticleColour = params.reticleColour;
@@ -710,6 +722,10 @@ void Scene::Update(GLFWwindow* const& win){
 			pinkCoinAmt = params.pinkCoinAmt;
 			greenCoinAmt = params.greenCoinAmt;
 			blueCoinAmt = params.blueCoinAmt;
+			takingDmg = params.takingDmg;
+			healthUp = params.healthUp;
+			lifeUp = params.lifeUp;
+			immune = params.immune;
 
 			playerCurrHealth = std::min(100.f, std::max(0.f, playerCurrHealth));
 			playerCurrLives = std::min(5.f, std::max(0.f, playerCurrLives));
@@ -1455,7 +1471,8 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			params.quadMesh = meshes[(int)MeshType::Quad];
 			entityManager->RenderEntities(forwardSP, params); //Render entities
 
-			if(scope){ //If scoped in...
+			///Border effects
+			if(scope){
 				forwardSP.SetMat4fv("PV", &(glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f))[0][0]);
 				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
 				forwardSP.Set1i("noNormals", 1);
@@ -1484,6 +1501,78 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
 				glBlendFunc(GL_ONE, GL_ZERO);
 				return;
+			}
+			if(takingDmg){
+				forwardSP.SetMat4fv("PV", &(glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f))[0][0]);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+				forwardSP.Set1i("noNormals", 1);
+
+				modelStack.PushModel({
+					modelStack.Translate(glm::vec3(0.f, 0.f, -20.f)),
+					modelStack.Scale(glm::vec3(float(winWidth) / 2.f, float(winHeight) / 2.f, 1.f)),
+				});
+					forwardSP.Set1i("customDiffuseTexIndex", 7);
+					meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+					meshes[(int)MeshType::Quad]->Render(forwardSP);
+				modelStack.PopModel();
+
+				forwardSP.Set1i("noNormals", 0);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+				forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
+			}
+			if(healthUp > 0.f){
+				forwardSP.SetMat4fv("PV", &(glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f))[0][0]);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+				forwardSP.Set1i("noNormals", 1);
+
+				modelStack.PushModel({
+					modelStack.Translate(glm::vec3(0.f, 0.f, -20.f)),
+					modelStack.Scale(glm::vec3(float(winWidth) / 2.f, float(winHeight) / 2.f, 1.f)),
+				});
+					forwardSP.Set1i("customDiffuseTexIndex", 8);
+					meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+					meshes[(int)MeshType::Quad]->Render(forwardSP);
+				modelStack.PopModel();
+
+				forwardSP.Set1i("noNormals", 0);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+				forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
+			}
+			if(lifeUp > 0.f){
+				forwardSP.SetMat4fv("PV", &(glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f))[0][0]);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+				forwardSP.Set1i("noNormals", 1);
+
+				modelStack.PushModel({
+					modelStack.Translate(glm::vec3(0.f, 0.f, -20.f)),
+					modelStack.Scale(glm::vec3(float(winWidth) / 2.f, float(winHeight) / 2.f, 1.f)),
+					});
+				forwardSP.Set1i("customDiffuseTexIndex", 9);
+				meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+				meshes[(int)MeshType::Quad]->Render(forwardSP);
+				modelStack.PopModel();
+
+				forwardSP.Set1i("noNormals", 0);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+				forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
+			}
+			if(immune){
+				forwardSP.SetMat4fv("PV", &(glm::ortho(-float(winWidth) / 2.f, float(winWidth) / 2.f, -float(winHeight) / 2.f, float(winHeight) / 2.f, .1f, 9999.f))[0][0]);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 1);
+				forwardSP.Set1i("noNormals", 1);
+
+				modelStack.PushModel({
+					modelStack.Translate(glm::vec3(0.f, 0.f, -20.f)),
+					modelStack.Scale(glm::vec3(float(winWidth) / 2.f, float(winHeight) / 2.f, 1.f)),
+				});
+					forwardSP.Set1i("customDiffuseTexIndex", 10);
+					meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
+					meshes[(int)MeshType::Quad]->Render(forwardSP);
+				modelStack.PopModel();
+
+				forwardSP.Set1i("noNormals", 0);
+				forwardSP.Set1i("useCustomDiffuseTexIndex", 0);
+				forwardSP.SetMat4fv("PV", &(projection * view)[0][0]);
 			}
 
 			////Render GUI
@@ -1586,9 +1675,9 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 					modelStack.Scale(glm::vec3(50.f)),
 				});
 				if(weapon->GetCurrentSlot() == j){
-					forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(0.f, 1.f, 0.f), 1.f));
+					forwardSP.Set4fv("customColour", glm::vec4(0.f, 1.f, 1.f, 1.f));
 				} else{
-					forwardSP.Set4fv("customColour", glm::vec4(glm::vec3(1.f, 0.f, 0.f), 1.f));
+					forwardSP.Set4fv("customColour", glm::vec4(1.f));
 				}
 					forwardSP.Set1i("customDiffuseTexIndex", 2);
 					meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
@@ -1643,6 +1732,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 
 			///Render text
 			if(!scope){
+				glDepthFunc(GL_NOTEQUAL);
 				str temp;
 				if(weapon->GetCurrentWeapon()->GetReloading())
 					temp = "Reloading...";
@@ -1699,6 +1789,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 					glm::vec4(1.f, 1.f, 0.f, 1.f),
 					0
 				});
+				glDepthFunc(GL_LESS);
 			}
 			break;
 		}

@@ -29,6 +29,10 @@ public:
 		int pinkCoinAmt = 0;
 		int greenCoinAmt = 0;
 		int blueCoinAmt = 0;
+		bool takingDmg = false;
+		float healthUp = false;
+		float lifeUp = false;
+		bool immune = false;
 	};
 	struct RenderParams final{ //Add on here if needed
 		glm::vec3 camPos = glm::vec3(0.f);
