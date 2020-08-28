@@ -1239,7 +1239,6 @@ void Scene::DepthRender(const short& projectionType){
 	glCullFace(GL_BACK);
 }
 
-///
 void Scene::PlanarReflectionRender(){
 	forwardSP.Use();
 	forwardSP.Set1f("shininess", 32.f); //More light scattering if lower
@@ -1249,7 +1248,30 @@ void Scene::PlanarReflectionRender(){
 	forwardSP.Set1i("dAmt", 0);
 	forwardSP.Set1i("sAmt", 0);
 
-	//forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), waterCam.GetAspectRatio(), .1f, 9999.f) * glm::mat4(glm::mat3(waterCam.LookAt())))[0][0]);
+	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), waterCam.GetAspectRatio(), .1f, 9999.f) * glm::mat4(glm::mat3(waterCam.LookAt())))[0][0]);
+
+	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
+	glCullFace(GL_FRONT);
+	forwardSP.Set1i("sky", 1);
+	modelStack.PushModel({
+		modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
+	});
+		meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
+		meshes[(int)MeshType::Sphere]->Render(forwardSP);
+	modelStack.PopModel();
+	forwardSP.Set1i("sky", 0);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LESS);
+
+	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), 1.f, .1f, 9999.f) * waterCam.LookAt())[0][0]);
+
+	modelStack.PushModel({
+		modelStack.Translate(glm::vec3(0.f, 200.f, 0.f)),
+		modelStack.Scale(glm::vec3(25.f)),
+	});
+		meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
+		meshes[(int)MeshType::Sphere]->Render(forwardSP);
+	modelStack.PopModel();
 }
 
 void Scene::CubemapReflectionRender(const short& cubemapFace){
@@ -1289,9 +1311,32 @@ void Scene::CubemapReflectionRender(const short& cubemapFace){
 			break;
 	}
 
-	//forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), enCam.GetAspectRatio(), .1f, 9999.f) * glm::mat4(glm::mat3(enCam.LookAt())))[0][0]);
+	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), enCam.GetAspectRatio(), .1f, 9999.f) * glm::mat4(glm::mat3(enCam.LookAt())))[0][0]);
+
+	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
+	glCullFace(GL_FRONT);
+	forwardSP.Set1i("sky", 1);
+	modelStack.PushModel({
+		modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
+	});
+		meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
+		meshes[(int)MeshType::Sphere]->Render(forwardSP);
+	modelStack.PopModel();
+	forwardSP.Set1i("sky", 0);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LESS);
+
+	forwardSP.SetMat4fv("PV", &(glm::perspective(glm::radians(90.f), 1.f, .1f, 9999.f) * enCam.LookAt())[0][0]);
+
+	modelStack.PushModel({
+		modelStack.Scale(glm::vec3(terrainXScale, terrainYScale, terrainZScale)),
+	});
+		forwardSP.Set1i("noNormals", 1);
+		meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
+		meshes[(int)MeshType::Terrain]->Render(forwardSP);
+		forwardSP.Set1i("noNormals", 0);
+	modelStack.PopModel();
 }
-///
 
 void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID, const uint& cubemapReflectionTexID){
 	forwardSP.Use();
@@ -2115,6 +2160,7 @@ void Scene::MinimapRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	forwardSP.SetMat4fv("PV", &(minimapProjection * minimapView)[0][0]);
 	forwardSP.Set1i("noNormals", 1);
 
+	///Render terrain
 	modelStack.PushModel({
 		modelStack.Scale(glm::vec3(terrainXScale, terrainYScale, terrainZScale)),
 	});
