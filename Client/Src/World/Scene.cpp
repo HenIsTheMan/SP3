@@ -351,15 +351,6 @@ void Scene::Update(GLFWwindow* const& win){
 					cam.SetTarget(glm::vec3(0.f));
 					cam.SetUp(glm::vec3(0.f, 1.f, 0.f));
 
-					///Play music
-					const size_t& musicSize = music.size();
-					for(size_t i = 0; i < musicSize; ++i){
-						ISound* const& myMusic = music[i];
-						if(myMusic && myMusic->getIsPaused()){
-							myMusic->setIsPaused(false);
-						}
-					}
-
 					for(int i = 1; i < 3; ++i){
 						weapon->SetCurrentSlot(i);
 						weapon->GetCurrentWeapon()->ResetWeapon(); // Restock all the ammo for all weapons
@@ -569,6 +560,15 @@ void Scene::Update(GLFWwindow* const& win){
 				SpawnCoin(Entity::EntityType::COIN_BLUE, meshes[(int)MeshType::CoinBlue], 15.f);
 				++blueCoinAmt;
 				blueCoinBT = elapsedTime + 60.f;
+			}
+
+			///Play music
+			const size_t& musicSize = music.size();
+			for(size_t i = 0; i < musicSize; ++i){
+				ISound* const& myMusic = music[i];
+				if(myMusic && myMusic->getIsPaused()){
+					myMusic->setIsPaused(false);
+				}
 			}
 
 			////Control player states
