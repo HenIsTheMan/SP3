@@ -231,6 +231,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						params.score += 100;
+						--params.goldCoinAmt;
 						entity->active = false;
 					}
 
@@ -241,6 +242,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						params.score += 10;
+						--params.silverCoinAmt;
 						entity->active = false;
 					}
 
@@ -251,6 +253,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						++params.playerCurrLives;
+						--params.pinkCoinAmt;
 						entity->active = false;
 					}
 
@@ -261,6 +264,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						params.playerCurrHealth += 50.f;
+						--params.greenCoinAmt;
 						entity->active = false;
 					}
 
@@ -271,6 +275,7 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
 						//Immunity#####
+						--params.blueCoinAmt;
 						entity->active = false;
 					}
 
