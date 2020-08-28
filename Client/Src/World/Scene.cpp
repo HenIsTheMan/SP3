@@ -1871,7 +1871,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 			forwardSP.Set1i("noNormals", 0);
 			forwardSP.Set1i("nightVision", 0);
 
-			///Render gun info
+			///Render text
 			if(!scope){
 				str temp;
 				if(weapon->GetCurrentWeapon()->GetReloading())

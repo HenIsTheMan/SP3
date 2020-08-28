@@ -49,6 +49,7 @@ public:
 protected:
 	EntityManager(); //Default ctor
 
+	float iFrames;
 	CubeSection* root; //Ptr to root quad
 	ModelStack modelStack;
 	std::vector<Entity*> entityList;

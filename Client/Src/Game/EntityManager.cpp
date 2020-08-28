@@ -4,6 +4,7 @@
 extern float dt;
 
 EntityManager::EntityManager():
+	iFrames(0.f),
 	entityList(),
 	root(new CubeSection())
 {
@@ -66,6 +67,11 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 	//assert(root->entityList->size() != 0);
 	root->Partition();
 	//assert(root->entityList->size() != 0);
+
+	if(iFrames > 0.f){
+		iFrames -= dt;
+		iFrames = std::max(0.f, iFrames);
+	}
 
 	///Spawn rain particles
 	static float tmp = (float)glfwGetTime();
@@ -143,7 +149,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 							|| glm::dot(relativeVelYZ, -displacementVecYZ) > 0.f)){
 							params.camCanMove = false;
 						}
-						params.playerCurrHealth -= 2.f;
+						if(iFrames <= 0.f){
+							params.playerCurrHealth -= 2.f;
+						}
 					}
 
 					///Change reticle colour
@@ -205,7 +213,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
-						params.playerCurrHealth -= 5.f;
+						if(iFrames <= 0.f){
+							params.playerCurrHealth -= 5.f;
+						}
 					}
 
 					///Spawn fire particles
@@ -281,7 +291,9 @@ void EntityManager::UpdateEntities(UpdateParams& params){
 					///Check for collision with cam
 					const glm::vec3& displacementVec = params.camPos - entity->pos;
 					if(glm::dot(displacementVec, displacementVec) <= (entity->scale.x + 5.f) * (entity->scale.x + 5.f)){
-						//Immunity#####
+						if(iFrames < 10.f){
+							iFrames = 10.f;
+						}
 						--params.blueCoinAmt;
 						entity->active = false;
 					}
