@@ -12,8 +12,6 @@ extern int winHeight;
 const GLFWvidmode* App::mode = nullptr;
 GLFWwindow* App::win = nullptr;
 
-//#define RENDER_OTHER
-
 App::App():
 	fullscreen(false),
 	elapsedTime(0.f),
@@ -258,53 +256,75 @@ void App::PreRender() const{
 
 void App::Render(){
 	if(scene.GetScreen() != Scene::Screen::Pause){
-		glViewport(0, 0, 1024, 1024);
+		glViewport(0, 0, 1024, 1024); {
+			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::DepthD]);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			scene.DepthRender(0);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::DepthD]);
-		glClear(GL_DEPTH_BUFFER_BIT);
-		scene.DepthRender(0);
+			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::DepthS]);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			scene.DepthRender(1);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::DepthS]);
-		glClear(GL_DEPTH_BUFFER_BIT);
-		scene.DepthRender(1);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::PlanarReflection]);
-		glClearColor(0.f, 0.82f, 0.86f, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		scene.PlanarReflectionRender();
-
-		glViewport(0, 0, 2048, 2048);
-		for(short i = 1; i <= 6; ++i){
-			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::CubemapReflection]);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i - 1, texRefIDs[(int)Tex::CubemapReflection], 0);
-			glClearColor(.5f, 0.82f, 0.86f, 1.f);
+			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::PlanarReflection]);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			scene.CubemapReflectionRender(i);
+			scene.PlanarReflectionRender();
+
+			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[int(FBO::Minimap)]);
+			glClearColor(1.f, .5f, .3f, 1.f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			scene.MinimapRender();
 		}
 
-		#ifdef RENDER_OTHER
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glClearColor(1.f, 0.82f, 0.86f, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		scene.DefaultRender(texRefIDs[(int)Tex::PlanarReflection], texRefIDs[(int)Tex::PlanarReflection]);
-		#else
+		bool horizontal = true;
+		glViewport(0, 0, 2048, 2048); {
+			for(short i = 1; i <= 6; ++i){
+				glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::CubemapReflection]);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i - 1, texRefIDs[(int)Tex::CubemapReflection], 0);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				scene.CubemapReflectionRender(i);
+			}
+
+			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::GeoPass]);
+			for(uint i = 0; i < 5; ++i){
+				glDrawBuffer(GL_COLOR_ATTACHMENT0 + i);
+				glClear(GL_COLOR_BUFFER_BIT);
+			}
+			uint arr1[5]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4};
+			glDrawBuffers(sizeof(arr1) / sizeof(arr1[0]), arr1);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			scene.GeoRenderPass();
+
+			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[(int)FBO::LightingPass]);
+			uint arr2[2]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+			glDrawBuffers(sizeof(arr2) / sizeof(arr2[0]), arr2);
+			scene.LightingRenderPass(texRefIDs[(int)Tex::Pos], texRefIDs[(int)Tex::Colours], texRefIDs[(int)Tex::Normals], texRefIDs[(int)Tex::Spec], texRefIDs[(int)Tex::Reflection]);
+
+			const short amt = 8;
+			for(short i = 0; i < amt; ++i){ //Blur... amt / 2 times horizontally and amt / 2 times vertically
+				glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[int(FBO::PingPong0) + int(horizontal)]);
+				scene.BlurRender(!i ? texRefIDs[(int)Tex::Bright] : texRefIDs[int(Tex::PingPong0) + int(horizontal)], horizontal);
+				horizontal = !horizontal;
+			}
+		}
+
 		glViewport(0, 0, winWidth, winHeight);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glClearColor(1.f, 0.82f, 0.86f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		scene.ForwardRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthS], texRefIDs[(int)Tex::PlanarReflection], texRefIDs[(int)Tex::CubemapReflection]);
-		#endif
+		glClearColor(1.f, .5f, .3f, 1.f);
+		scene.DefaultRender(texRefIDs[(int)Tex::Lit], texRefIDs[int(Tex::PingPong0) + int(!horizontal)], glm::vec3(0.f), glm::vec3(1.f));
 
-		glViewport(0, 0, 1024, 1024);
-		glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[int(FBO::Minimap)]);
-		glClearColor(0.f, .3f, 0.f, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		scene.MinimapRender();
+		glViewport(0, 0, 2048, 2048);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, FBORefIDs[(int)FBO::GeoPass]);
+		glViewport(0, 0, winWidth, winHeight);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		glBlitFramebuffer(0, 0, 2048, 2048, 0, 0, winWidth, winHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		scene.ForwardRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthS], texRefIDs[(int)Tex::PlanarReflection], texRefIDs[(int)Tex::CubemapReflection]);
 
 		glViewport(0, 0, winWidth, winHeight);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_DEPTH_BUFFER_BIT);
-		scene.DefaultRender(texRefIDs[(int)Tex::Minimap], texRefIDs[(int)Tex::Minimap], glm::vec3(.75f), glm::vec3(.23f)); //??
+		scene.DefaultRender(texRefIDs[(int)Tex::Minimap], texRefIDs[(int)Tex::Minimap], glm::vec3(.75f), glm::vec3(.23f));
 	}
 }
 

@@ -1079,66 +1079,10 @@ void Scene::Update(GLFWwindow* const& win){
 	}
 }
 
-void Scene::GeoRenderPass() {
-	geoPassSP.Use();
-	geoPassSP.SetMat4fv("PV", &(projection * glm::mat4(glm::mat3(view)))[0][0]);
-
-	///Sky
-	glDepthFunc(GL_LEQUAL); //Modify comparison operators used for depth test such that frags with depth <= 1.f are shown
-	glCullFace(GL_FRONT);
-	geoPassSP.Set1i("sky", 1);
-	modelStack.PushModel({
-		modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glfwGetTime())),
-	});
-		meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Sphere]->Render(geoPassSP);
-	modelStack.PopModel();
-	geoPassSP.Set1i("sky", 0);
-	glCullFace(GL_BACK);
-	glDepthFunc(GL_LESS);
-
-	geoPassSP.SetMat4fv("PV", &(projection * view)[0][0]);
-
-	///Terrain
-	modelStack.PushModel({
-		modelStack.Scale(glm::vec3(500.f, 100.f, 500.f)),
-	});
-		meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
-		meshes[(int)MeshType::Terrain]->Render(geoPassSP);
-	modelStack.PopModel();
-
-	///Shapes
-	modelStack.PushModel({
-		modelStack.Translate(glm::vec3(0.f, 100.f, 0.f)),
-		modelStack.Scale(glm::vec3(10.f)),
-	});
-		modelStack.PushModel({
-			modelStack.Translate(glm::vec3(6.f, 0.f, 0.f)),
-		});
-			geoPassSP.Set1i("noNormals", 1);
-			geoPassSP.Set1i("useCustomColour", 1);
-			geoPassSP.Set4fv("customColour", glm::vec4(glm::vec3(5.f), 1.f));
-			meshes[(int)MeshType::Quad]->SetModel(modelStack.GetTopModel());
-			meshes[(int)MeshType::Quad]->Render(geoPassSP);
-			geoPassSP.Set1i("useCustomColour", 0);
-			geoPassSP.Set1i("noNormals", 0);
-			modelStack.PushModel({
-				modelStack.Translate(glm::vec3(0.f, 0.f, 5.f)),
-			});
-				meshes[(int)MeshType::Sphere]->SetModel(modelStack.GetTopModel());
-				meshes[(int)MeshType::Sphere]->Render(geoPassSP);
-				modelStack.PopModel();
-			modelStack.PushModel({
-				modelStack.Translate(glm::vec3(0.f, 0.f, -5.f)),
-			});
-				meshes[(int)MeshType::Cylinder]->SetModel(modelStack.GetTopModel());
-				meshes[(int)MeshType::Cylinder]->Render(geoPassSP);
-			modelStack.PopModel();
-		modelStack.PopModel();
-	modelStack.PopModel();
+void Scene::GeoRenderPass(){
 }
 
-void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID) {
+void Scene::LightingRenderPass(const uint& posTexRefID, const uint& coloursTexRefID, const uint& normalsTexRefID, const uint& specTexRefID, const uint& reflectionTexRefID){
 	lightingPassSP.Use();
 	const int& pAmt = (int)ptLights.size();
 	const int& dAmt = (int)directionalLights.size();
