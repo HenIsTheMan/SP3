@@ -1477,12 +1477,14 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 				forwardSP.Set1i("water", 0);
 			modelStack.PopModel();
 
+			///Render entities
 			EntityManager::RenderParams params;
+			params.minimap = false;
 			params.camPos = cam.GetPos();
 			params.depthDTexRefID = depthDTexRefID;
 			params.depthSTexRefID = depthSTexRefID;
 			params.quadMesh = meshes[(int)MeshType::Quad];
-			entityManager->RenderEntities(forwardSP, params); //Render entities
+			entityManager->RenderEntities(forwardSP, params);
 
 			///Border effects
 			if(scope){
@@ -2096,8 +2098,7 @@ void Scene::ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID
 	glBlendFunc(GL_ONE, GL_ZERO);
 }
 
-///
-void Scene::MinimapRender(){
+void Scene::MinimapRender(const uint& depthDTexRefID, const uint& depthSTexRefID){
 	forwardSP.Use();
 	forwardSP.Set1f("shininess", 32.f); //More light scattering if lower
 	forwardSP.Set3fv("globalAmbient", Light::globalAmbient);
@@ -2114,13 +2115,21 @@ void Scene::MinimapRender(){
 	forwardSP.SetMat4fv("PV", &(minimapProjection * minimapView)[0][0]);
 
 	modelStack.PushModel({
-		modelStack.Scale(glm::vec3(500.f, 100.f, 500.f)),
+		modelStack.Scale(glm::vec3(terrainXScale, terrainYScale, terrainZScale)),
 	});
 		meshes[(int)MeshType::Terrain]->SetModel(modelStack.GetTopModel());
 		meshes[(int)MeshType::Terrain]->Render(forwardSP);
 	modelStack.PopModel();
+
+	///Render entities
+	EntityManager::RenderParams params;
+	params.minimap = true;
+	params.camPos = cam.GetPos();
+	params.depthDTexRefID = depthDTexRefID;
+	params.depthSTexRefID = depthSTexRefID;
+	params.quadMesh = meshes[(int)MeshType::Quad];
+	entityManager->RenderEntities(forwardSP, params);
 }
-///
 
 const Scene::Screen& Scene::GetScreen() const{
 	return screen;

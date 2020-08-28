@@ -32,7 +32,7 @@ public:
 	void PlanarReflectionRender();
 	void CubemapReflectionRender(const short& cubemapFace);
 	void ForwardRender(const uint& depthDTexRefID, const uint& depthSTexRefID, const uint& planarReflectionTexID, const uint& cubemapReflectionTexID);
-	void MinimapRender();
+	void MinimapRender(const uint& depthDTexRefID, const uint& depthSTexRefID);
 	const Screen& GetScreen() const;
 private:
 	Cam cam;

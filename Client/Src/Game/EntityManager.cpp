@@ -352,6 +352,10 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 				case Entity::EntityType::BULLET:
 				case Entity::EntityType::BULLET2:
 				case Entity::EntityType::BULLET3: {
+					if(params.minimap){
+						continue;
+					}
+
 					SP.UseTex(params.depthDTexRefID, "dDepthTexSampler");
 					SP.UseTex(params.depthSTexRefID, "sDepthTexSampler");
 					SP.Set1i("useCustomColour", 1);
@@ -442,6 +446,10 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 				case Entity::EntityType::PARTICLE:
 				case Entity::EntityType::PARTICLE2:
 				case Entity::EntityType::PARTICLE3: {
+					if(params.minimap){
+						continue;
+					}
+
 					modelStack.PushModel({
 						modelStack.Translate(entity->pos),
 						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),
@@ -475,6 +483,10 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 				//	particle1 = true;
 				//	break;
 				case Entity::EntityType::FIRE: {
+					if(params.minimap){
+						continue;
+					}
+
 					modelStack.PushModel({
 						modelStack.Translate(entity->pos + glm::vec3(0.f, entity->scale.y / 2.f, 0.f)),
 						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),
@@ -494,6 +506,10 @@ void EntityManager::RenderEntities(ShaderProg& SP, RenderParams& params){
 				case Entity::EntityType::COIN_PINK:
 				case Entity::EntityType::COIN_GREEN:
 				case Entity::EntityType::COIN_BLUE: {
+					if(params.minimap){
+						continue;
+					}
+
 					modelStack.PushModel({
 						modelStack.Translate(entity->pos),
 						modelStack.Rotate(glm::vec4(0.f, 1.f, 0.f, glm::degrees(atan2(params.camPos.x - entity->pos.x, params.camPos.z - entity->pos.z)))),

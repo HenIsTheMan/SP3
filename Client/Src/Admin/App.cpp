@@ -272,7 +272,7 @@ void App::Render(){
 			glBindFramebuffer(GL_FRAMEBUFFER, FBORefIDs[int(FBO::Minimap)]);
 			glClearColor(1.f, .5f, .3f, 1.f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			scene.MinimapRender();
+			scene.MinimapRender(texRefIDs[(int)Tex::DepthD], texRefIDs[(int)Tex::DepthS]);
 		}
 
 		bool horizontal = true;
