@@ -10,7 +10,7 @@ public:
 
     void AddModelMatForAll(const glm::mat4& modelMat);
     //void BatchRender(const int& primitive);
-    void InstancedRender(ShaderProg& SP, const int& primitive = GL_TRIANGLES);
+    void InstancedRender(ShaderProg& SP, const bool& autoConfig = true, const int& primitive = GL_TRIANGLES);
     void Render(ShaderProg& SP, const int& primitive = GL_TRIANGLES);
     void SetModelForAll(const glm::mat4& model);
 private:

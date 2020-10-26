@@ -24,7 +24,7 @@ bool TextChief::Init(){
         (void)puts("Failed to init FreeType!\n");
         return false;
     }
-    if(FT_New_Face(ft, "Fonts/Continue.ttf", 0, &face)){
+    if(FT_New_Face(ft, "Fonts/System.ttf", 0, &face)){
         (void)puts("Failed to load font as face\n");
         return false;
     }

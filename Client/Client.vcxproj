@@ -194,16 +194,36 @@
   <ItemGroup>
     <ClCompile Include="Src\Admin\App.cpp" />
     <ClCompile Include="Src\Client.cpp" />
+    <ClCompile Include="Src\Game\AssaultRifle.cpp" />
+    <ClCompile Include="Src\Game\Collision.cpp" />
+    <ClCompile Include="Src\Game\Entity.cpp" />
+    <ClCompile Include="Src\Game\EntityManager.cpp" />
+    <ClCompile Include="Src\Game\Pistol.cpp" />
+    <ClCompile Include="Src\Game\CubeSection.cpp" />
+    <ClCompile Include="Src\Game\SniperRifle.cpp" />
+    <ClCompile Include="Src\Game\Weapon.cpp" />
     <ClCompile Include="Src\World\Cam.cpp" />
+    <ClCompile Include="Src\World\ModelStack.cpp" />
     <ClCompile Include="Src\World\Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Admin\App.h" />
+    <ClInclude Include="Src\Game\AssaultRifle.h" />
+    <ClInclude Include="Src\Game\Collision.h" />
+    <ClInclude Include="Src\Game\Entity.h" />
+    <ClInclude Include="Src\Game\EntityManager.h" />
+    <ClInclude Include="Src\Game\Pistol.h" />
+    <ClInclude Include="Src\Game\CubeSection.h" />
+    <ClInclude Include="Src\Game\SniperRifle.h" />
+    <ClInclude Include="Src\Game\Weapon.h" />
     <ClInclude Include="Src\World\Cam.h" />
+    <ClInclude Include="Src\World\ModelStack.h" />
     <ClInclude Include="Src\World\Scene.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Blur.fs" />
+    <None Include="Shaders\Depth.fs" />
+    <None Include="Shaders\Depth.vs" />
     <None Include="Shaders\Forward.fs" />
     <None Include="Shaders\Forward.vs" />
     <None Include="Shaders\GeoPass.fs" />

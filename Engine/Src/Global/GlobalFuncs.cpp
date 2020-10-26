@@ -65,7 +65,7 @@ bool InitAPI(GLFWwindow*& win){
     glfwSetCursorPosCallback(win, CursorPosCallback);
     glfwSetMouseButtonCallback(win, MouseButtonCallback);
     glfwSetScrollCallback(win, ScrollCallback);
-    glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED); //Hide and capture mouse cursor
+    glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     return true;
 }
@@ -113,7 +113,7 @@ void SetUpTex(const SetUpTexsParams& params, uint& texRefID){
     if(!data){
         return (void)printf("Failed to load tex at \"%s\"\n", params.texPath.c_str());
     }
-    glTexImage2D(params.texTarget, 0, colourChannelsAmt == 3 ? GL_RGB16F : GL_RGBA16F, width, height, 0, colourChannelsAmt == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(params.texTarget, 0, colourChannelsAmt == 3 ? GL_RGB : GL_RGBA, width, height, 0, colourChannelsAmt == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data); //Free the img mem
     glGenerateMipmap(params.texTarget); //Gen required mipmap lvls for currently bound tex
     glTexParameteri(params.texTarget, GL_TEXTURE_WRAP_S, params.texWrapParam);
@@ -146,6 +146,6 @@ static void MouseButtonCallback(GLFWwindow* win, int button, int action, int mod
 }
 
 static void ScrollCallback(GLFWwindow*, double xOffset, double yOffset){
-    angularFOV -= float(xOffset) + float(yOffset);
-    angularFOV = std::max(1.f, std::min(75.f, angularFOV));
+    //angularFOV -= float(xOffset) + float(yOffset);
+    //angularFOV = std::max(1.f, std::min(75.f, angularFOV));
 }

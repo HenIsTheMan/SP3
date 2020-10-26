@@ -14,6 +14,11 @@ public:
 		LightingPass,
 		PingPong0,
 		PingPong1,
+		DepthD,
+		DepthS,
+		PlanarReflection,
+		CubemapReflection,
+		Minimap,
 		Amt
 	};
 	enum struct Tex{
@@ -26,6 +31,16 @@ public:
 		Bright,
 		PingPong0,
 		PingPong1,
+		DepthD,
+		DepthS,
+		PlanarReflection,
+		CubemapReflection,
+		Minimap,
+		Amt
+	};
+	enum struct RBO{
+		GeoPass = 0,
+		CubemapReflection,
 		Amt
 	};
 
@@ -47,7 +62,7 @@ private:
 
 	uint FBORefIDs[(int)FBO::Amt];
 	uint texRefIDs[(int)Tex::Amt];
-	uint RBORefIDs[1];
+	uint RBORefIDs[(int)RBO::Amt];
 };
 
 template <class T>

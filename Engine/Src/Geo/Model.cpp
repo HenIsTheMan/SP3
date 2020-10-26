@@ -176,7 +176,7 @@ void Model::AddModelMatForAll(const glm::mat4& modelMat){
 //    glBindVertexArray(0);
 //}
 
-void Model::InstancedRender(ShaderProg& SP, const int& primitive){
+void Model::InstancedRender(ShaderProg& SP, const bool& autoConfig, const int& primitive){
     if(primitive < 0){
         return (void)puts("Invalid primitive!\n");
     }
@@ -188,7 +188,7 @@ void Model::InstancedRender(ShaderProg& SP, const int& primitive){
         meshes[i].primitive = primitive;
         meshes[i].model = modelForAll;
         meshes[i].modelMats = modelMatsForAll;
-        meshes[i].InstancedRender(SP);
+        meshes[i].InstancedRender(SP, autoConfig);
     }
 }
 

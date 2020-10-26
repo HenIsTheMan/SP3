@@ -179,6 +179,7 @@
     <ClInclude Include="Src\Geo\Model.h" />
     <ClInclude Include="Src\Geo\SpriteAni.h" />
     <ClInclude Include="Src\Geo\Terrain.h" />
+    <ClInclude Include="Src\Geo\Water.h" />
     <ClInclude Include="Src\Global\GlobalFuncs.h" />
     <ClInclude Include="Src\Global\GlobalStructs.h" />
     <ClInclude Include="Src\Global\GlobalVars.h" />
@@ -196,6 +197,7 @@
     <ClCompile Include="Src\Geo\Model.cpp" />
     <ClCompile Include="Src\Geo\SpriteAni.cpp" />
     <ClCompile Include="Src\Geo\Terrain.cpp" />
+    <ClCompile Include="Src\Geo\Water.cpp" />
     <ClCompile Include="Src\Global\GlobalFuncs.cpp" />
     <ClCompile Include="Src\Geo\Mesh.cpp" />
     <ClCompile Include="Src\Graphics\ShaderProg.cpp" />

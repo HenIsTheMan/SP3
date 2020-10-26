@@ -308,16 +308,17 @@ Mesh::~Mesh(){
 //	glBindVertexArray(0);
 //}
 
-void Mesh::InstancedRender(ShaderProg& SP, const bool& autoConfig){
+void Mesh::InstancedRender(ShaderProg& SP, const bool& autoConfig, const bool& setInstancing){
 	if(primitive < 0){
 		return (void)puts("Invalid primitive!\n");
 	}
 
 	SP.Use();
 	SP.SetMat4fv("model", &(model)[0][0]);
-	if(autoConfig){
+	if(setInstancing){
 		SP.Set1i("instancing", 1);
-
+	}
+	if(autoConfig){
 		SP.Set1i("useDiffuseMap", 0);
 		SP.Set1i("useSpecMap", 0);
 		SP.Set1i("useEmissionMap", 0);
@@ -437,20 +438,21 @@ void Mesh::InstancedRender(ShaderProg& SP, const bool& autoConfig){
 	}
 }
 
-void Mesh::Render(ShaderProg& SP, const bool& autoConfig){
+void Mesh::Render(ShaderProg& SP, const bool& autoConfig, const bool& setInstancing){
 	if(primitive < 0){
 		return (void)puts("Invalid primitive!\n");
 	}
 
 	SP.Use();
 	SP.SetMat4fv("model", &(model)[0][0]);
-	if(autoConfig){
+	if(setInstancing){
 		SP.Set1i("instancing", 0);
-
+	}
+	if(autoConfig){
 		SP.Set1i("useDiffuseMap", 0);
 		SP.Set1i("useSpecMap", 0);
 		SP.Set1i("useEmissionMap", 0);
-		//SP.Set1i("useReflectionMap", 0);
+		SP.Set1i("useReflectionMap", 0);
 		SP.Set1i("useBumpMap", 0);
 
 		short diffuseCount = 0;
@@ -543,6 +545,10 @@ void Mesh::Render(ShaderProg& SP, const bool& autoConfig){
 	if(autoConfig){
 		SP.ResetTexUnits();
 	}
+}
+
+const Mesh::MeshType& Mesh::GetMeshType() const{
+	return type;
 }
 
 void Mesh::AddModelMat(const glm::mat4& modelMat){
