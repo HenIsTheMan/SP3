@@ -216,6 +216,6 @@ CubeSection* const& CubeSection::FetchCubeSection(){
 		}
 	}
 	cubeSectionPool.emplace_back(new CubeSection());
-	(void)puts("1 cube section was added to cubeSectionPool!\n");
+	(void)puts("1 cube section was added to cubeSectionPool!");
 	return cubeSectionPool.back();
 }
