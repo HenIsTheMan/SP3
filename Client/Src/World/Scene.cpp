@@ -233,7 +233,7 @@ bool Scene::Init(){
 		std::sort(scores.begin(), scores.end(), std::greater<int>());
 	}
 
-	soundEngine = createIrrKlangDevice(ESOD_AUTO_DETECT, ESEO_MULTI_THREADED | ESEO_LOAD_PLUGINS | ESEO_USE_3D_BUFFERS | ESEO_PRINT_DEBUG_INFO_TO_DEBUGGER);
+	soundEngine = createIrrKlangDevice(ESOD_AUTO_DETECT, ESEO_DEFAULT_OPTIONS & ~ESEO_PRINT_DEBUG_INFO_TO_DEBUGGER & ~ESEO_PRINT_DEBUG_INFO_TO_STDOUT);
 	if(!soundEngine){
 		(void)puts("Failed to init soundEngine!\n");
 	}
