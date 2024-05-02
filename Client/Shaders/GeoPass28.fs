@@ -1,4 +1,4 @@
-#version 330 core
+#version 400 core
 layout (location = 0) out vec3 pos;
 layout (location = 1) out vec4 colour;
 layout (location = 2) out vec3 normal;
@@ -24,7 +24,7 @@ uniform bool useSpecMap;
 uniform bool useEmissionMap;
 uniform bool useReflectionMap;
 
-uniform sampler2D diffuseMaps[29];
+uniform sampler2D diffuseMaps[28]; //32 - 4
 uniform sampler2D specMap;
 uniform sampler2D emissionMap;
 uniform sampler2D reflectionMap;

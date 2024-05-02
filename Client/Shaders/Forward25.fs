@@ -1,4 +1,4 @@
-#version 330 core
+#version 400 core
 out vec4 fragColour;
 
 in myInterface{
@@ -65,7 +65,7 @@ uniform bool useSpecMap;
 uniform bool useEmissionMap;
 uniform bool useReflectionMap;
 
-uniform sampler2D diffuseMaps[29];
+uniform sampler2D diffuseMaps[25]; //32 - 7
 uniform sampler2D specMap;
 uniform sampler2D emissionMap;
 uniform sampler2D reflectionMap;

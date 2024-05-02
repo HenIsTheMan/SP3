@@ -98,9 +98,6 @@
     <None Include="Shaders\Screen.fs">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\GeoPass.fs">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Shaders\GeoPass.vs">
       <Filter>Shaders</Filter>
     </None>
@@ -128,9 +125,6 @@
     <None Include="Shaders\Text.vs">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\Forward.fs">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Shaders\Forward.vs">
       <Filter>Shaders</Filter>
     </None>
@@ -140,5 +134,9 @@
     <None Include="Shaders\Depth.vs">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\Forward9.fs" />
+    <None Include="Shaders\Forward25.fs" />
+    <None Include="Shaders\GeoPass12.fs" />
+    <None Include="Shaders\GeoPass28.fs" />
   </ItemGroup>
 </Project>

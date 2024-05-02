@@ -88,8 +88,8 @@ private:
 
 	ShaderProg blurSP;
 	ShaderProg depthSP;
-	ShaderProg forwardSP;
-	ShaderProg geoPassSP;
+	ShaderProg* forwardSP;
+	ShaderProg* geoPassSP;
 	ShaderProg lightingPassSP;
 	ShaderProg normalsSP;
 	ShaderProg screenSP;

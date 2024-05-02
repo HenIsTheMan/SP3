@@ -224,10 +224,12 @@
     <None Include="Shaders\Blur.fs" />
     <None Include="Shaders\Depth.fs" />
     <None Include="Shaders\Depth.vs" />
-    <None Include="Shaders\Forward.fs" />
     <None Include="Shaders\Forward.vs" />
-    <None Include="Shaders\GeoPass.fs" />
+    <None Include="Shaders\Forward9.fs" />
+    <None Include="Shaders\Forward25.fs" />
     <None Include="Shaders\GeoPass.vs" />
+    <None Include="Shaders\GeoPass12.fs" />
+    <None Include="Shaders\GeoPass28.fs" />
     <None Include="Shaders\LightingPass.fs" />
     <None Include="Shaders\Normals.fs" />
     <None Include="Shaders\Normals.gs" />
